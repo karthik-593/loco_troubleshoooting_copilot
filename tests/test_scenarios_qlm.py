@@ -147,3 +147,11 @@ def test_alias_match_and_llm_stub(kb):
     assert match_alias("sanders not working", kb) is None
     with pytest.raises(NotImplementedError):
         match_free_text("dj tripped and the main relay thing is red", kb)
+
+
+def test_alias_phrase_containment(kb):
+    assert match_alias("QLM locked, all normal, resetting now", kb).fault_id == QLM
+    assert match_alias("DJ tripped and qlm red target", kb).fault_id == QLM
+    assert match_alias("QLM is locked", kb) is None          # not a verbatim alias phrase
+    assert match_alias("QLM not locked", kb) is None
+    assert match_alias("dj tripped", kb) is None

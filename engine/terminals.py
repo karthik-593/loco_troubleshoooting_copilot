@@ -9,7 +9,8 @@ from typing import Literal, Optional
 
 from kb.schema import Fault, Step
 
-TerminalKind = Literal["confirm", "ask_step", "ask_history", "caution", "refuse", "defer_to_TLC"]
+TerminalKind = Literal["confirm", "ask_step", "ask_history", "caution", "refuse", "defer_to_TLC",
+                       "confirm_fault", "clarify"]
 
 # Refuse reasons (engine vocabulary; fix B in the gate review).
 REASON_SECOND_RESET = "second_reset"
@@ -105,6 +106,24 @@ def refuse(fault: Fault, step: Step, message: str, reasons: tuple[str, ...],
         gate_type=step.gate.type,
         reasons=reasons,
     )
+
+
+def confirm_fault(fault: Fault) -> Terminal:
+    """§5.5: an LLM-matched fault that carries a hard gate is confirmed in ONE line before
+    any guidance. The line names the fault and its KB presenting signs — nothing else."""
+    signs = "; ".join(fault.presenting_signs)
+    return Terminal(
+        kind="confirm_fault",
+        fault_id=fault.fault_id,
+        message=f"Sounds like {fault.fault_id.replace('_', ' ')} — {signs}?",
+        source=fault.source,
+    )
+
+
+def clarify(question: str) -> Terminal:
+    """Low-confidence parse (§8): one-line clarification instead of acting."""
+    return Terminal(kind="clarify", fault_id=None, message=question,
+                    source="BUILD_PLAN §8 (low-confidence parse → clarify, never act)")
 
 
 def defer_to_TLC(reason: str, fault_id: Optional[str] = None) -> Terminal:

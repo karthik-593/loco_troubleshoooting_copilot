@@ -5,6 +5,9 @@ Routing, in this fixed order:
      (a defence in depth: even if a caller forgot to run ``evaluate_gates`` after its
      state update, reassess re-runs it; there is no path to a terminal that bypasses it);
   2. no matched fault / no KB procedure → defer_to_TLC (§5.6);
+  2b. matched fault carries a hard gate and is not yet confirmed → confirm_fault (§5.5):
+     a misparse must not route the pilot into a gated procedure. (A REFUSE from step 1
+     still fires first — refusing is always safe.)
   3. ordinary checks incomplete → ask_step(next_unmet) — the ONE specific missed check,
      carrying hold_action if the pilot said they intend the gated action (fix D);
   4. everything (incl. the gated step) claimed done → confirm + KB follow-up guidance.
@@ -79,6 +82,10 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     # 2. nothing matched → never guess.
     if fault is None or state.matched_fault != fault.fault_id:
         return Decision("terminal", T.defer_to_TLC("This isn't in my procedure set."), verdict, None)
+
+    # 2b. §5.5 — hard-gated fault must be confirmed before any guidance.
+    if fault.gated_steps and not state.fault_confirmed:
+        return Decision("need_pilot_input", T.confirm_fault(fault), verdict, None)
 
     # 3. the delta over the ordinary checks.
     delta = diff_steps(state, fault)

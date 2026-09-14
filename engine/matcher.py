@@ -44,10 +44,19 @@ class KnowledgeBase:
         return self._faults[fault_id]
 
     def match_alias(self, text: str) -> Optional[Fault]:
-        """Exact (normalised) alias match. Returns None when nothing matches — the
-        caller must then refuse / defer to TLC (BUILD_PLAN §5.6), never guess."""
-        fid = self._alias_index.get(_norm(text))
-        return self._faults[fid] if fid else None
+        """Deterministic alias match: the whole normalised text equals an alias, or an
+        alias appears verbatim as a whole phrase inside it ("QLM locked, all normal").
+        Returns None when nothing matches — the caller then either asks the M2 parser
+        for a (to-be-confirmed) guess or defers to TLC (BUILD_PLAN §5.6); never guesses."""
+        t = _norm(text)
+        fid = self._alias_index.get(t)
+        if fid:
+            return self._faults[fid]
+        hits = {f for alias, f in self._alias_index.items()
+                if re.search(rf"(?<![\w-]){re.escape(alias)}(?![\w-])", t)}
+        if len(hits) == 1:
+            return self._faults[hits.pop()]
+        return None  # none, or ambiguous across faults → not deterministic
 
 
 def load_kb(faults_dir: Path = FAULTS_DIR) -> KnowledgeBase:
@@ -75,6 +84,7 @@ def match_alias(text: str, kb: Optional[KnowledgeBase] = None) -> Optional[Fault
 
 
 def match_free_text(text: str, kb: Optional[KnowledgeBase] = None):
-    """M2: LLM-assisted parse of a messy pilot turn into a fault guess + confidence.
-    Deliberately unimplemented in M1 — there is no NLP in the deterministic core."""
-    raise NotImplementedError("free-text fault matching is an M2 (LLM parse) capability")
+    """LLM-assisted matching lives in ``llm.parse.parse_turn`` (M2). The engine package
+    itself contains no NLP and never will; this stub exists so nothing in ``engine/``
+    can be mistaken for a model-backed matcher."""
+    raise NotImplementedError("free-text fault matching is llm.parse.parse_turn, not an engine capability")

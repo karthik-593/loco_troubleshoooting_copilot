@@ -7,7 +7,33 @@ Milestone 1.
 ---
 
 ## Status
-- **Milestone: M1 — engine core built (2026-09-14), 46 tests green, CI + DVC in place.** **NO LLM.**
+- **Milestone: M2 — LLM language + decision layer built (2026-09-14) on top of the M1 engine.**
+  89 tests green (10 live parse tests skip without credentials). M1 engine core: 2026-09-14.
+- **M2 decisions (recorded here so M3 does not re-derive them):**
+  - `llm/interface.py`: `LLMProvider` protocol with two ops (`structured`, `text`);
+    `AnthropicProvider` (claude-opus-5, adaptive thinking, effort medium for parse/decide and
+    low for phrase, structured output via `output_config.format` json_schema, stop_reason
+    checked before validation); `FakeProvider` for tests/offline eval.
+  - `llm/parse.py`: alias match (exact OR verbatim phrase containment, `engine/matcher.py`)
+    is deterministic → fault confirmed, no confirm turn. Model-guessed fault → `fault_confirmed=False`;
+    a hard-gated fault then gets the §5.5 one-line `confirm_fault` terminal from `reassess`
+    (step 2b) before any step guidance. A REFUSE from the reflex still fires first.
+    Confidence < 0.6 → `clarify`, state untouched. Claimed steps validated against the KB;
+    unknown ones are surfaced via `unrecognised_claims`, never accepted.
+  - `llm/decide.py`: only `engine/tools.py` REGISTRY names or "none"; anything else is
+    rejected (recorded in `ToolChoice.rejected`) and treated as "none". The reflex is not
+    listed and not selectable.
+  - `llm/phrase.py`: deterministic `guard` per terminal kind (refusal must stay negated and
+    keep TLC/relief/fire text; caution keeps once/10 min/log/TLC and the conditional; questions
+    must ask; hold_action must survive). Any violation → `render_verbatim` (KB text). Provider
+    failure → same fallback.
+  - `engine/tools.py` (Class A) built early because `decide` needs the registry: diff,
+    lookup_procedure, check_combination, get_required_observations, resolve_config,
+    read_siv_screen. Idempotent via state-snapshot caching.
+  - Prompts are versioned files in `llm/prompts/*.md` (git), built from the KB at runtime.
+  - **Pending M2 DoD item:** the held-out free-text set (`tests/data/parse_heldout.yaml`,
+    10 messy messages) has not been run against the live model — no credentials on the build
+    machine. Run `pytest tests/test_parse_live.py -m live -s` once `ANTHROPIC_API_KEY` is set.
 - Layout note: the TSD PDF lives at the repo root under its cited filename and is DVC-tracked
   (`1566969531009-ETTC_TSD.pdf.dvc`); QLM YAML is at `kb/faults/qlm_dropped.yaml`.
 - **Scope: QLM only.** Depth-first: prove QLM end-to-end before encoding any other
@@ -50,8 +76,9 @@ Per BUILD_PLAN §13 layout:
   caution / refuse / defer_to_TLC.
 - `tests/test_gates.py`, `tests/test_diff.py`, `tests/test_scenarios_qlm.py`.
 
-**Do NOT build yet:** `engine/tools.py` (agent toolset — M2/M3), anything under `llm/`,
-`agent/graph.py`, `api/`, `client/`.
+**Built in M2:** `engine/tools.py`, `llm/` (interface, schemas, parse, decide, phrase, prompts).
+**Do NOT build yet (M3):** `agent/graph.py` (LangGraph loop + reflex wiring + loop guards),
+`api/server.py`, `client/streamlit_app.py`, `tests/test_loop_guards.py`.
 
 ---
 

@@ -24,7 +24,7 @@ every file and every step cites its TSD section. The schema (`kb/schema.py`) enf
 this in CI. The PDF itself is DVC-tracked (`1566969531009-ETTC_TSD.pdf.dvc`) and kept
 out of git.
 
-## Status — Milestone 1 (deterministic engine, no LLM)
+## Status — Milestone 2 (engine + bounded LLM layer; agent loop is M3)
 
 | Piece | Where |
 |---|---|
@@ -37,7 +37,18 @@ out of git.
 | Router + loop-guard helpers | `engine/reassess.py` |
 | Terminals (confirm / ask / caution / refuse / defer) | `engine/terminals.py` |
 | M1 single-pass driver | `engine/run_turn.py` |
-| Tests (46) | `tests/` |
+| Class-A diagnostic tools (the bounded set the agent may pick) | `engine/tools.py` |
+| Swappable LLM provider (Claude + scripted fake) | `llm/interface.py` |
+| `parse` — free text → KB-validated update, low confidence → clarify | `llm/parse.py` |
+| `agent_decide` — picks one registered tool or none; safety not selectable | `llm/decide.py` |
+| `phrase` — renders the engine's terminal; guard + verbatim-KB fallback | `llm/phrase.py` |
+| Prompt templates (versioned) | `llm/prompts/` |
+| Tests (89, plus 10 live parse tests that need credentials) | `tests/` |
+
+The LLM has exactly three bounded jobs — parse, decide, phrase — and none of them can
+originate, alter, or skip a safety verdict: the engine package imports nothing from
+`llm/` (enforced by a test), and the reflex runs after every state update regardless of
+what the model says.
 
 Design spec: `BUILD_PLAN.md`. Working notes and locked decisions: `HANDOFF.md`.
 
@@ -47,6 +58,7 @@ Design spec: `BUILD_PLAN.md`. Working notes and locked decisions: `HANDOFF.md`.
 python -m venv .venv && . .venv/Scripts/activate   # or .venv/bin/activate
 pip install -r requirements.txt
 python -m kb.schema      # validate the knowledge base
-python -m pytest         # engine + reflex tests
+python -m pytest         # engine + reflex + LLM-layer tests (scripted model)
+export ANTHROPIC_API_KEY=...   # then: pytest tests/test_parse_live.py -m live -s
 dvc pull                 # (once a DVC remote is configured) fetch the TSD PDF
 ```

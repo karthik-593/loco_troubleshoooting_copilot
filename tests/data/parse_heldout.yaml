@@ -1,0 +1,38 @@
+# Held-out free-text parse set (BUILD_PLAN §14 M2 DoD). Messy pilot messages → expected
+# structured fields. Expected values use KB vocabulary only. Run by tests/test_parse_live.py
+# against the real model when credentials are available; skipped otherwise.
+# Fields not listed are not asserted.
+- text: "QLM locked. I checked the transformer and oil level."
+  fault: QLM_dropped
+  claimed: [check_ht2_compartment, check_oil_levels]
+- text: "dj tripped, qlm target down. ht2 checked no smoke no smell, oil ok. going to reset now"
+  fault: QLM_dropped
+  claimed: [check_ht2_compartment, check_oil_levels]
+  abnormality: "no"
+  intended_action: reset_QLM
+- text: "QLM red. already reset once this trip near the last station"
+  fault: QLM_dropped
+  reset_earlier: "yes"
+- text: "qlm acted first time, not reset before. checked ht2 compartment, tfp oil, gr oil, cgr arc chutes, all normal"
+  fault: QLM_dropped
+  claimed: [check_ht2_compartment, check_oil_levels, check_arc_chutes_and_terminals]
+  reset_earlier: "no"
+  abnormality: "no"
+- text: "QLM locked and QOP-1 also dropped"
+  fault: QLM_dropped
+  other_relays: [QOP-1]
+- text: "qlm dropped, smoke coming from HT2 side"
+  fault: QLM_dropped
+  claimed: [check_ht2_compartment]
+  abnormality: "yes"
+- text: "vcb tripped, qlm locked indication, along with QLA"
+  fault: QLM_dropped
+  other_relays: [QLA]
+- text: "sanders not working on both sides"
+  fault: null
+- text: "dj tripped, dont know which relay"
+  fault_confidence_below: 0.6
+- text: "QLM dropped. checked the horn and the headlight, both fine"
+  fault: QLM_dropped
+  claimed: []
+  unmapped_min: 1

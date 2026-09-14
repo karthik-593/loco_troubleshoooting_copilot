@@ -64,6 +64,8 @@ class StateUpdate:
     Field semantics are *merge*: ``None`` / empty means "nothing new on this field".
     """
     fault_id: Optional[str] = None
+    # None with a fault_id = "structured/deterministic match" → treated as confirmed.
+    # The M2 parser passes an explicit False for an LLM-guessed hard-gated fault (§5.5).
     fault_confirmed: Optional[bool] = None
     config: Optional[Config] = None
     claimed_steps: tuple[str, ...] = ()
@@ -83,7 +85,11 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
     * ``intended_action`` persists across turns until explicitly cleared or replaced.
     """
     if update.fault_id is not None:
+        if update.fault_id != state.matched_fault:
+            state.fault_confirmed = False
         state.matched_fault = update.fault_id
+        if update.fault_confirmed is None:
+            state.fault_confirmed = True      # structured / alias match is trusted
     if fault is not None and state.matched_fault == fault.fault_id:
         state.steps_required = list(fault.step_ids)
     if update.fault_confirmed is not None:
