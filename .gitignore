@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# MLflow (M5)
+mlruns/
+mlartifacts/
+
+# DVC-tracked artifacts — the TSD PDF (64 MB) never enters git; see *.dvc pointer
+/1566969531009-ETTC_TSD.pdf
+
+# local
+.env
+.DS_Store
+Thumbs.db

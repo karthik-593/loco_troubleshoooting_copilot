@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: QLM dropped / locked  (Primary Over-Current relay, feeding power circuit)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 6 "DJ Tripping through Safety Relays", §6.01 / §6.1.1–6.1.3,
+#         printed pages 83–86.
+# All step logic, gates and terminals below are facts taken from that section only.
+# No procedure content is from any other source. (BUILD_PLAN §5.3, §11)
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: QLM_dropped
+aliases: ["QLM locked", "QLM acted", "QLM target dropped", "QLM red", "QLM LOCKED indication"]
+config_dependency: none            # §6.1.1 checks are identical across WAM4/WAP1/WAG5A/WAG7/WAP4
+                                   # (only the relay set-point amps differ; the pilot does not act on that)
+presenting_signs:                  # §6.01 intro + p81 item 7
+  - "DJ / VCB tripped"
+  - "QLM red 'LOCKED' stencil target dropped"
+
+# What QLM is (background, not a step) — §6.01, p83:
+# Over-current relay in the FEEDING POWER circuit protecting the main transformer.
+# On acting, its N/C interlock opens on the MTDJ branch and DJ/VCB trips.
+# Set at 325 A (WAM4, WAP1, WAG5A) / 450 A (WAG7, WAP4).
+
+combination_rules:
+  # §6.1.2, p84–85 — QLM together with traction-circuit over-current relays
+  - if_also: ["QOP-1", "QOP-2", "QRSI-1", "QRSI-2"]
+    route_to: QLM_with_QOP_QRSI    # distinct fault_id (traction power circuit branch)
+    source: "§6.1.2, p84–85"
+  # §6.1.3, p85–86 — QLM together with auxiliary-circuit relays  [per TSD §6.1.3 — confirmed]
+  - if_also: ["QLA", "QOA"]
+    route_to: QLM_with_QLA_QOA     # distinct fault_id (auxiliary power circuit branch)
+    source: "§6.1.3, p85–86"
+
+steps:                             # §6.1.1 "QLM alone acted with locked indication", ordered a→c then d
+  - id: check_ht2_compartment
+    text: >-
+      Check the HT-2 compartment for smoke, burning smell, fire, high temperature
+      and oil splashes from the transformer explosion vent, from underneath the
+      loco via the vent pipe, and from the GR safety valve.
+    gate: null
+    source: "§6.1.1(a), p83–84"
+
+  - id: check_oil_levels
+    text: "Check TFP and GR oil level for any abnormal increase."
+    gate: null
+    source: "§6.1.1(b), p84"
+
+  - id: check_arc_chutes_and_terminals
+    text: >-
+      Check CGR-1/CGR-2/CGR-3 arc chutes, RGR and RPGR for red-hot condition;
+      check TFR terminals, A33/A0/A34 bushings, HT cable, TFILM, TFSPM, and oil
+      leakage from breathers, transformer drain plug and oil trap box for any
+      abnormality (smell, smoke, fire).
+    gate: null
+    on_abnormality: "Use fire extinguisher; ask for relief engine."   # §6.1.1(c)
+    source: "§6.1.1(c), p84"
+
+  - id: reset_decision
+    text: "If no abnormality is found in the above checks, reset QLM."
+    gate:
+      type: reset_limit
+      rule: "QLM may be reset only ONCE. A second reset is not permitted."
+      needs_history: "was_QLM_reset_earlier_this_trip"
+      on_first_reset: >-
+        Reset QLM once and resume traction, checking feeding-power-circuit items
+        every 10 minutes. Make a remark in the loco log book and inform TLC.
+      on_already_reset: >-
+        DO NOT reset the relay target a second time. Make a clear remark in the
+        loco log book, inform TLC, and ask for a relief loco.
+      source: "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f) second reset forbidden, p84"
+
+terminal_actions:
+  no_abnormality:    "reset_once_and_monitor"                         # §6.1.1(d)(e)
+  abnormality_found: "do_not_reset; fire precautions (extinguisher) if fire; log; inform TLC; relief loco"  # §6.1.1(c)(f)
+
+# Reset direction note (§6.1.2 note, p85): reset the relay target clockwise, or per
+# the arrow mark on the resetting knob.  (guidance, not a gate)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.01/6.1.1–6.1.3, pp.83–86"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

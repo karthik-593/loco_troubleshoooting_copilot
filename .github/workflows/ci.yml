@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install pinned dependencies
+        run: pip install -r requirements.txt
+
+      # Mechanical "cite the TSD" rule: every fault file must validate (source, source_url,
+      # per-step citation, known gate types) or the build is red.
+      - name: validate_kb
+        run: python -m kb.schema
+
+      # Deterministic engine tests, including the §5.1 reflex-fires-without-a-tool test.
+      - name: pytest
+        run: python -m pytest
+
+      # M5 will add here: unsafe-instruction-rate == 0 assertion over the scenario suite.

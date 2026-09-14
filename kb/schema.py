@@ -1,0 +1,167 @@
+"""KB schema — typed models for a fault file + the ``validate_kb`` CI check.
+
+Every fault file under ``kb/faults/`` must validate against ``Fault``. The schema
+mechanically enforces the "cite the TSD" rule (BUILD_PLAN §5.3, §11; HANDOFF):
+
+* file-level ``source`` and ``source_url`` are mandatory;
+* every step cites a TSD section in its own ``source``;
+* every gate is of a known type and cites its section;
+* every combination rule cites its section.
+
+Run ``python -m kb.schema`` to validate the whole KB (exit 1 on any failure).
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+from typing import Literal, Optional
+
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+KB_ROOT = Path(__file__).resolve().parent
+FAULTS_DIR = KB_ROOT / "faults"
+
+# Gate types the deterministic reflex knows how to evaluate (BUILD_PLAN §7 class B).
+# Adding a type here without a matching evaluator in engine/gates.py is a CI failure.
+GATE_TYPES = ("reset_limit", "hazard_exposure", "isolation_before_contact")
+GateType = Literal["reset_limit", "hazard_exposure", "isolation_before_contact"]
+
+ConfigDependency = Literal["none", "siv", "arno", "branch-specific"]
+
+
+class _Strict(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class Gate(_Strict):
+    type: GateType
+    rule: str
+    source: str = Field(min_length=1)
+    # reset_limit fields (BUILD_PLAN §9)
+    needs_history: Optional[str] = None
+    on_first_reset: Optional[str] = None
+    on_already_reset: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _reset_limit_fields(self) -> "Gate":
+        if self.type == "reset_limit":
+            missing = [f for f in ("needs_history", "on_first_reset", "on_already_reset")
+                       if getattr(self, f) is None]
+            if missing:
+                raise ValueError(f"reset_limit gate missing {missing}")
+        return self
+
+
+class Step(_Strict):
+    id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    text: str = Field(min_length=1)
+    gate: Optional[Gate] = None
+    on_abnormality: Optional[str] = None
+    # TSD section this step is taken from. A gated step may carry its citation on the
+    # gate instead (that is how the locked qlm_dropped.yaml encodes reset_decision).
+    source: Optional[str] = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def _must_cite(self) -> "Step":
+        if self.source is None and self.gate is None:
+            raise ValueError(f"step '{self.id}' has no TSD source citation")
+        return self
+
+    @property
+    def is_gated(self) -> bool:
+        return self.gate is not None
+
+    @property
+    def citation(self) -> str:
+        return self.source or self.gate.source  # type: ignore[union-attr]
+
+
+class CombinationRule(_Strict):
+    if_also: list[str] = Field(min_length=1)
+    route_to: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+
+
+class Fault(_Strict):
+    fault_id: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]*$")
+    aliases: list[str] = Field(min_length=1)
+    config_dependency: ConfigDependency
+    presenting_signs: list[str] = Field(default_factory=list)
+    combination_rules: list[CombinationRule] = Field(default_factory=list)
+    steps: list[Step] = Field(min_length=1)
+    terminal_actions: dict[str, str] = Field(default_factory=dict)
+    source: str = Field(min_length=1)
+    source_url: str = Field(pattern=r"^https?://")
+
+    @field_validator("steps")
+    @classmethod
+    def _unique_step_ids(cls, steps: list[Step]) -> list[Step]:
+        ids = [s.id for s in steps]
+        dupes = {i for i in ids if ids.count(i) > 1}
+        if dupes:
+            raise ValueError(f"duplicate step ids: {sorted(dupes)}")
+        return steps
+
+    # Convenience views used by the engine -------------------------------------
+    @property
+    def ordinary_steps(self) -> list[Step]:
+        """Steps with no gate — the checklist the diff runs over (HANDOFF)."""
+        return [s for s in self.steps if s.gate is None]
+
+    @property
+    def gated_steps(self) -> list[Step]:
+        return [s for s in self.steps if s.gate is not None]
+
+    @property
+    def step_ids(self) -> list[str]:
+        return [s.id for s in self.steps]
+
+    def step(self, step_id: str) -> Step:
+        for s in self.steps:
+            if s.id == step_id:
+                return s
+        raise KeyError(step_id)
+
+
+def load_fault_file(path: Path) -> Fault:
+    with open(path, encoding="utf-8") as fh:
+        data = yaml.safe_load(fh)
+    return Fault.model_validate(data)
+
+
+def validate_kb(faults_dir: Path = FAULTS_DIR) -> list[str]:
+    """Validate every ``*.yaml`` in ``faults_dir``; return a list of error strings."""
+    errors: list[str] = []
+    files = sorted(faults_dir.glob("*.yaml"))
+    if not files:
+        errors.append(f"no fault files found in {faults_dir}")
+    seen: dict[str, Path] = {}
+    for path in files:
+        try:
+            fault = load_fault_file(path)
+        except Exception as exc:  # pydantic / yaml errors, reported per file
+            errors.append(f"{path.name}: {exc}")
+            continue
+        if fault.fault_id in seen:
+            errors.append(f"{path.name}: duplicate fault_id {fault.fault_id} (also in {seen[fault.fault_id].name})")
+        seen[fault.fault_id] = path
+    return errors
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = argv if argv is not None else sys.argv[1:]
+    faults_dir = Path(args[0]) if args else FAULTS_DIR
+    errors = validate_kb(faults_dir)
+    if errors:
+        print("validate_kb: FAILED")
+        for e in errors:
+            print(f"  - {e}")
+        return 1
+    n = len(list(faults_dir.glob("*.yaml")))
+    print(f"validate_kb: OK ({n} fault file(s) in {faults_dir})")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

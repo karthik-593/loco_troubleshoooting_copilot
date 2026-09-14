@@ -1,0 +1,9 @@
+outs:
+- md5: 3f96b53843d04b8329b53f570e51c01f
+  size: 64438710
+  hash: md5
+  path: 1566969531009-ETTC_TSD.pdf
+meta:
+  title: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019)
+  source_url: https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf
+  role: sole source of procedure content (BUILD_PLAN §5.3, §11)
