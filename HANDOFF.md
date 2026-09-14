@@ -7,8 +7,23 @@ Milestone 1.
 ---
 
 ## Status
-- **Milestone: M2 — LLM language + decision layer built (2026-09-14) on top of the M1 engine.**
-  89 tests green (10 live parse tests skip without credentials). M1 engine core: 2026-09-14.
+- **Milestone: M3 — LangGraph agent loop + FastAPI + Streamlit built (2026-09-15).**
+  114 offline tests green (10 live parse tests pending DeepSeek Flash). M2: 2026-09-14. M1: 2026-09-14.
+- **M3 decisions:**
+  - `agent/graph.py`: nodes parse → update_state → reflex → agent_decide → execute_tool →
+    reflex_after_tool → reassess → (loop | terminal) → phrase. The reflex is a node on every
+    edge out of a state update; a combination reroute (a state change made by reassess) is
+    routed back through `reflex_after_tool` before anything else.
+  - Loop exit reasons (`stop_reason`): gate | none | max_iter | no_progress | rejected |
+    reassess | clarify | reroute. Every non-gate exit lands on the ENGINE's `reassess` terminal.
+  - No-progress = the tool's result was a cache hit AND the diagnostic snapshot is unchanged.
+  - `reassess_node` loops back to the agent only when there is no fresh diff, or relays were
+    reported and `check_combination` has not run on the current state (this is where the
+    tool path diverges for combination faults — `tests/test_graph_qlm.py`).
+  - Combination reroute to a fault not in the KB → `defer_to_TLC` citing the rule's section.
+  - `tool_path` trace per turn is returned by the API and shown by the client (§12.2 evidence).
+  - Live check: the Claude phrase path was verified on refuse / conditional caution /
+    ask_step-with-hold — all passed the guard unmodified (~1.3 s each).
 - **M2 decisions (recorded here so M3 does not re-derive them):**
   - `llm/interface.py`: `LLMProvider` protocol with two ops (`structured`, `text`).
     **Model pins (user decision 2026-09-15, explicit on every call, never an SDK default;
@@ -88,8 +103,12 @@ Per BUILD_PLAN §13 layout:
 - `tests/test_gates.py`, `tests/test_diff.py`, `tests/test_scenarios_qlm.py`.
 
 **Built in M2:** `engine/tools.py`, `llm/` (interface, schemas, parse, decide, phrase, prompts).
-**Do NOT build yet (M3):** `agent/graph.py` (LangGraph loop + reflex wiring + loop guards),
-`api/server.py`, `client/streamlit_app.py`, `tests/test_loop_guards.py`.
+**Built in M3:** `agent/graph.py`, `agent/session.py`, `api/server.py`, `client/streamlit_app.py`,
+`tests/test_loop_guards.py`, `tests/test_graph_qlm.py`, `tests/test_api.py`.
+**Next (M4):** encode isolate-and-retest, pantograph (hazard gate), a config-dependent fault,
+and the combination fault(s) `QLM_with_QOP_QRSI` / `QLM_with_QLA_QOA` — each from the TSD
+only, each with its own scenario. Gate evaluators for `hazard_exposure` /
+`isolation_before_contact` currently fail closed (`NotImplementedError`).
 
 ---
 

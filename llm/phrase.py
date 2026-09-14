@@ -56,7 +56,8 @@ def terminal_payload(t: Terminal) -> str:
     if t.guidance:
         lines.append(f"guidance: {' '.join(t.guidance)}")
     if t.hold_action:
-        lines.append(f"hold_action: {t.hold_action}")
+        lines.append(f"hold_action: the pilot intends to {t.hold_action.replace('_', ' ')} — "
+                     f"say plainly that this waits until the check is done")
     if t.conditional:
         lines.append("conditional: yes — applies only if no abnormality was found")
     if t.reasons:

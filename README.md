@@ -24,7 +24,7 @@ every file and every step cites its TSD section. The schema (`kb/schema.py`) enf
 this in CI. The PDF itself is DVC-tracked (`1566969531009-ETTC_TSD.pdf.dvc`) and kept
 out of git.
 
-## Status — Milestone 2 (engine + bounded LLM layer; agent loop is M3)
+## Status — Milestone 3 (engine + bounded LLM layer + LangGraph agent loop + API + client)
 
 | Piece | Where |
 |---|---|
@@ -43,12 +43,20 @@ out of git.
 | `agent_decide` — picks one registered tool or none; safety not selectable | `llm/decide.py` |
 | `phrase` — renders the engine's terminal; guard + verbatim-KB fallback | `llm/phrase.py` |
 | Prompt templates (versioned) | `llm/prompts/` |
-| Tests (89, plus 10 live parse tests that need credentials) | `tests/` |
+| **LangGraph agent loop** — reflex after every state update, bounded `agent_decide → execute_tool` cycle | `agent/graph.py` |
+| Session store (per-pilot state + trace) | `agent/session.py` |
+| FastAPI `POST /diagnose` (+ `/session/{id}`, `/health`) | `api/server.py` |
+| Streamlit chat client showing the engine trace | `client/streamlit_app.py` |
+| Tests (114 offline incl. loop guards, graph traces, API; plus 10 live parse tests) | `tests/` |
 
 The LLM has exactly three bounded jobs — parse, decide, phrase — and none of them can
 originate, alter, or skip a safety verdict: the engine package imports nothing from
-`llm/` (enforced by a test), and the reflex runs after every state update regardless of
-what the model says.
+`llm/` (enforced by a test), and the reflex is a graph node on every path out of a state
+update — after parse and after every tool — so `agent_decide` cannot reach the pilot
+except through it. If a gate fires the loop short-circuits and the agent is never
+consulted (`tests/test_loop_guards.py::test_skip_attempt_guard_agent_never_consulted_when_gate_fires`).
+The loop is bounded: max-iteration cap, idempotent tools, a no-progress detector, and a
+registry-only toolset; every guard degrades to the engine's deterministic terminal.
 
 Design spec: `BUILD_PLAN.md`. Working notes and locked decisions: `HANDOFF.md`.
 
@@ -58,7 +66,9 @@ Design spec: `BUILD_PLAN.md`. Working notes and locked decisions: `HANDOFF.md`.
 python -m venv .venv && . .venv/Scripts/activate   # or .venv/bin/activate
 pip install -r requirements.txt
 python -m kb.schema      # validate the knowledge base
-python -m pytest         # engine + reflex + LLM-layer tests (scripted model)
+python -m pytest         # engine + reflex + LLM-layer + loop + API tests (scripted model)
+uvicorn api.server:app   # API on :8000 (needs the two credential env vars)
+streamlit run client/streamlit_app.py   # chat client against the API
 # with ANTHROPIC_AGENTIC_AI_PROJECT_KEY / DEEPSEEK_AGENTIC_AI_PROJECT_KEY set in the environment:
 python -m pytest tests/test_parse_live.py -m live -s
 dvc pull                 # (once a DVC remote is configured) fetch the TSD PDF
