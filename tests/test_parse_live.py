@@ -1,35 +1,28 @@
-"""LIVE parse test against the real model over the held-out set (M2 DoD).
+"""LIVE parse test against the real parse model (DeepSeek) over the held-out set (M2 DoD).
 
-Skipped unless credentials are available (ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN / an
-``ant auth login`` profile). Run explicitly with::
+Skipped unless the credential is present. Only structured model output is printed —
+never anything about credentials. Run explicitly with::
 
     pytest tests/test_parse_live.py -m live -s
 """
-import os
 from pathlib import Path
 
 import pytest
 import yaml
 
 from engine.state import DiagnosisState
-from llm.parse import CLARIFY_THRESHOLD, parse_turn
+from llm.interface import DEEPSEEK_KEY_VAR, credential_present, providers_from_env
+from llm.parse import parse_turn
 
 DATA = Path(__file__).with_name("data") / "parse_heldout.yaml"
 pytestmark = pytest.mark.live
 
 
-def _has_credentials() -> bool:
-    if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"):
-        return True
-    return (Path.home() / ".config" / "anthropic").exists()
-
-
 @pytest.fixture(scope="module")
 def provider():
-    if not _has_credentials():
-        pytest.skip("no Anthropic credentials — live parse test skipped")
-    from llm.interface import AnthropicProvider
-    return AnthropicProvider()
+    if not credential_present(DEEPSEEK_KEY_VAR):
+        pytest.skip(f"{DEEPSEEK_KEY_VAR} not present — live parse test skipped")
+    return providers_from_env().parse
 
 
 def _cases():

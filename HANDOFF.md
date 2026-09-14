@@ -10,10 +10,21 @@ Milestone 1.
 - **Milestone: M2 — LLM language + decision layer built (2026-09-14) on top of the M1 engine.**
   89 tests green (10 live parse tests skip without credentials). M1 engine core: 2026-09-14.
 - **M2 decisions (recorded here so M3 does not re-derive them):**
-  - `llm/interface.py`: `LLMProvider` protocol with two ops (`structured`, `text`);
-    `AnthropicProvider` (claude-opus-5, adaptive thinking, effort medium for parse/decide and
-    low for phrase, structured output via `output_config.format` json_schema, stop_reason
-    checked before validation); `FakeProvider` for tests/offline eval.
+  - `llm/interface.py`: `LLMProvider` protocol with two ops (`structured`, `text`).
+    **Model pins (user decision 2026-09-15, explicit on every call, never an SDK default;
+    do not substitute stronger models):**
+    `parse` + `agent_decide` → `DeepSeekProvider`, **`deepseek-flash`** (DeepSeek-V4.1-Flash),
+    temperature 0, **thinking mode explicitly disabled** (`extra_body={"thinking":{"type":"disabled"}}`,
+    verified on the wire by `tests/test_provider.py`), JSON mode with the pydantic schema embedded.
+    `phrase` → `AnthropicProvider`, **`claude-haiku-4-5-20251001`**, temperature 0.5, no
+    thinking/effort params. `providers_from_env()` is the only vendor binding.
+    Credentials: env vars `ANTHROPIC_AGENTIC_AI_PROJECT_KEY` / `DEEPSEEK_AGENTIC_AI_PROJECT_KEY`,
+    read only inside `llm/interface.py` (process env, then Windows User-scope registry),
+    never logged or written anywhere. `FakeProvider` for tests/offline eval.
+  - **Open issue (2026-09-15):** `deepseek-flash` requests from this key hang with no HTTP
+    response (>150 s, even streaming); `deepseek-v4-pro` on the same key answers in ~1 s;
+    DeepSeek status page clean. Key confirmed correct by the user. Live held-out parse run is
+    therefore still pending; re-try with `pytest tests/test_parse_live.py -m live -s`.
   - `llm/parse.py`: alias match (exact OR verbatim phrase containment, `engine/matcher.py`)
     is deterministic → fault confirmed, no confirm turn. Model-guessed fault → `fault_confirmed=False`;
     a hard-gated fault then gets the §5.5 one-line `confirm_fault` terminal from `reassess`

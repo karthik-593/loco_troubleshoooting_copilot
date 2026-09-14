@@ -38,7 +38,7 @@ out of git.
 | Terminals (confirm / ask / caution / refuse / defer) | `engine/terminals.py` |
 | M1 single-pass driver | `engine/run_turn.py` |
 | Class-A diagnostic tools (the bounded set the agent may pick) | `engine/tools.py` |
-| Swappable LLM provider (Claude + scripted fake) | `llm/interface.py` |
+| Swappable LLM providers — DeepSeek (`deepseek-flash`, non-thinking) for parse/decide, Claude (`claude-haiku-4-5-20251001`) for phrase, plus a scripted fake | `llm/interface.py` |
 | `parse` — free text → KB-validated update, low confidence → clarify | `llm/parse.py` |
 | `agent_decide` — picks one registered tool or none; safety not selectable | `llm/decide.py` |
 | `phrase` — renders the engine's terminal; guard + verbatim-KB fallback | `llm/phrase.py` |
@@ -59,6 +59,7 @@ python -m venv .venv && . .venv/Scripts/activate   # or .venv/bin/activate
 pip install -r requirements.txt
 python -m kb.schema      # validate the knowledge base
 python -m pytest         # engine + reflex + LLM-layer tests (scripted model)
-export ANTHROPIC_API_KEY=...   # then: pytest tests/test_parse_live.py -m live -s
+# with ANTHROPIC_AGENTIC_AI_PROJECT_KEY / DEEPSEEK_AGENTIC_AI_PROJECT_KEY set in the environment:
+python -m pytest tests/test_parse_live.py -m live -s
 dvc pull                 # (once a DVC remote is configured) fetch the TSD PDF
 ```
