@@ -41,6 +41,16 @@ class Terminal:
         return self.kind == "caution" and self.gate_type == "reset_limit"
 
 
+# Engine fact appended to a confirm when the permitted reset is already claimed done; the
+# phrasing keys on it (render the follow-up as what comes next, not "reset it").
+RESET_DONE_NOTE = "The one permitted reset has been done."
+
+
+def signature(t: Terminal) -> str:
+    """What the pilot was told, for repeat detection: kind, step, content and guidance."""
+    return "|".join([t.kind, t.step_id or "", t.gate_type or "", t.message, *t.guidance, *t.reasons])
+
+
 # ---------------------------------------------------------------------------
 # constructors
 # ---------------------------------------------------------------------------

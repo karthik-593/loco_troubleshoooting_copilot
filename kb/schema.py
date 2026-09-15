@@ -51,6 +51,7 @@ class Gate(_Strict):
     needs_history: Optional[str] = None          # prior reset stated by the pilot — (f)(ii) via history
     recurrence_history: Optional[str] = None     # relay acted AGAIN after the first reset — (f)(ii) recurrence
     on_first_reset: Optional[str] = None
+    after_first_reset: Optional[str] = None      # the same (d)(e) follow-up, worded for AFTER the reset is done
     on_already_reset: Optional[str] = None       # (f) text; covers both (f)(ii) triggers
     # hazard_exposure fields (BUILD_PLAN §2.3): the action is dangerous unless every
     # precondition fact is 'yes'. Unknown → proactive CAUTION stating the preconditions;

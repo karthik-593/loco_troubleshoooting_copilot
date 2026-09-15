@@ -224,7 +224,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Procedure verified — nothing missed. Reset QLM once and resume traction, checking feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC.",
+            "reply": "Procedure verified complete. The one permitted reset has been done. Resume traction, checking feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC. QLM may be reset only once. If QLM acts a second time — it re-locks after the first reset, or was already reset earlier this trip — DO NOT reset the target.",
             "phrase_fallback": true,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
@@ -391,7 +391,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Procedure verified — nothing missed. Reset QLM once and resume traction, checking feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC.",
+            "reply": "Procedure verified complete. The one permitted reset has been done. Resume traction, checking feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC. QLM may be reset only once. If QLM acts a second time — it re-locks after the first reset, or was already reset earlier this trip — DO NOT reset the target.",
             "phrase_fallback": true,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
@@ -542,7 +542,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Procedure verified — nothing missed. resume traction",
+            "reply": "Procedure verified complete. resume traction",
             "phrase_fallback": true,
             "violations": [],
             "source": "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.12, pp.172–173"

@@ -435,3 +435,33 @@ permitted first reset is log + TLC + continue; relief loco is (f)(ii) only.
   refuse; recurrence cue → refuse; prior stated without claim → refuse) + the no-resolution
   refusal; gate test rebuilt as two updates plus a direct state-fact test; 3 held-out live
   parse cases (27 total).
+
+## Post-M6: "is this how a copilot behaves?" (live, 2026-09-16)
+
+Seen: after "qlm dropped once. i checked and reset. now working fine. anything to keep
+notice of?" the confirm replayed "Reset QLM once and resume..." verbatim; "anything else to
+do?" replayed the identical text. Two causes, both fixed deterministically:
+
+1. **Confirm after the permitted reset now answers "what to keep notice of" unasked.**
+   `engine/reassess._confirm_after_reset` (both the resolved path 2c and the rule-6 path 4)
+   states the engine fact "The one permitted reset has been done." (`terminals.RESET_DONE_NOTE`)
+   and carries TWO KB texts: the gate's `after_first_reset` (§6.1.1(d)(e) follow-up worded for
+   a reset already done — NEW YAML FIELD on the locked QLM file, a wording split of the approved
+   `on_first_reset` sentence with the same citation, no new content) and the gate's `rule`
+   (§6.1.1(f)(ii): reset only once; if it acts again, do not reset) as the forward warning.
+   Guards: `confirm_missing_forward_rule` (the warning must survive phrasing),
+   `confirm_added_relief` (relief loco is (f)(ii) text, not in this payload),
+   `confirm_reinstructs_done_reset`. The verbatim confirm fallback now renders the engine
+   message (with the note) + guidance, so a fallback reads correctly too.
+2. **Repeat detection.** `StateUpdate.brings_news(state)` (no new claim/fact/intent/fault/
+   config/presentation) and `terminals.signature(t)`; `DiagnosisState.last_terminal_sig`.
+   No news + same terminal as last turn → `TurnResult.repeat=True`. A confirm is then rendered
+   from the engine sentence "Nothing further is required by the procedure at this point." +
+   the same guidance (`llm.phrase.for_repeat`); a pending caution / question / refusal is
+   simply restated — it is still pending. The model never decides what a repeat is.
+
+Not built (design boundary, recorded): free-form questions ("why?", "what is QLM?") are not
+answered — the LLM has no answer-from-knowledge job (§8). If wanted, the safe shape is a fifth
+bounded job / Class-A tool `explain_current_step` that returns the KB step text + TSD citation
+verbatim, selected by the agent, never composed by the model. Needs a parse flag for
+"asks a question about the current guidance" and a guard that the reply quotes KB text only.

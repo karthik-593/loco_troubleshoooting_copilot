@@ -113,10 +113,34 @@ def test_not_isolated_refusal_needs_tlc_but_not_a_negation(kb):
     assert "refusal_instructs_reset" in guard(t, "Reset the targets and contact TLC.")
 
 
-def test_confirm_after_done_reset_carries_the_already_done_cue(kb):
-    from dataclasses import replace
+def test_confirm_after_done_reset_uses_after_first_reset_text_and_forward_rule(kb):
+    """After the permitted reset the confirm carries the (d)(e) follow-up worded for a done
+    reset (never "Reset QLM once and ...") plus the (f)(ii) rule as the forward warning."""
+    from engine.reassess import _confirm_after_reset
+    from engine.state import DiagnosisState
+    f = kb.get("QLM_dropped"); g = f.step(RESET_STEP).gate
+    assert g.after_first_reset and g.after_first_reset.startswith("Resume traction")
+    d = DiagnosisState(); d.matched_fault = f.fault_id; d.steps_claimed_done.add(RESET_STEP)
+    t = _confirm_after_reset(d, f, (), f.source)
+    assert T.RESET_DONE_NOTE in t.message
+    assert not any(x.startswith("Reset QLM once") for x in t.guidance)
+    assert any("10 minutes" in x for x in t.guidance) and any("DO NOT reset" in x for x in t.guidance)
+    v = render_verbatim(t)
+    assert "Reset QLM once and" not in v and "DO NOT reset" in v and "10 minutes" in v
+    # guard: the forward rule and the follow-up must survive phrasing; no relief loco invented
+    assert "confirm_missing_forward_rule" in guard(t, "Resume traction, check every 10 minutes, log it, tell TLC.")
+    assert "confirm_added_relief" in guard(t, "Check every 10 minutes; if it acts again do not reset, get relief.")
+    assert not guard(t, "Resume traction, checking every 10 minutes. Log it and inform TLC. QLM may be reset only once; if it acts again do not reset.")
+
+
+def test_repeat_rewrites_only_a_confirm(kb):
+    from llm.phrase import REPEAT_MESSAGE, for_repeat
     f = kb.get("QLM_dropped")
-    t = T.confirm(f, guidance=(f.step(RESET_STEP).gate.on_first_reset,))
-    assert "already_done" not in terminal_payload(t)
-    t = replace(t, message=t.message + " The one permitted reset has been done.")
-    assert "already_done" in terminal_payload(t) and "10 minutes" in terminal_payload(t)
+    t = T.confirm(f, guidance=("g",))
+    assert for_repeat(t).message == REPEAT_MESSAGE and for_repeat(t).guidance == ("g",)
+    r = phrase(t, FakeProvider(text_queue=["Nothing further. g"]), repeat=True)
+    assert r.text.startswith("Nothing further")
+    c = T.caution(f, f.step(RESET_STEP), "Reset once and monitor every 10 minutes.")
+    assert for_repeat(c) is not c and for_repeat(c).message == REPEAT_MESSAGE     # helper is generic...
+    r = phrase(c, FakeProvider(text_queue=["Reset once and monitor every 10 minutes."]), repeat=True)
+    assert "Nothing further" not in r.text                                        # ...but phrase() applies it to confirm only

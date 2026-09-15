@@ -10,10 +10,11 @@ The model adds nothing the engine did not decide (§4.2). That is enforced two w
 from __future__ import annotations
 
 import re
+from dataclasses import replace
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from engine.terminals import REASON_NOT_ISOLATED, REASON_RECURRED, REASON_SECOND_RESET, Terminal
+from engine.terminals import REASON_NOT_ISOLATED, REASON_RECURRED, REASON_SECOND_RESET, RESET_DONE_NOTE, Terminal
 
 # How each refusal reason is to be framed (the verdict text is the KB's; only the framing differs).
 _REASON_FRAMING = {
@@ -42,7 +43,7 @@ class PhraseResult:
 
 def render_verbatim(t: Terminal) -> str:
     if t.kind == "confirm":
-        return " ".join(["Procedure verified — nothing missed.", *t.guidance]).strip()
+        return " ".join([t.message, *t.guidance]).strip()
     if t.kind == "ask_step":
         hold = f" Hold the {t.hold_action.replace('_', ' ')} until this is done." if t.hold_action else ""
         return f"Next check: {t.message}{hold} Done?"
@@ -64,10 +65,6 @@ def terminal_payload(t: Terminal) -> str:
     lines = [f"kind: {t.kind}", f"content: {t.message}"]
     if t.guidance:
         lines.append(f"guidance: {' '.join(t.guidance)}")
-    if t.kind == "confirm" and "reset has been done" in t.message:
-        lines.append("already_done: the reset in the guidance is DONE — phrase the guidance as what "
-                     "follows from here (resume, the 10-minute checks, log book, TLC); do not tell "
-                     "them to reset")
     if t.hold_action:
         lines.append(f"hold_action: the pilot intends to {t.hold_action.replace('_', ' ')} — "
                      f"say plainly that this waits until the check is done")
@@ -161,6 +158,13 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
     elif t.kind == "confirm":
         if any("10 min" in g.lower() for g in t.guidance) and "10 min" not in low:
             v.append("confirm_missing_guidance")
+        if (any("do not reset" in g.lower() for g in t.guidance)
+                and not re.search(r"\b(not|never) reset\b|\bonly once\b|\bsecond time\b", low)):
+            v.append("confirm_missing_forward_rule")      # §6.1.1(f)(ii) warning must survive
+        if "relief" in low and not any("relief" in g.lower() for g in (t.message, *t.guidance)):
+            v.append("confirm_added_relief")              # not in this payload → not the pilot's instruction
+        if RESET_DONE_NOTE in t.message and re.search(r"\breset qlm once and\b", low):
+            v.append("confirm_reinstructs_done_reset")    # the reset is done; do not tell them to do it
     elif t.kind == "defer_to_TLC":
         if "tlc" not in low:
             v.append("defer_missing_TLC")
@@ -169,10 +173,31 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
     return tuple(v)
 
 
-def phrase(t: Terminal, provider: LLMProvider) -> PhraseResult:
+REPEAT_MESSAGE = "Nothing further is required by the procedure at this point."
+REPEAT_CUE = ("repeat: the pilot asked again / acknowledged without new information; this is what "
+              "they were told last turn. Render the content sentence, then the standing follow-up "
+              "briefly — no verbatim replay of the earlier confirmation.")
+
+
+def for_repeat(t: Terminal) -> Terminal:
+    """A repeat is rendered from an engine-owned sentence (not the KB confirmation again) with
+    the same guidance; the sentence is the engine's, so the verbatim fallback reads right too.
+    Engine facts riding on the message (the reset-done note) are kept."""
+    keep = " " + RESET_DONE_NOTE if RESET_DONE_NOTE in t.message else ""
+    return replace(t, message=REPEAT_MESSAGE + keep)
+
+
+def phrase(t: Terminal, provider: LLMProvider, repeat: bool = False) -> PhraseResult:
+    """``repeat``: the pilot gave no new information and this is the same terminal as last
+    turn. A confirm is then rendered from the engine's "nothing further" sentence; a pending
+    question / caution / refusal is simply restated (it is still pending)."""
     system = PROMPT_PATH.read_text(encoding="utf-8")
+    repeat = repeat and t.kind == "confirm"
+    if repeat:
+        t = for_repeat(t)
+    payload = terminal_payload(t) + ("\n" + REPEAT_CUE if repeat else "")
     try:
-        text = provider.text(system, terminal_payload(t))
+        text = provider.text(system, payload)
     except Exception as exc:  # provider failure → the KB's own words, never silence
         return PhraseResult(render_verbatim(t), True, (f"provider_error:{type(exc).__name__}",))
     violations = guard(t, text)

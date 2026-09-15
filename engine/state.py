@@ -59,6 +59,7 @@ class DiagnosisState:
     tool_results: dict[str, Any] = field(default_factory=dict)  # idempotency / no-progress
     iter_count: int = 0                            # loop guard (§6)
     clarify_asked: int = 0                         # unresolved-fault turns so far (§5.6 backstop)
+    last_terminal_sig: Optional[str] = None        # what the pilot was last told (repeat detection)
     # Session loco context ("session bar"): [leading] or [leading, trailing]. The fault is
     # attributed to locos[active_loco]. Kept alongside §10.1's ``config`` (which mirrors the
     # active loco's config for backward compatibility with BUILD_PLAN's state shape).
@@ -131,6 +132,15 @@ class StateUpdate:
     # merely referring to it. Set deterministically by parse on an alias hit, or on a
     # confident model guess that says the fault is presenting. Drives the recurrence backstop.
     fault_presenting: bool = False
+
+    def brings_news(self, state: "DiagnosisState") -> bool:
+        """Does this update change anything the engine acts on? False for "ok" / "anything
+        else?" — a turn with no new claim, fact, intent, fault, config or presentation."""
+        return bool(
+            (self.fault_id and self.fault_id != state.matched_fault)
+            or (self.fault_confirmed is not None and self.fault_confirmed != state.fault_confirmed)
+            or self.config or self.loco_type or self.claimed_steps or self.history
+            or self.intended_action or self.clear_intended_action or self.fault_presenting)
 
 
 def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fault]) -> DiagnosisState:

@@ -104,13 +104,7 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     if state.history(HF_RESOLVED) == "yes":
         state.stuck_at = None
         guidance = tuple(g for g in (fault.terminal_actions.get("resolved"),) if g)
-        reset_done = [s for s in fault.gated_steps
-                      if s.gate and s.gate.type == "reset_limit" and s.id in state.steps_claimed_done]
-        guidance += tuple(s.gate.on_first_reset for s in reset_done if s.gate.on_first_reset)
-        t = T.confirm(fault, guidance=guidance, source=fault.source)
-        if reset_done:      # an engine fact, so the phrasing treats the guidance as follow-up
-            t = replace(t, message=t.message + " The one permitted reset has been done.")
-        return Decision("terminal", t, verdict, None)
+        return Decision("terminal", _confirm_after_reset(state, fault, guidance, fault.source), verdict, None)
 
     # 2d. "if <situation>, contact TLC" clauses.
     for dc in fault.defer_conditions:
@@ -167,10 +161,7 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     #    reset is already claimed done with history == no (rule 6) → confirm, adding the
     #    KB's follow-up (monitor / log / TLC) as guidance.
     state.stuck_at = None
-    guidance = tuple(
-        s.gate.on_first_reset for s in fault.gated_steps
-        if s.gate and s.gate.type == "reset_limit" and s.gate.on_first_reset
-    )
+    guidance: tuple[str, ...] = ()
     if not fault.gated_steps:
         last_done = next((s for s in reversed(fault.steps) if s.id in state.steps_claimed_done), None)
         if last_done is not None and last_done.completes and fault.terminal_actions.get("resolved"):
@@ -178,4 +169,21 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
         elif fault.terminal_actions.get("unresolved"):
             guidance = (fault.terminal_actions["unresolved"],)   # every step tried, still not cleared
     src = "; ".join(s.gate.source for s in fault.gated_steps if s.gate) or fault.source
-    return Decision("terminal", T.confirm(fault, guidance=guidance, source=src), verdict, delta)
+    return Decision("terminal", _confirm_after_reset(state, fault, guidance, src), verdict, delta)
+
+
+def _confirm_after_reset(state: DiagnosisState, fault: Fault, guidance: tuple[str, ...], src: str) -> T.Terminal:
+    """Confirm on a reset-gated fault. If the permitted reset is claimed done, the confirm
+    states that fact (so the phrasing renders what follows, not "reset it") and carries the
+    gate's follow-up (§6.1.1(d)(e): resume, monitor, log, TLC) AND the gate's own rule as the
+    forward warning (§6.1.1(f)(ii): if it acts again, do not reset) — what to keep notice of,
+    given unasked. All KB text."""
+    done = [s for s in fault.gated_steps
+            if s.gate and s.gate.type == "reset_limit" and s.id in state.steps_claimed_done]
+    guidance += tuple((s.gate.after_first_reset or s.gate.on_first_reset) for s in done
+                      if (s.gate.after_first_reset or s.gate.on_first_reset))
+    guidance += tuple(" ".join(s.gate.rule.split()) for s in done if s.gate.rule)
+    t = T.confirm(fault, guidance=guidance, source=src)
+    if done:
+        t = replace(t, message=t.message + " " + T.RESET_DONE_NOTE)
+    return t

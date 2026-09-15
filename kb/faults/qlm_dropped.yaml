@@ -87,6 +87,9 @@ steps:                             # §6.1.1 "QLM alone acted with locked indica
       on_first_reset: >-
         Reset QLM once and resume traction, checking feeding-power-circuit items
         every 10 minutes. Make a remark in the loco log book and inform TLC.
+      after_first_reset: >-                    # same §6.1.1(d)(e) follow-up, for a reset already done
+        Resume traction, checking feeding-power-circuit items every 10 minutes.
+        Make a remark in the loco log book and inform TLC.
       on_already_reset: >-
         DO NOT reset the relay target a second time. Make a clear remark in the
         loco log book, inform TLC, and ask for a relief loco.

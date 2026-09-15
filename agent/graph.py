@@ -59,6 +59,8 @@ class GraphState(TypedDict, total=False):
     snapshot_before_tool: Optional[tuple]
     last_tool_cached: bool
     rerouted: bool                 # reassess changed matched_fault → must pass the reflex again
+    news: bool                     # the parse brought something the engine acts on
+    repeat: bool                   # same terminal as last turn, no news → phrased as "nothing further"
 
 
 @dataclass(frozen=True)
@@ -71,6 +73,7 @@ class TurnResult:
     phrase_fallback: bool
     rejected_tools: tuple[str, ...] = field(default=())
     iterations: int = 0
+    repeat: bool = False           # no new information and the same terminal as last turn
 
 
 class Copilot:
@@ -97,7 +100,7 @@ class Copilot:
             diag.clarify_asked += 1                 # backstop: the next unresolved turn defers
             return {"update": None, "terminal": T.clarify(r.clarification or ""), "stop_reason": "clarify"}
         diag.clarify_asked = 0
-        return {"update": r.update}
+        return {"update": r.update, "news": r.update is not None and r.update.brings_news(diag)}
 
     def update_state_node(self, s: GraphState) -> GraphState:
         diag = s["diag"]
@@ -202,8 +205,14 @@ class Copilot:
     def phrase_node(self, s: GraphState) -> GraphState:
         t = s["terminal"]
         assert t is not None
-        r = phrase(t, self.providers.phrase)
-        return {"reply": r.text, "phrase_fallback": r.used_fallback, "last_assistant": r.text}
+        diag = s["diag"]
+        # Deterministic repeat detection: the pilot said nothing the engine acts on and the
+        # engine landed on exactly what it told them last turn ("anything else?", "ok").
+        sig = T.signature(t)
+        repeat = (not s.get("news", True)) and diag.last_terminal_sig == sig
+        diag.last_terminal_sig = sig
+        r = phrase(t, self.providers.phrase, repeat=repeat)
+        return {"reply": r.text, "phrase_fallback": r.used_fallback, "last_assistant": r.text, "repeat": repeat}
 
     # ---- routing ---------------------------------------------------------
     @staticmethod
@@ -258,7 +267,8 @@ class Copilot:
         init: GraphState = {"diag": diag, "pilot_text": pilot_text, "last_assistant": last_assistant,
                             "tool_path": [], "reflex_runs": 0, "rejected_tools": [],
                             "snapshot_before_tool": None, "last_tool_cached": False, "rerouted": False,
-                            "terminal": None, "stop_reason": None, "phrase_fallback": False}
+                            "terminal": None, "stop_reason": None, "phrase_fallback": False,
+                            "news": True, "repeat": False}
         out = self.graph.invoke(init, config={"recursion_limit": 8 * (self.max_iter + 2)})
         return TurnResult(
             reply=out["reply"],
@@ -269,4 +279,5 @@ class Copilot:
             phrase_fallback=out.get("phrase_fallback", False),
             rejected_tools=tuple(out.get("rejected_tools", [])),
             iterations=diag.iter_count,
+            repeat=out.get("repeat", False),
         )

@@ -341,3 +341,38 @@ def test_reset_claim_plus_prior_reset_without_resolution_still_refuses():
     t1 = cp.turn(d, "DJ tripped, QLM is locked.")
     t2 = cp.turn(d, "Yes, I reset it once already this trip.", last_assistant=t1.reply)
     assert t2.terminal.kind == "refuse" and REASON_SECOND_RESET in t2.terminal.reasons
+
+
+def test_no_news_turn_after_confirm_is_a_repeat_not_a_replay():
+    """'anything else to do?' / 'ok' after a confirm: empty update, same terminal → the reply
+    is rendered from the engine's 'nothing further' sentence (repeat=True), never the
+    confirmation replayed verbatim; the (f)(ii) forward rule rides along. A later
+    re-presentation is news and refuses."""
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes",
+                     claimed_steps=[*ORDINARY, RESET_STEP], abnormality_found="no",
+                     was_reset_earlier_this_trip="no", fault_resolved="yes"),
+         _blind(), _blind(), _blind(fault_presenting="yes")],
+        ["diff_completed_steps"] * 4))
+    t1 = cp.turn(d, "qlm dropped once. i checked and reset. now working fine. anything to keep notice of?")
+    assert t1.terminal.kind == "confirm" and not t1.repeat
+    assert "Reset QLM once and" not in t1.reply and "DO NOT reset" in t1.reply and "10 minutes" in t1.reply
+    t2 = cp.turn(d, "anything else to do?", last_assistant=t1.reply)
+    assert t2.terminal.kind == "confirm" and t2.repeat and t2.reply.startswith("Nothing further")
+    t3 = cp.turn(d, "ok", last_assistant=t2.reply)
+    assert t3.repeat
+    t4 = cp.turn(d, "QLM dropped again", last_assistant=t3.reply)
+    assert t4.terminal.kind == "refuse" and not t4.repeat and REASON_RECURRED in t4.terminal.reasons
+
+
+def test_no_news_turn_on_a_pending_caution_restates_it():
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [ParseOutput(fault_guess=QLM, fault_confidence=0.9, claimed_steps=list(ORDINARY),
+                     abnormality_found="no", was_reset_earlier_this_trip="no"), _blind()],
+        ["diff_completed_steps"] * 2))
+    t1 = cp.turn(d, "QLM locked, first time. all checks normal")
+    assert t1.terminal.kind == "caution"
+    t2 = cp.turn(d, "ok?", last_assistant=t1.reply)
+    assert t2.terminal.kind == "caution" and t2.repeat and "Nothing further" not in t2.reply
