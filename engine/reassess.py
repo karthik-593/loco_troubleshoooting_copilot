@@ -147,10 +147,14 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
             state.stuck_at = step.id
             return Decision("need_pilot_input", T.ask_branch(fault, branches), verdict, delta)
         state.stuck_at = step.id
+        # Put as the next action rather than asked when the pilot has said it is not done, or
+        # when they have JUST stated the branch condition that makes it due ("drops only in
+        # position 3" → isolate that TM): they are reporting the condition, not the action.
+        do_now = (step.id in state.steps_declined
+                  or bool(step.applies_when and set(step.applies_when) & state.facts_this_turn))
         return Decision(
             "need_pilot_input",
-            T.ask_step(fault, step, hold_action=hold, unrecognised=delta.unrecognised,
-                       do_now=step.id in state.steps_declined),       # "no, not done" → do it now
+            T.ask_step(fault, step, hold_action=hold, unrecognised=delta.unrecognised, do_now=do_now),
             verdict,
             delta,
         )

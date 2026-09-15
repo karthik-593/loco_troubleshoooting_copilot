@@ -71,6 +71,11 @@ class ParseOutput(BaseModel):
         default_factory=list,
         description="Things the pilot says they did that do not map to any checklist step "
                     "(short phrases, verbatim-ish).")
+    asks_for_detail: YesNoUnknown = Field(
+        default="unknown",
+        description="'yes' if the pilot asks for the exact component list / full detail the "
+                    "assistant just offered ('yes', 'give me the list', 'which components?', "
+                    "'full list'). 'unknown' otherwise.")
     denies_asked_step: YesNoUnknown = Field(
         default="unknown",
         description="'yes' if the assistant's last message asked whether a specific check was "

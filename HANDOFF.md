@@ -495,3 +495,31 @@ condition; a completed branch (e) did not end the checklist. All fixed determini
 
 Known model slip not caught by a generic guard: "breakers" rendered for "breathers" once on
 QLM (c). Candidate: a KB-declared equipment vocabulary check per step.
+
+## Post-M6: spoken-style phrase prompt (user-supplied, 2026-09-16)
+
+`llm/prompts/phrase.md` replaced with the user's prompt (colleague voice; long component lists
+summarised as symptom + subsystem tag + an OFFER of the exact list). Three one-line rules were
+added to it after live testing: alternatives in a branch question are kept; without `do_now`
+an ask_step is always a question; "do not reset" in confirm guidance is kept literally.
+
+Engine/guard support the prompt needs:
+- `long_list:` payload line (≥6 identifiers in the step's action clause) with the identifiers as
+  the sanctioned subsystem tags. Guard: a SHORT FORM is accepted only if it names the symptom,
+  keeps at least one payload identifier, and offers the list; otherwise the substance rule
+  applies. `ask_step_named_other_circuit:<id>` rejects the other truck's identifier (RSI-1 on an
+  RSI-2 step).
+- "Yes, give me the list": `ParseOutput.asks_for_detail` → `StateUpdate.wants_detail` → the graph
+  re-emits `DiagnosisState.last_terminal` with `verbatim=True`; `phrase()` renders KB text with
+  no model call (`stop_reason=detail`, no engine pass, no reflex). Only for a last `ask_step`.
+- A branch step whose condition was stated THIS turn (`DiagnosisState.facts_this_turn`) is
+  issued as `do_now` (the pilot reported the condition, not the action).
+- Out-of-scope guard checks every covered fault name is present, not the literal "I can verify".
+
+Model slips seen, not caught by a generic guard (recorded): "L-series reactors" for L4/L5/L6
+(line contactors); "breakers" for "breathers". A KB-declared per-step equipment vocabulary
+(identifier → canonical noun) would let the guard reject a wrong noun next to a right identifier.
+
+Open from the encoding plan (batch 1, Ch.6 remainder): fact-keyed reroute (`route_rules`),
+`rb` axis on the session bar, and reading Ch.11/13 for the HT-compartment / reverser-bit
+safety measures — awaiting the user's answers.

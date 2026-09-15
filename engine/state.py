@@ -57,10 +57,12 @@ class DiagnosisState:
     intended_action: Optional[str] = None          # pilot's next move, for the reflex
     stuck_at: Optional[str] = None
     steps_declined: set[str] = field(default_factory=set)    # pilot said "not done" when asked
+    facts_this_turn: set[str] = field(default_factory=set)   # history keys stated in the latest update
     tool_results: dict[str, Any] = field(default_factory=dict)  # idempotency / no-progress
     iter_count: int = 0                            # loop guard (§6)
     clarify_asked: int = 0                         # unresolved-fault turns so far (§5.6 backstop)
     last_terminal_sig: Optional[str] = None        # what the pilot was last told (repeat detection)
+    last_terminal: Optional[Any] = None            # the Terminal itself (re-rendered on "give me the list")
     # Session loco context ("session bar"): [leading] or [leading, trailing]. The fault is
     # attributed to locos[active_loco]. Kept alongside §10.1's ``config`` (which mirrors the
     # active loco's config for backward compatibility with BUILD_PLAN's state shape).
@@ -136,6 +138,9 @@ class StateUpdate:
     # The pilot says the check the assistant just asked about is NOT done (parser fast path;
     # the engine also treats a repeated ask on the same step as this).
     denies_asked_step: bool = False
+    # The pilot asks for the exact component list the short spoken form offered ("yes, the
+    # list", "which components?"). Not a state change: the last ask is re-rendered verbatim.
+    wants_detail: bool = False
 
     def brings_news(self, state: "DiagnosisState") -> bool:
         """Does this update change anything the engine acts on? False for "ok" / "anything
@@ -201,6 +206,7 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
         state.tool_results.pop("unrecognised_claims", None)
 
     incoming = dict(update.history)
+    state.facts_this_turn = set(incoming)
     # The reset the ENGINE instructed, now reported done, is `reset_performed_this_session`
     # — not "reset earlier this trip" (that means a reset BEFORE this occurrence). Seen live:
     # "reset done, resumed" was parsed as was_QLM_reset_earlier_this_trip=yes and refused as

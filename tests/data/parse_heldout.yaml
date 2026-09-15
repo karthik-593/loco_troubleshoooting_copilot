@@ -123,3 +123,16 @@
   last_assistant: "Have you isolated that traction motor and set your load to 5/6 of the maximum permissible?"
   fault: QRSI2_drops_on_run
   claimed: [isolate_tm_of_bad_hmcs2_position]
+# --- short spoken form: the pilot takes the offered list ---
+- text: "yes give me the list"
+  state_fault: QRSI2_drops_on_run
+  last_assistant: "Look for smoke, burning smell or any abnormality on the RSI-2 side and the truck-2 traction motors — want the exact component list?"
+  fault: QRSI2_drops_on_run
+  claimed: []
+  asks_for_detail: true
+- text: "which components?"
+  state_fault: QLM_dropped
+  last_assistant: "Look for red-hot arc chutes and any smoke or smell on the TFR side — want the exact component list?"
+  fault: QLM_dropped
+  claimed: []
+  asks_for_detail: true

@@ -170,3 +170,50 @@ def test_phrase_guard_rejects_an_ask_step_that_lost_the_equipment(kb):
     f = kb.get(Q2); t = T.ask_step(f, f.step(Q2_STEPS[3]))
     assert "ask_step_lost_substance" in guard(t, "Have you checked the equipment listed above for abnormality?")
     assert not guard(t, "If it is dropping frequently and the traction circuit-2 equipment is normal, have you tried HMCS-2 in positions 2, 3 and 4 one by one?")
+
+
+# ---------------------------------------------------------------------------
+# Spoken short form (phrase prompt 2026-09-16): long component lists are summarised and the
+# exact list is OFFERED; "yes, the list" re-renders the last ask verbatim with no model.
+# ---------------------------------------------------------------------------
+
+def test_detail_request_re_renders_the_last_ask_verbatim_without_engine_or_model():
+    d = DiagnosisState()
+    cp = _cp([ParseOutput(fault_guess=Q2, fault_confidence=0.9, fault_presenting="yes"),
+              ParseOutput(fault_guess=None, fault_confidence=0.0, asks_for_detail="yes")],
+             ["diff_completed_steps"] * 2)
+    t1 = cp.turn(d, "qrsi2 dropped")
+    t2 = cp.turn(d, "yes give me the list", last_assistant=t1.reply)
+    assert t2.stop_reason == "detail" and t2.terminal.verbatim and t2.terminal.step_id == t1.terminal.step_id
+    assert t2.reply.startswith("Next check:") and "RU5, RU6, QD-2 and SJ 4, 5, 6" in t2.reply
+    assert not t2.phrase_fallback and t2.tool_path == () and t2.reflex_runs == 0
+
+
+def test_branch_step_conditioned_this_turn_is_issued_as_do_now(kb):
+    d = DiagnosisState()
+    run_turn(d, StateUpdate(fault_id=Q2, claimed_steps=Q2_STEPS[:2], history={"traction2_abnormality_found": "no"}), kb)
+    t = run_turn(d, StateUpdate(history={"drops_frequently": "yes", "drops_after_long_interval": "no"}), kb)
+    assert t.terminal.step_id == Q2_STEPS[3] and t.terminal.do_now          # pilot just reported the condition
+    t = run_turn(d, StateUpdate(), kb)
+    assert t.terminal.step_id == Q2_STEPS[3] and not t.terminal.do_now      # next turn: back to verifying
+
+
+def test_phrase_short_form_is_accepted_and_other_truck_is_not(kb):
+    from llm.phrase import guard, terminal_payload
+    from engine import terminals as T
+    f = kb.get(Q2); t = T.ask_step(f, f.step(Q2_STEPS[0]))
+    assert "long_list: yes" in terminal_payload(t)
+    ok = "Look for smoke or burning smell on the RSI-2 side and the truck-2 traction motors — want the exact component list?"
+    assert guard(t, ok) == ()
+    assert "ask_step_lost_substance" in guard(t, "Have you checked the equipment for smoke?")          # no tag, no offer
+    assert any(v.startswith("ask_step_named_other_circuit:RSI-1") for v in guard(t, ok.replace("RSI-2", "RSI-1")))
+
+
+def test_out_of_scope_guard_checks_the_list_not_the_phrase(kb):
+    from llm.phrase import guard
+    from llm.parse import out_of_scope_reason
+    from engine import terminals as T
+    t = T.defer_to_TLC(out_of_scope_reason(kb))
+    names = "QLM dropped, QLM with QLA QOA, QLM with QOP QRSI, QRSI1 drops on run, QRSI2 drops on run, fire on loco, pantograph damaged, sanders not working"
+    assert guard(t, f"This one's outside the procedure set. You can verify {names}. Contact TLC.") == ()
+    assert "out_of_scope_dropped_coverage" in guard(t, "Outside the procedure set. I can verify QLM dropped and a few others. Contact TLC.")

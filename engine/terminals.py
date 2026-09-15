@@ -36,6 +36,8 @@ class Terminal:
     unrecognised_claims: tuple[str, ...] = field(default=())
     do_now: bool = False                # ask_step: the pilot has said this check is NOT done —
                                         # tell them to do it now, do not ask again
+    verbatim: bool = False              # render the KB text itself, no phrasing (pilot asked
+                                        # for the exact list after the short spoken form)
 
     @property
     def instructs_reset(self) -> bool:

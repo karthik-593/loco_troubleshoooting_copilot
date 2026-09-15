@@ -45,6 +45,23 @@ _STOP = {"everything", "whether", "otherwise", "further", "normal", "abnormality
          "anything", "before", "after", "through", "again", "should", "please", "maximum"}
 
 
+_TRUCK_SWAP = {"1": "2", "2": "1"}
+
+
+def _foreign_identifiers(t: Terminal, low: str) -> list[str]:
+    """Identifiers of the OTHER truck named in the reply (RSI-1 for an RSI-2 step): the phrase
+    prompt forbids naming a component from a different truck or circuit."""
+    own = set(_identifiers(t.message))
+    out = []
+    for i in own:
+        m = re.fullmatch(r"([A-Z]+-?)([12])", i)
+        if m:
+            other = f"{m.group(1)}{_TRUCK_SWAP[m.group(2)]}"
+            if other not in own and re.search(rf"(?<![\w-]){re.escape(other.lower())}(?![\w-])", low):
+                out.append(other)
+    return sorted(set(out))
+
+
 def _key_words_present(clause: str, low: str) -> bool:
     """A KB clause survives phrasing if its distinctive words (≥5 letters, or an identifier) do."""
     words = [w for w in re.findall(r"[A-Za-z][A-Za-z0-9-]+", clause) if len(w) >= 5 or w.isupper()]
@@ -74,6 +91,16 @@ def render_verbatim(t: Terminal) -> str:
 
 
 _IF_HEAD = re.compile(r"^\s*If\s+(.+?)[,;:]\s*(.+)$", re.IGNORECASE | re.DOTALL)
+_IDENT = re.compile(r"\b[A-Z][A-Z0-9]*(?:[-/][A-Z0-9]+)*\b")
+LONG_LIST = 6            # a check naming this many components may be spoken in short form
+_SYMPTOM = re.compile(r"\b(smoke|smell|abnormal\w*|fire|heat|hot|temperature|leak\w*|damage\w*)\b", re.I)
+_OFFER = re.compile(r"\b(list|detail|components?|items?)\b[^.?!]*\?", re.I)
+
+
+def _identifiers(text: str) -> list[str]:
+    """Equipment identifiers in a KB step's ACTION clause, in order, deduplicated."""
+    action = re.sub(r"^\s*If\s.+?[,;:]", "", text, count=1, flags=re.IGNORECASE | re.DOTALL)
+    return list(dict.fromkeys(m for m in _IDENT.findall(action) if len(m) >= 2))
 
 
 def terminal_payload(t: Terminal) -> str:
@@ -89,6 +116,10 @@ def terminal_payload(t: Terminal) -> str:
         lines.append(f"content: {t.message}")
     if t.guidance:
         lines.append(f"guidance: {' '.join(t.guidance)}")
+    if t.kind == "ask_step":
+        ids = _identifiers(t.message)
+        if len(ids) >= LONG_LIST:
+            lines.append(f"long_list: yes — {len(ids)} components; subsystem tags: {', '.join(ids)}")
     if t.kind == "ask_step" and t.do_now:
         lines.append("do_now: the pilot has said this check is NOT done. Tell them to do it now and "
                      "report what they find. Do NOT ask whether they have done it.")
@@ -181,12 +212,21 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         # motor, permissible...). Seen live: an action rendered as a question about its own
         # "If ..." condition, and "the equipment listed above" for a full checklist.
         action = re.sub(r"^\s*If\s.+?[,;:]", "", t.message, count=1, flags=re.IGNORECASE | re.DOTALL)
-        idents = {m for m in re.findall(r"\b[A-Z][A-Z0-9]*(?:[-/][A-Z0-9]+)*\b", action) if len(m) >= 2}
+        idents = set(_identifiers(t.message))
         words = {w.lower() for w in re.findall(r"[A-Za-z][A-Za-z-]{5,}", action)} - _STOP
         lost_i = [i for i in idents if i.lower() not in low]
         lost_w = [w for w in words if w not in low]
-        if (idents and len(lost_i) / len(idents) > 0.34) or (words and len(lost_w) / len(words) > 0.5):
+        # Sanctioned SHORT FORM for a long component list (phrase prompt): the symptom, at
+        # least one of the payload's own identifiers as the subsystem tag, and an offer of the
+        # exact list. Anything else must keep the substance.
+        short_form = (len(idents) >= LONG_LIST and len(lost_i) < len(idents)
+                      and _SYMPTOM.search(low) and _OFFER.search(s))
+        if not short_form and ((idents and len(lost_i) / len(idents) > 0.34)
+                               or (words and len(lost_w) / len(words) > 0.5)):
             v.append("ask_step_lost_substance")           # a paraphrase keeps most; a substitution loses most
+        foreign = _foreign_identifiers(t, low)
+        if foreign:
+            v.append("ask_step_named_other_circuit:" + ",".join(foreign))
     if t.kind == "ask_step" and t.do_now:
         if re.search(r"\bhave you\b|\bdid you\b|\bhas .* been\b", low):
             v.append("do_now_asked_again")               # they said no; do not ask again
@@ -219,8 +259,10 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
     elif t.kind == "defer_to_TLC":
         if "tlc" not in low:
             v.append("defer_missing_TLC")
-        if "procedure set" in t.message and "i can verify" not in low:
-            v.append("out_of_scope_dropped_coverage")     # §5.6: the list of covered faults must survive
+        if "procedure set" in t.message and "verify:" in t.message:
+            names = [n.strip().lower() for n in t.message.split("verify:")[1].split(".")[0].split(",")]
+            if any(n and n not in low for n in names):
+                v.append("out_of_scope_dropped_coverage")     # §5.6: every covered fault must be named
     return tuple(v)
 
 
@@ -242,6 +284,8 @@ def phrase(t: Terminal, provider: LLMProvider, repeat: bool = False) -> PhraseRe
     """``repeat``: the pilot gave no new information and this is the same terminal as last
     turn. A confirm is then rendered from the engine's "nothing further" sentence; a pending
     question / caution / refusal is simply restated (it is still pending)."""
+    if t.verbatim:
+        return PhraseResult(render_verbatim(t), False, ())        # the pilot asked for the KB text itself
     system = PROMPT_PATH.read_text(encoding="utf-8")
     repeat = repeat and t.kind == "confirm"
     if repeat:

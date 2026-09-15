@@ -100,6 +100,12 @@ class Copilot:
             diag.clarify_asked += 1                 # backstop: the next unresolved turn defers
             return {"update": None, "terminal": T.clarify(r.clarification or ""), "stop_reason": "clarify"}
         diag.clarify_asked = 0
+        last = diag.last_terminal
+        if (r.update is not None and r.update.wants_detail and not r.update.brings_news(diag)
+                and last is not None and last.kind == "ask_step"):
+            # The spoken form offered the exact list and the pilot took it: same terminal, KB
+            # text verbatim, no model and no engine pass (nothing about the loco changed).
+            return {"update": None, "terminal": replace(last, verbatim=True), "stop_reason": "detail"}
         return {"update": r.update, "news": r.update is not None and r.update.brings_news(diag)}
 
     def update_state_node(self, s: GraphState) -> GraphState:
@@ -216,6 +222,7 @@ class Copilot:
             diag.steps_declined.add(t.step_id)
             t = replace(t, do_now=True)
         diag.last_terminal_sig = sig
+        diag.last_terminal = t
         r = phrase(t, self.providers.phrase, repeat=repeat)
         return {"reply": r.text, "phrase_fallback": r.used_fallback, "last_assistant": r.text, "repeat": repeat,
                 "terminal": t}
