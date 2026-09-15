@@ -9,8 +9,15 @@ Verdicts: NO_FIRE (normal flow continues) | ASK | CAUTION | REFUSE.
 Reset-limit gate — precedence, each rule grounded in TSD §6.1.1 (Rev-2 2019, p.83–84).
 Reviewed and agreed 2026-09-14 (fixes A–D to the HANDOFF proposal):
 
-  1. history[was_QLM_reset_earlier_this_trip] == yes  → REFUSE  §6.1.1(f) "QLM acts second time"
-  2. abnormality == yes on any ordinary step         → REFUSE  §6.1.1(c)(f) "any abnormality"
+  1. §6.1.1(f)(ii) "QLM acts second time" — TWO triggers, same verdict, distinct reasons:
+       history[was_QLM_reset_earlier_this_trip] == yes → REFUSE (second_reset: pilot states
+         a prior reset this trip);
+       history[fault_recurred] == yes                  → REFUSE (recurred_after_reset: the
+         relay re-locked after the first reset performed/instructed in this session — set
+         by the ENGINE backstop in update_state, parser flag is a fast path only).
+  2. abnormality == yes on any ordinary step         → REFUSE  §6.1.1(f)(i) "any abnormality";
+     a step's own ``on_abnormality`` text (e.g. (c)'s fire extinguisher + relief engine)
+     attaches only when its ``finding_key`` fact is 'yes' (or it declares no finding_key).
      Rules 1–2 fire on the fact alone — regardless of stated intent or check completion
      (fix A; BUILD_PLAN §12.1 gold scenario states no intent). If both hold, the REFUSE
      carries BOTH reasons so the fire-precaution guidance is never dropped (fix B).
@@ -44,11 +51,17 @@ from typing import Callable, Optional
 
 from engine.state import (
     HF_ABNORMALITY,
+    HF_RECURRED,
     HF_RESET_EARLIER,
     DiagnosisState,
     checks_complete,
 )
-from engine.terminals import REASON_ABNORMALITY, REASON_NOT_ISOLATED, REASON_SECOND_RESET
+from engine.terminals import (
+    REASON_ABNORMALITY,
+    REASON_NOT_ISOLATED,
+    REASON_RECURRED,
+    REASON_SECOND_RESET,
+)
 from kb.schema import GATE_TYPES, Fault, Step
 
 
@@ -97,6 +110,11 @@ def _render_action(text: str) -> str:
     return " ".join(p[0].upper() + p[1:] + ("" if p.endswith(".") else ".") for p in parts)
 
 
+def _relay_name(fault: Fault) -> str:
+    """The relay the reset gate protects, from the fault_id (QLM_dropped → 'QLM')."""
+    return fault.fault_id.split("_", 1)[0]
+
+
 def _reset_in_play(state: DiagnosisState, fault: Fault, step: Step) -> bool:
     return step.id in state.steps_claimed_done or checks_complete(state, fault)
 
@@ -124,7 +142,8 @@ def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> Gat
             if REASON_ABNORMALITY not in reasons:
                 reasons.append(REASON_ABNORMALITY)
                 parts.append(_render_action(fault.terminal_actions.get("abnormality_found", "")))
-            if s.on_abnormality:
+            # step-specific inline consequence only for THIS step's finding (§6.1.1(c))
+            if s.on_abnormality and (s.finding_key is None or state.history(s.finding_key) == "yes"):
                 parts.append(s.on_abnormality)
             continue
         iso = state.history(s.isolation.needs_history)
@@ -137,9 +156,17 @@ def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> Gat
         else:
             isolation_pending = s
 
+    # Rule 1 — (f)(ii), both triggers. Recurrence gets an engine framing sentence so the
+    # phrased reply can reflect the real situation; the verdict text itself is (f)'s.
+    recurred = state.history(gate.recurrence_history or HF_RECURRED)
+    if recurred == "yes":
+        reasons.insert(0, REASON_RECURRED)
+        parts.insert(0, f"{_relay_name(fault)} has acted a second time, after the first reset. "
+                        f"{gate.on_already_reset}")
     if reset_earlier == "yes":
         reasons.insert(0, REASON_SECOND_RESET)
-        parts.insert(0, gate.on_already_reset)
+        if recurred != "yes":
+            parts.insert(0, gate.on_already_reset)
 
     # Rules 1–2 (+2b not-isolated): REFUSE on fact, regardless of intent / check completion.
     if reasons:
@@ -147,7 +174,7 @@ def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> Gat
             outcome=Outcome.REFUSE,
             gate_type=gate.type,
             step_id=step.id,
-            rule="1" if reasons[0] == REASON_SECOND_RESET else "2",
+            rule="1" if reasons[0] in (REASON_SECOND_RESET, REASON_RECURRED) else "2",
             reasons=tuple(reasons),
             message=" ".join(p for p in parts if p),
             source=gate.source,

@@ -23,6 +23,15 @@ class ParseOutput(BaseModel):
     confirms_fault: YesNoUnknown = Field(
         default="unknown",
         description="If the assistant just asked 'is it fault X?', the pilot's answer.")
+    fault_presenting: YesNoUnknown = Field(
+        default="unknown",
+        description="Does THIS message report the relay/fault acting NOW (dropped, locked, "
+                    "tripped, acted, target down, red) — as opposed to merely referring to it "
+                    "or reporting on checks? 'yes' only for a present-tense report of the fault.")
+    fault_recurred: YesNoUnknown = Field(
+        default="unknown",
+        description="'yes' if the pilot says the relay/fault has acted AGAIN after a reset "
+                    "(again, once more, re-locked, second time, tripped after reset).")
     claimed_steps: list[str] = Field(
         default_factory=list,
         description="step ids from the provided checklist the pilot says they have DONE.")

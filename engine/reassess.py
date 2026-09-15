@@ -26,7 +26,7 @@ from typing import Any, Literal, Optional
 from engine import terminals as T
 from engine.diff import StepDelta, diff_steps
 from engine.gates import GateVerdict, Outcome, evaluate_gates
-from engine.state import ACTION_RESET_QLM, HF_RESOLVED, DiagnosisState
+from engine.state import ACTION_RESET_QLM, HF_RESET_INSTRUCTED, HF_RESOLVED, DiagnosisState
 from kb.schema import Fault
 
 # ---------------------------------------------------------------------------
@@ -80,6 +80,10 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     verdict = evaluate_gates(state, fault)
     if verdict.fired:
         assert fault is not None
+        if verdict.outcome is Outcome.CAUTION and verdict.gate_type == "reset_limit":
+            # The engine has told the pilot to reset: from now on a re-presentation of the
+            # fault is a recurrence (§6.1.1(f)(ii)) — see update_state's backstop.
+            state.history_facts[HF_RESET_INSTRUCTED] = "yes"
         return Decision("gate_terminal", _gate_terminal(fault, verdict), verdict, None)
 
     # 2. nothing matched → never guess.

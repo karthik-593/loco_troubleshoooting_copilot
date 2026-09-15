@@ -21,7 +21,10 @@ from typing import Optional
 from engine.matcher import KnowledgeBase
 from engine.state import (
     HF_ABNORMALITY,
+    HF_RECURRED,
     HF_RESET_EARLIER,
+    HF_RESET_INSTRUCTED,
+    HF_RESET_PERFORMED,
     HF_RESOLVED,
     DiagnosisState,
     StateUpdate,
@@ -93,6 +96,8 @@ _FACT_HINTS = {
     "traction_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in the TRACTION power circuit equipment",
     "aux_abnormality_found": "abnormality found in the AUXILIARY power circuit equipment",
     "isolation_successful": "the pilot tried to isolate the abnormal equipment: 'yes' if isolation succeeded, 'no' if it could not be isolated",
+    "arc_chute_terminal_abnormality": "the abnormality (smell/smoke/fire/red-hot/oil leak) was found in the arc chutes, RGR/RPGR, TFR terminals, bushings, HT cable, breathers, drain plug or oil trap box",
+    "fault_recurred": "(use the top-level fault_recurred field instead)",
 }
 
 
@@ -109,6 +114,10 @@ def user_prompt(text: str, state: DiagnosisState, last_assistant: Optional[str])
         ctx.append(f"Steps already claimed: {sorted(state.steps_claimed_done)}")
     if last_assistant:
         ctx.append(f"Assistant's last message: {last_assistant}")
+    if state.history(HF_RESET_PERFORMED) == "yes" or state.history(HF_RESET_INSTRUCTED) == "yes":
+        ctx.append("Context: a first reset of this relay has already been performed or instructed in "
+                   "this session. If the pilot now reports the relay has acted / dropped / locked "
+                   "again, set fault_recurred = yes and fault_presenting = yes.")
     ctx.append(f"Pilot's message: {text}")
     return "\n".join(ctx)
 
@@ -138,6 +147,18 @@ def _validate(out: ParseOutput, fault_id: Optional[str], kb: KnowledgeBase
     return tuple(accepted), tuple(rejected)
 
 
+def same_family(kb: KnowledgeBase, a: Optional[str], b: Optional[str]) -> bool:
+    """Same relay family: identical, or one is a combination-rule reroute target of the other
+    (QLM_dropped ↔ QLM_with_QOP_QRSI). A re-presentation of QLM after a reroute is a
+    recurrence of the RESOLVED fault, not a new QLM_dropped."""
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    routes = lambda f: {r.route_to for r in kb.get(f).combination_rules} if f in kb.fault_ids else set()
+    return b in routes(a) or a in routes(b)
+
+
 def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LLMProvider,
                last_assistant: Optional[str] = None) -> ParseResult:
     # 1. deterministic alias match — no model needed for the fault.
@@ -148,6 +169,8 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
     # 2. resolve the fault: alias > current state > model guess (validated).
     if alias_hit is not None:
         fault_id, confirmed, confidence = alias_hit.fault_id, True, 1.0
+        if same_family(kb, alias_hit.fault_id, state.matched_fault):
+            fault_id = state.matched_fault          # keep the resolved (rerouted) identity
     elif state.matched_fault:
         fault_id, confirmed, confidence = state.matched_fault, None, 1.0
         if out.confirms_fault == "yes":
@@ -176,10 +199,20 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         history[HF_OTHER_RELAYS] = [r.upper() for r in out.other_relays_acted]
     if _yn(out.fault_resolved):
         history[HF_RESOLVED] = out.fault_resolved
+    if out.fault_recurred == "yes":                 # parser fast path; the engine backstop is primary
+        history[HF_RECURRED] = "yes"
     allowed = {k for fid in kb.fault_ids for k in kb.get(fid).history_keys}
     for k, v in out.facts.items():
         if k in allowed and _yn(v):            # KB-declared keys only; unknown keys dropped
             history[k] = v
+
+    # Does this message PRESENT the fault (relay acted now)? Deterministic on an alias hit —
+    # every alias is a presenting-sign phrase — else a confident model guess that says so.
+    presenting = alias_hit is not None or (
+        out.fault_presenting == "yes"
+        and out.fault_confidence >= CLARIFY_THRESHOLD
+        and same_family(kb, out.fault_guess, fault_id)
+    )
 
     update = StateUpdate(
         fault_id=fault_id if fault_id != state.matched_fault else None,
@@ -187,5 +220,6 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         claimed_steps=accepted + rejected,   # rejected ones are surfaced by update_state/diff
         history=history,
         intended_action=out.intended_action,
+        fault_presenting=presenting,
     )
     return ParseResult(update, confidence, False, None, out, rejected_steps=rejected + tuple(out.unmapped_claims))

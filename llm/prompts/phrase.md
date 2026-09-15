@@ -15,6 +15,10 @@ Output kinds you will be given:
 - caution       → give the permitted action and its conditions, all of them. If marked
                   conditional, keep the "if no abnormality" condition explicit.
 - refuse        → state clearly what must NOT be done and the actions to take instead.
+                  Frame it by the reason given: "recurred_after_reset" means the relay
+                  tripped again after the first reset, so say so — the fault is real, do not
+                  reset again, get relief; "second_reset" means it was already reset once
+                  earlier this trip — say that instead. Same actions either way.
 - confirm_fault → ask the one-line confirmation given.
 - clarify       → ask the clarification given.
 - defer_to_TLC  → say it is outside the procedure set and to contact TLC.

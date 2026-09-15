@@ -21,6 +21,11 @@ HF_RESET_EARLIER = "was_QLM_reset_earlier_this_trip"
 HF_ABNORMALITY = "abnormality_found"          # fault-wide default abnormality verdict
 HF_RESOLVED = "fault_resolved"                 # pilot reports the fault cleared (gate-free faults)
 HF_OTHER_RELAYS = "other_relays_acted"         # list of other relay targets the pilot reported
+# Recurrence — §6.1.1(f)(ii) "QLM acts second time". Set by the ENGINE (update_state backstop)
+# and, as a fast path only, by the parser.
+HF_RECURRED = "fault_recurred"                 # the relay acted again after the first reset
+HF_RESET_PERFORMED = "reset_performed_this_session"   # pilot claimed the gated reset step done
+HF_RESET_INSTRUCTED = "reset_instructed_this_session" # engine emitted the first-reset caution
 
 # Intended-action vocabulary (structured; the M2 parser maps free text onto these).
 ACTION_RESET_QLM = "reset_QLM"
@@ -74,6 +79,10 @@ class StateUpdate:
     history: dict[str, Any] = field(default_factory=dict)
     intended_action: Optional[str] = None
     clear_intended_action: bool = False
+    # This message PRESENTS the fault (relay dropped / locked / acted) — as opposed to
+    # merely referring to it. Set deterministically by parse on an alias hit, or on a
+    # confident model guess that says the fault is presenting. Drives the recurrence backstop.
+    fault_presenting: bool = False
 
 
 def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fault]) -> DiagnosisState:
@@ -85,7 +94,15 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
       accepted). Unrecognised claims are kept aside in ``tool_results['unrecognised_claims']``
       so the diff can report them.
     * ``intended_action`` persists across turns until explicitly cleared or replaced.
+    * **Recurrence backstop (§6.1.1(f)(ii)) — the PRIMARY mechanism, independent of the
+      parser:** if a reset was already performed or instructed in this session *before*
+      this update, and this message presents the fault again, the engine itself records
+      ``fault_recurred = yes``. Biased to over-refuse: a false positive costs a section;
+      a false negative would let a real fault be reset again.
     """
+    prior_reset = (str(state.history_facts.get(HF_RESET_PERFORMED, "")).lower() == "yes"
+                   or str(state.history_facts.get(HF_RESET_INSTRUCTED, "")).lower() == "yes")
+
     if update.fault_id is not None:
         if update.fault_id != state.matched_fault:
             state.fault_confirmed = False
@@ -108,6 +125,15 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
         state.tool_results.pop("unrecognised_claims", None)
 
     state.history_facts.update(update.history)
+
+    # gated reset step claimed → a reset has been performed this session
+    if fault is not None and any(s.gate and s.gate.type == "reset_limit" and s.id in state.steps_claimed_done
+                                 for s in fault.steps):
+        state.history_facts[HF_RESET_PERFORMED] = "yes"
+
+    # engine backstop: reset already done/instructed before this turn + fault presents again
+    if prior_reset and update.fault_presenting:
+        state.history_facts[HF_RECURRED] = "yes"
 
     if update.clear_intended_action:
         state.intended_action = None

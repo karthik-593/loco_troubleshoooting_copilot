@@ -47,7 +47,8 @@ steps:
       leakage from breathers, transformer drain plug and oil trap box for any
       abnormality (smell, smoke, fire).
     gate: null
-    on_abnormality: "Use fire extinguisher; ask for relief engine."   # §6.1.1(c)
+    on_abnormality: "Use fire extinguisher; ask for relief engine."   # §6.1.1(c) — (c)'s own consequence
+    finding_key: arc_chute_terminal_abnormality
     source: "§6.1.2(a) → §6.1.1(c), p84"
 
   # §6.1.2(b): traction power circuit — its abnormality has a DIFFERENT consequence from
@@ -75,9 +76,11 @@ steps:
     gate:
       type: reset_limit
       rule: >-
-        If QLM acts a second time along with other relays or alone, DO NOT reset
-        the relay targets — even though there is no abnormality.
+        If QLM acts a second time along with other relays or alone — it re-locks
+        after the first reset, or was already reset earlier this trip — DO NOT reset
+        the relay targets, even though there is no abnormality.
       needs_history: "was_QLM_reset_earlier_this_trip"
+      recurrence_history: "fault_recurred"     # §6.1.2(d): "second time" = prior reset OR re-lock after first reset
       on_first_reset: >-
         Reset the QLM and the other relay targets and resume traction (reset each
         relay target clockwise or as per the arrow mark on the resetting knob).

@@ -39,9 +39,10 @@ class Gate(_Strict):
     rule: str
     source: str = Field(min_length=1)
     # reset_limit fields (BUILD_PLAN §9)
-    needs_history: Optional[str] = None
+    needs_history: Optional[str] = None          # prior reset stated by the pilot — (f)(ii) via history
+    recurrence_history: Optional[str] = None     # relay acted AGAIN after the first reset — (f)(ii) recurrence
     on_first_reset: Optional[str] = None
-    on_already_reset: Optional[str] = None
+    on_already_reset: Optional[str] = None       # (f) text; covers both (f)(ii) triggers
 
     @model_validator(mode="after")
     def _reset_limit_fields(self) -> "Gate":
@@ -72,6 +73,11 @@ class Step(_Strict):
     # Default (None) = the fault-wide "abnormality_found". A step may name its own key when
     # the TSD gives its abnormality a different consequence (e.g. isolate-then-reset).
     abnormality_key: Optional[str] = Field(default=None, pattern=r"^[a-z][a-z0-9_]*$")
+    # Fact that says the abnormality was found in THIS step's equipment. When set, this
+    # step's ``on_abnormality`` text attaches only if that fact is 'yes' — the refuse
+    # TRIGGER stays the fault-wide abnormality fact. (§6.1.1(c)'s inline "use fire
+    # extinguisher and ask for Relief Engine" is tied to (c)'s findings only.)
+    finding_key: Optional[str] = Field(default=None, pattern=r"^[a-z][a-z0-9_]*$")
     isolation: Optional[Isolation] = None
     # TSD section this step is taken from. A gated step may carry its citation on the
     # gate instead (that is how the locked qlm_dropped.yaml encodes reset_decision).
@@ -145,10 +151,14 @@ class Fault(_Strict):
         for s in self.steps:
             if s.abnormality_key:
                 keys.append(s.abnormality_key)
+            if s.finding_key:
+                keys.append(s.finding_key)
             if s.isolation:
                 keys.append(s.isolation.needs_history)
             if s.gate and s.gate.needs_history:
                 keys.append(s.gate.needs_history)
+            if s.gate and s.gate.recurrence_history:
+                keys.append(s.gate.recurrence_history)
         return list(dict.fromkeys(keys))
 
     def step(self, step_id: str) -> Step:

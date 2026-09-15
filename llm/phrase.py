@@ -13,7 +13,16 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from engine.terminals import REASON_NOT_ISOLATED, Terminal
+from engine.terminals import REASON_NOT_ISOLATED, REASON_RECURRED, REASON_SECOND_RESET, Terminal
+
+# How each refusal reason is to be framed (the verdict text is the KB's; only the framing differs).
+_REASON_FRAMING = {
+    REASON_SECOND_RESET: "the pilot states the relay was already reset once earlier this trip",
+    REASON_RECURRED: "the relay re-tripped after the first reset — the fault is real; do not reset "
+                     "again; get relief",
+    "abnormality_found": "an abnormality was found in the checks",
+    REASON_NOT_ISOLATED: "the abnormal equipment could not be isolated",
+}
 from llm.interface import LLMProvider
 
 PROMPT_PATH = Path(__file__).with_name("prompts") / "phrase.md"
@@ -61,7 +70,7 @@ def terminal_payload(t: Terminal) -> str:
     if t.conditional:
         lines.append("conditional: yes — applies only if no abnormality was found")
     if t.reasons:
-        lines.append(f"reasons: {', '.join(t.reasons)}")
+        lines.append("reasons: " + "; ".join(f"{r} ({_REASON_FRAMING.get(r, r)})" for r in t.reasons))
     if t.unrecognised_claims:
         lines.append(f"unrecognised_claims (mention briefly that these are not in the procedure): "
                      f"{', '.join(t.unrecognised_claims)}")
@@ -74,6 +83,14 @@ def terminal_payload(t: Terminal) -> str:
 
 _NEGATION = re.compile(r"\b(not|don'?t|never|no|neither|nor|without)\b", re.I)
 _RESET = re.compile(r"\bre-?set", re.I)
+# "reset" referring to a reset ALREADY MADE — as a noun ("after your reset", "the first
+# reset") or a past-tense verb with a subject ("after you reset it", "it was reset") — is
+# not an instruction. Stripped before the instruction check.
+_RESET_AS_EVENT = re.compile(
+    r"\b(after|following|since|before|post|the|your|that|this|a|first|earlier|previous|last|second)"
+    r"(\s+(first|last|earlier|previous|second|initial))?\s+re-?set(s|ting)?\b"
+    r"|\b(you|we|i|they|he|she|pilot|it|was|were|been|already|having|have|had)"
+    r"(\s+(have|had|already|just|then))?\s+re-?set\b", re.I)
 
 
 def _sentences(text: str) -> list[str]:
@@ -81,8 +98,14 @@ def _sentences(text: str) -> list[str]:
 
 
 def _unnegated_reset_sentences(text: str) -> list[str]:
-    """Sentences that mention a reset without any negation — i.e. read as an instruction."""
-    return [p for p in _sentences(text) if _RESET.search(p) and not _NEGATION.search(p)]
+    """Sentences that read as a reset INSTRUCTION: a reset verb with no negation, after
+    discounting noun uses that merely refer to a reset already made."""
+    out = []
+    for p in _sentences(text):
+        stripped = _RESET_AS_EVENT.sub(" ", p)
+        if _RESET.search(stripped) and not _NEGATION.search(p):
+            out.append(p)
+    return out
 
 
 def guard(t: Terminal, text: str) -> tuple[str, ...]:
@@ -110,6 +133,14 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
             v.append("refusal_missing_relief")
         if "fire extinguisher" in t.message.lower() and "extinguisher" not in low:
             v.append("refusal_missing_fire_precaution")
+        # (f)(ii) framing must reflect the actual situation (engine-decided reason)
+        if REASON_RECURRED in t.reasons and not re.search(
+                r"\b(re-?trip\w*|re-?lock\w*|recur\w*|second time|twice|once now|(acted|tripped|dropped|locked) again"
+                r"|after (the|your|that) reset|after you reset)\b", low):
+            v.append("refusal_recurrence_framing_missing")
+        if REASON_SECOND_RESET in t.reasons and REASON_RECURRED not in t.reasons and not re.search(
+                r"\b(already|earlier|once|second time|twice|again)\b", low):
+            v.append("refusal_prior_reset_framing_missing")
     elif t.kind == "caution":
         for key, needle in (("once", "once"), ("interval", "10 min"), ("TLC", "tlc"), ("log", "log")):
             if needle in t.message.lower() and needle not in low:

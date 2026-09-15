@@ -89,12 +89,24 @@ def test_second_reset_refused_after_the_fact(qlm):
 # ---------------------------------------------------------------------------
 
 def test_abnormality_refused_without_intent(qlm):
+    """(a)/(b) finding → generic (f)(i): do not reset, log, TLC, relief loco — and NOT (c)'s
+    extinguisher text, which is tied to (c)'s own findings."""
     s = _state(qlm, claimed=ORDINARY[:1], history={HF_ABNORMALITY: "yes"})
     v = evaluate_gates(s, qlm)
     assert v.outcome is Outcome.REFUSE and v.rule == "2"
     assert v.reasons == (REASON_ABNORMALITY,)
-    assert "fire extinguisher" in v.message.lower()
-    assert "relief" in v.message.lower()
+    assert "do not reset" in v.message.lower() and "relief loco" in v.message.lower()
+    assert "tlc" in v.message.lower() and "log" in v.message.lower()
+    assert "fire extinguisher" not in v.message.lower()
+
+
+def test_arc_chute_finding_adds_c_inline_consequence(qlm):
+    """(c) finding → generic (f)(i) PLUS (c)'s 'use fire extinguisher; ask for relief engine'."""
+    s = _state(qlm, claimed=ORDINARY, history={HF_ABNORMALITY: "yes", "arc_chute_terminal_abnormality": "yes"})
+    v = evaluate_gates(s, qlm)
+    assert v.outcome is Outcome.REFUSE and v.reasons == (REASON_ABNORMALITY,)
+    assert "fire extinguisher" in v.message.lower() and "relief engine" in v.message.lower()
+    assert "do not reset" in v.message.lower()
 
 
 def test_abnormality_refused_with_intent_and_history_no(qlm):
@@ -106,7 +118,8 @@ def test_abnormality_refused_with_intent_and_history_no(qlm):
 def test_both_reasons_are_kept(qlm):
     """Fix B: second reset AND abnormality → one REFUSE carrying both, and the
     fire-precaution text is not dropped."""
-    s = _state(qlm, claimed=ORDINARY, history={HF_ABNORMALITY: "yes", HF_RESET_EARLIER: "yes"})
+    s = _state(qlm, claimed=ORDINARY, history={HF_ABNORMALITY: "yes", HF_RESET_EARLIER: "yes",
+                                               "arc_chute_terminal_abnormality": "yes"})
     v = evaluate_gates(s, qlm)
     assert v.outcome is Outcome.REFUSE
     assert set(v.reasons) == {REASON_SECOND_RESET, REASON_ABNORMALITY}

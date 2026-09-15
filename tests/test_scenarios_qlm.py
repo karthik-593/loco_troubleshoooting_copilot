@@ -128,7 +128,8 @@ def test_abnormality_found_refuses_regardless_of_progress(kb):
                                     history={HF_ABNORMALITY: "yes"}), kb)
     assert t.short_circuit and t.terminal.kind == "refuse"
     assert t.terminal.reasons == (REASON_ABNORMALITY,)
-    assert "fire extinguisher" in t.terminal.message.lower()
+    assert "relief loco" in t.terminal.message.lower()             # (f)(i) generic for an (a) finding
+    assert "fire extinguisher" not in t.terminal.message.lower()    # (c)'s text stays on (c)
     assert not t.terminal.instructs_reset
 
 

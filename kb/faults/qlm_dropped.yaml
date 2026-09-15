@@ -50,26 +50,38 @@ steps:                             # §6.1.1 "QLM alone acted with locked indica
       leakage from breathers, transformer drain plug and oil trap box for any
       abnormality (smell, smoke, fire).
     gate: null
+    # (c)'s OWN inline consequence — attaches only when the finding is in (c)'s equipment
+    # (finding_key). (a)/(b) findings fall to the generic (f)(i) terminal: the TSD gives
+    # (a) and (b) no inline action of their own.  [verified against §6.1.1 text, 2026-09-15]
     on_abnormality: "Use fire extinguisher; ask for relief engine."   # §6.1.1(c)
+    finding_key: arc_chute_terminal_abnormality
     source: "§6.1.1(c), p84"
 
   - id: reset_decision
     text: "If no abnormality is found in the above checks, reset QLM."
     gate:
       type: reset_limit
-      rule: "QLM may be reset only ONCE. A second reset is not permitted."
+      # §6.1.1(f) has TWO refuse triggers with one consequence:
+      #   (i)  any abnormality in checks (a)/(b)/(c)            → handled via abnormality_found
+      #   (ii) "QLM acts second time"                          → EITHER the pilot states a prior
+      #        reset this trip (needs_history) OR QLM re-locks after the first reset performed /
+      #        instructed in this session (recurrence_history; set by the engine backstop).
+      rule: >-
+        QLM may be reset only once. If QLM acts a second time — it re-locks after the
+        first reset, or was already reset earlier this trip — DO NOT reset the target.
       needs_history: "was_QLM_reset_earlier_this_trip"
+      recurrence_history: "fault_recurred"
       on_first_reset: >-
         Reset QLM once and resume traction, checking feeding-power-circuit items
         every 10 minutes. Make a remark in the loco log book and inform TLC.
       on_already_reset: >-
         DO NOT reset the relay target a second time. Make a clear remark in the
         loco log book, inform TLC, and ask for a relief loco.
-      source: "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f) second reset forbidden, p84"
+      source: "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
 
 terminal_actions:
   no_abnormality:    "reset_once_and_monitor"                         # §6.1.1(d)(e)
-  abnormality_found: "do_not_reset; fire precautions (extinguisher) if fire; log; inform TLC; relief loco"  # §6.1.1(c)(f)
+  abnormality_found: "do_not_reset; log; inform TLC; relief loco"    # §6.1.1(f)(i) — generic; (c)'s extinguisher text is on the step
 
 # Reset direction note (§6.1.2 note, p85): reset the relay target clockwise, or per
 # the arrow mark on the resetting knob.  (guidance, not a gate)

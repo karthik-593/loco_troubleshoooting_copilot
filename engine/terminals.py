@@ -13,8 +13,9 @@ TerminalKind = Literal["confirm", "ask_step", "ask_history", "caution", "refuse"
                        "confirm_fault", "clarify"]
 
 # Refuse reasons (engine vocabulary; fix B in the gate review).
-REASON_SECOND_RESET = "second_reset"
-REASON_ABNORMALITY = "abnormality_found"
+REASON_SECOND_RESET = "second_reset"               # (f)(ii): pilot states a prior reset this trip
+REASON_RECURRED = "recurred_after_reset"           # (f)(ii): relay acted again after the first reset
+REASON_ABNORMALITY = "abnormality_found"           # (f)(i)
 REASON_NOT_ISOLATED = "abnormality_not_isolated"   # M4: isolate-then-reset step, isolation failed
 
 
