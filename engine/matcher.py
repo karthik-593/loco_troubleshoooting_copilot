@@ -18,7 +18,7 @@ __all__ = ["Fault", "KnowledgeBase", "load_kb", "match_alias", "match_free_text"
 
 def _norm(text: str) -> str:
     """Normalise for alias comparison: lower-case, collapse whitespace, strip punctuation."""
-    text = text.lower().strip()
+    text = text.lower().strip().replace("_", " ")   # fault_id "QLM_dropped" ≡ "QLM dropped"
     text = re.sub(r"[^\w\s/-]", " ", text)
     return re.sub(r"\s+", " ", text).strip()
 

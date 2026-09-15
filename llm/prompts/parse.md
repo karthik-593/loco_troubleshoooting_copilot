@@ -14,7 +14,11 @@ Rules
   clearly the message points to that fault; a bare mention of DJ tripping with no relay
   named is low confidence.
 - claimed_steps: include a step id only if the pilot says they DID that check. Intending
-  to do it, or asking about it, is not a claim.
+  to do it, or asking about it, is not a claim. A claim to have checked a piece of
+  equipment counts for the step that inspects that equipment, even if the pilot names it
+  loosely ("checked the transformer" → the step that checks the transformer/HT-2
+  compartment; "oil ok" → the oil-level step). Put a claim in unmapped_claims only when
+  no listed step inspects that equipment at all.
 - abnormality_found: "yes" if they report smoke, smell, fire, heat, red-hot parts, oil
   leak/splash, or abnormal oil level. "no" only if they say things were normal / OK /
   nothing found. Otherwise "unknown".

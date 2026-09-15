@@ -155,3 +155,8 @@ def test_alias_phrase_containment(kb):
     assert match_alias("QLM is locked", kb) is None          # not a verbatim alias phrase
     assert match_alias("QLM not locked", kb) is None
     assert match_alias("dj tripped", kb) is None
+
+
+def test_fault_id_words_match_as_alias(kb):
+    """'QLM dropped' (the fault_id's own words, as in the §10.2 trace) is deterministic."""
+    assert match_alias("QLM dropped. I checked the transformer and oil level.", kb).fault_id == QLM

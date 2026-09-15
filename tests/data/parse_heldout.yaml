@@ -23,8 +23,8 @@
   other_relays: [QOP-1]
 - text: "qlm dropped, smoke coming from HT2 side"
   fault: QLM_dropped
-  claimed: [check_ht2_compartment]
-  abnormality: "yes"
+  abnormality: "yes"      # whether this also counts as 'checked HT-2' is ambiguous; the engine
+                          # REFUSES on abnormality either way, so the claim is not asserted
 - text: "vcb tripped, qlm locked indication, along with QLA"
   fault: QLM_dropped
   other_relays: [QLA]

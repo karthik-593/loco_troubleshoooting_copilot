@@ -8,7 +8,7 @@ Milestone 1.
 
 ## Status
 - **Milestone: M3 — LangGraph agent loop + FastAPI + Streamlit built (2026-09-15).**
-  114 offline tests green (10 live parse tests pending DeepSeek Flash). M2: 2026-09-14. M1: 2026-09-14.
+  116 offline tests green; 10 live parse tests pass on deepseek-flash. M2: 2026-09-14. M1: 2026-09-14.
 - **M3 decisions:**
   - `agent/graph.py`: nodes parse → update_state → reflex → agent_decide → execute_tool →
     reflex_after_tool → reassess → (loop | terminal) → phrase. The reflex is a node on every
@@ -36,10 +36,17 @@ Milestone 1.
     Credentials: env vars `ANTHROPIC_AGENTIC_AI_PROJECT_KEY` / `DEEPSEEK_AGENTIC_AI_PROJECT_KEY`,
     read only inside `llm/interface.py` (process env, then Windows User-scope registry),
     never logged or written anywhere. `FakeProvider` for tests/offline eval.
-  - **Open issue (2026-09-15):** `deepseek-flash` requests from this key hang with no HTTP
-    response (>150 s, even streaming); `deepseek-v4-pro` on the same key answers in ~1 s;
-    DeepSeek status page clean. Key confirmed correct by the user. Live held-out parse run is
-    therefore still pending; re-try with `pytest tests/test_parse_live.py -m live -s`.
+  - **Resolved (2026-09-15, later):** the `deepseek-flash` stalls were DeepSeek-side queueing
+    (an 8h43m background run eventually got answers); by evening it answers in ~2 s. Also
+    seen live: a 200 with `choices: null` → provider now raises a clean RuntimeError.
+  - **M2 DoD held-out parse: 10/10 on `deepseek-flash` (non-thinking), twice.** Prompt gained
+    one mapping rule (a loosely named equipment check counts for the step that inspects it).
+    The `smoke from HT2` case no longer asserts the claimed step (ambiguous; engine REFUSES
+    on abnormality either way).
+  - **Live §10.2 trace reproduced end-to-end** (DeepSeek parse/decide + Claude phrase):
+    Turn 1 ask_step(arc chutes) via diff (4.5 s); Turn 2 refuse via reflex short-circuit,
+    agent never consulted (1.9 s); no phrase fallbacks. `engine/matcher.py` now treats the
+    fault_id's own words ("QLM dropped") as a deterministic alias (underscore ≡ space).
   - `llm/parse.py`: alias match (exact OR verbatim phrase containment, `engine/matcher.py`)
     is deterministic → fault confirmed, no confirm turn. Model-guessed fault → `fault_confirmed=False`;
     a hard-gated fault then gets the §5.5 one-line `confirm_fault` terminal from `reassess`
