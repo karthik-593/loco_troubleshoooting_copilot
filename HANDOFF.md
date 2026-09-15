@@ -7,8 +7,33 @@ Milestone 1.
 ---
 
 ## Status
-- **Milestone: M4b — pantograph hazard gate + QRSI-1 isolate-and-retest (2026-09-15).**
-  166 offline tests, 18/18 live parse cases. M4a + §6.1.1(f) pass: 2026-09-15. M3: 2026-09-15.
+- **Milestone: M5 — evaluation (2026-09-15).** 181 offline tests; 18/18 live parse; scenario
+  suite 13/13 offline AND live with unsafe = 0, missed-gate = 0, 7 distinct tool paths.
+  Session loco context (loco_number/type/config, leading+trailing, swap; `type_dependency`
+  axis) also landed 2026-09-15. M4b/M4a/M3: 2026-09-15.
+- **M5 decisions:**
+  - `eval/scenarios/*.yaml`: §12.1 fields + per-turn `structured` (the parse the M2 parser
+    would produce) so the suite replays OFFLINE; `expected_turn_terminals` catches wrong
+    intermediate turns (this exposed the instructed-reset bug below). Classes:
+    did_it_right ×2, missed_step ×3, unsafe ×5, ambiguous, combination, config.
+  - `eval/harness.py`: offline mode = ScriptedParse + PolicyDecider (diff, then none) +
+    verbatim phrase; live mode = real providers. `--assert-safe` exits 1 unless unsafe = 0 and
+    missed-gate = 0 — wired into CI (`.github/workflows/ci.yml`) with the report uploaded as
+    an artifact. `must_not_do` vocabulary: instruct_reset, confirm, confirm_fault, refuse,
+    ask_config, instruct_roof_work, any_procedure, confirm_after_recurrence.
+  - `eval/baseline.py`: flat retrieval bot — alias-matches, recites the whole procedure;
+    scored on the same gold (unsafe 0.54, missed-gate 1.0, specific-miss 0, recites the right
+    step 0.31). `eval/report.py`: agent-vs-baseline table, tool-path divergence, per-scenario
+    traces, honest notes; `--mlflow` logs to a local file store (`MLFLOW_ALLOW_FILE_STORE`
+    set in code; mlflow-skinny). `dvc.yaml`: validate_kb → eval → report; `dvc metrics show`.
+  - **Bug found by the live suite and fixed:** "reset done, resumed" was parsed as
+    `was_QLM_reset_earlier_this_trip=yes` → refused as a second reset. Engine rule in
+    `update_state`: while a first reset is instructed and the relay is not presenting again, a
+    same-turn 'yes' on the prior-reset fact is taken as the INSTRUCTED reset
+    (`reset_performed_this_session`), not a prior one; parser context line clarified. A
+    genuine prior reset stated with a presenting fault still refuses (tests).
+  - Live "expected tool path" is 0.85: the real agent chose `none` (no tool) on the clean
+    confirm case and the engine confirmed anyway — valid, reported, not hidden.
 - **M4b KB additions — PENDING HUMAN CONFIRMATION:**
   - `kb/faults/pantograph_damaged.yaml` (§10.03 pp.164–165 incl. "Obtaining emergency power
     block"; §11.04 p.178). Ordinary: lower panto → BP/protect → contact TPC; **gated**
@@ -184,10 +209,11 @@ Per BUILD_PLAN §13 layout:
 `tests/test_loop_guards.py`, `tests/test_graph_qlm.py`, `tests/test_api.py`.
 **Built in M4a:** `QLM_with_QOP_QRSI`, `QLM_with_QLA_QOA`, `sanders_not_working` + engine above.
 **Built in M4b:** `pantograph_damaged`, `QRSI1_drops_on_run` + engine above.
-**Next (M5):** evaluation — scenario suite (three classes + ambiguous + config), harness,
-flat-retrieval baseline, MLflow, tool-path-divergence report, unsafe-instruction-rate = 0 as a
-CI gate; `dvc.yaml` pipeline (validate_kb → eval → report). Config-dependent fault still
-deferred (no genuine SIV/ARNO branch found; transformer-kVA axis noted in QRSI-1).
+**Built in M5:** `eval/` (scenarios, harness, baseline, report), `dvc.yaml`/`dvc.lock`, CI safety gate.
+**Next (M6):** demo polish + write-up — README interview framing, recorded walkthrough leading
+with the QLM second-reset refusal and a combination-fault trace; pin the loco session bar in
+the client; optionally encode the general fire procedure (`fire_on_loco`, Ch.1 pp43–44 /
+Ch.4 item 6) and a genuine config-dependent fault if one is found in the TSD.
 
 ---
 

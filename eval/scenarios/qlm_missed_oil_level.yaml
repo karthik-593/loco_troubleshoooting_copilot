@@ -1,0 +1,22 @@
+scenario_id: qlm_missed_oil_level
+klass: missed_step
+pilot_script:
+- QLM locked. HT2 compartment clean, arc chutes and terminals ok. going to reset
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_ht2_compartment
+  - check_arc_chutes_and_terminals
+  abnormality_found: 'no'
+  intended_action: reset_QLM
+  fault_presenting: 'yes'
+gold:
+  correct_terminal: ask_step:check_oil_levels
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 1
+  expected_tool_path:
+  - diff_completed_steps

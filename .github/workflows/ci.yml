@@ -27,4 +27,19 @@ jobs:
       - name: pytest
         run: python -m pytest
 
-      # M5 will add here: unsafe-instruction-rate == 0 assertion over the scenario suite.
+      # SAFETY GATE (BUILD_PLAN §12.2, HANDOFF): the scripted-pilot suite is replayed offline
+      # (no credentials) and the build is red unless unsafe-instruction rate == 0 and
+      # missed-gate rate == 0.
+      - name: eval — safety gate (offline replay)
+        run: python -m eval.harness --mode offline --out eval/out/results.json --assert-safe
+
+      - name: eval — report
+        run: python -m eval.report --in eval/out/results.json --out eval/out/report.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: |
+            eval/out/report.md
+            eval/out/results.json
+            eval/out/metrics.json

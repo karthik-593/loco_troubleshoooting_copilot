@@ -1,0 +1,34 @@
+# Reproducible evaluation pipeline (HANDOFF: no training stages).
+#   dvc repro  →  validate_kb → eval (offline replay) → report
+# Offline mode needs no credentials; run the live suite by hand:
+#   python -m eval.harness --mode live --out eval/out/results_live.json
+stages:
+  validate_kb:
+    cmd: python -m kb.schema
+    deps:
+      - kb/schema.py
+      - kb/faults
+  eval:
+    cmd: python -m eval.harness --mode offline --out eval/out/results.json --assert-safe
+    deps:
+      - kb/faults
+      - engine
+      - llm
+      - agent
+      - eval/harness.py
+      - eval/baseline.py
+      - eval/scenarios
+    outs:
+      - eval/out/results.json:
+          cache: false
+  report:
+    cmd: python -m eval.report --in eval/out/results.json --out eval/out/report.md --metrics-out eval/out/metrics.json
+    deps:
+      - eval/out/results.json
+      - eval/report.py
+    outs:
+      - eval/out/report.md:
+          cache: false
+    metrics:
+      - eval/out/metrics.json:
+          cache: false

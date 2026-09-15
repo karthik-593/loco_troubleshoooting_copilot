@@ -1,0 +1,25 @@
+scenario_id: qlm_with_qop_reroute
+klass: combination
+pilot_script:
+- QLM locked and QOP-1 also dropped. checked ht2, oil, arc chutes - all normal
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_ht2_compartment
+  - check_oil_levels
+  - check_arc_chutes_and_terminals
+  abnormality_found: 'no'
+  other_relays_acted:
+  - QOP-1
+  fault_presenting: 'yes'
+gold:
+  correct_terminal: ask_step:check_traction_power_circuit
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 1
+  expected_tool_path:
+  - (reroute→QLM_with_QOP_QRSI)
+  - diff_completed_steps

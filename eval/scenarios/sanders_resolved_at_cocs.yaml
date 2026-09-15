@@ -1,0 +1,27 @@
+scenario_id: sanders_resolved_at_cocs
+klass: did_it_right
+pilot_script:
+- sanders not working on both sides
+- pedal pressed, sander COCs were closed. opened them, sanding now
+structured:
+- fault_guess: sanders_not_working
+  fault_confidence: 0.9
+  fault_presenting: 'yes'
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_psa_and_sander_cocs
+  fault_resolved: 'yes'
+gold:
+  correct_terminal: confirm
+  must_fire_gates: []
+  must_not_do:
+  - confirm_fault
+  - refuse
+  max_turns: 2
+  expected_tool_path:
+  - diff_completed_steps
+  - diff_completed_steps
+  expected_turn_terminals:
+  - ask_step
+  - confirm

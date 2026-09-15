@@ -24,7 +24,32 @@ every file and every step cites its TSD section. The schema (`kb/schema.py`) enf
 this in CI. The PDF itself is DVC-tracked (`1566969531009-ETTC_TSD.pdf.dvc`) and kept
 out of git.
 
-## Status — Milestone 4b (six TSD faults, all four gate mechanisms; agent loop; API; client)
+## Evaluation (Milestone 5)
+
+13 scripted-pilot scenarios (`eval/scenarios/`) across BUILD_PLAN §12's classes — pilot did
+it right, pilot missed a step, pilot's next move is unsafe, ambiguous intake, combination
+fault, config axis — scored against a **flat-retrieval baseline that has the same KB
+content** and only recites it. Live run (DeepSeek parse/decide, Claude phrase):
+
+| Metric | Agent | Flat baseline |
+|---|---|---|
+| Unsafe-instruction rate (target 0) | **0.00** | 0.54 |
+| Missed-gate rate (target 0) | **0.00** | 1.00 |
+| Specific-miss detection | 1.00 | 0.00 |
+| Correct-terminal rate | 1.00 | 0.08 |
+| Distinct tool paths (proof of agency) | 7 | 1 |
+
+The baseline's unsafe rate is not a strawman: it prints the correct procedure, which says
+"reset QLM" / "climb on the roof" unconditionally. Where the agent merely ties it (the
+baseline recites the right step somewhere, 31%), the report says so.
+
+**Safety as a CI gate:** every push replays the suite offline (scripted parses, no
+credentials) and the build is red unless unsafe-instruction rate = 0 and missed-gate
+rate = 0 (`python -m eval.harness --mode offline --assert-safe`). `dvc repro` reproduces
+validate_kb → eval → report; `python -m eval.report --mlflow` logs params (models, KB SHA),
+metrics and artifacts to a local MLflow file store. Full report: `eval/out/report_live.md`.
+
+## Status — Milestone 5 (six TSD faults, all mechanisms, agent loop, API, client, evaluation)
 
 | Piece | Where |
 |---|---|
@@ -47,7 +72,9 @@ out of git.
 | Session store (per-pilot state + trace) | `agent/session.py` |
 | FastAPI `POST /diagnose` (+ `/session/{id}`, `/health`) | `api/server.py` |
 | Streamlit chat client showing the engine trace | `client/streamlit_app.py` |
-| Tests (166 offline incl. loop guards, graph traces, recurrence, API; 18 live parse cases) | `tests/` |
+| Session loco context — loco number, class (WAG-7/WAG-5/WAP-4), config (SIV/ARNO) per loco, leading/trailing, swap | `engine/state.py`, API, client sidebar |
+| Eval: scenario suite, harness (offline + live), flat-retrieval baseline, report + MLflow | `eval/` |
+| Tests (181 offline incl. loop guards, graph traces, recurrence, API, eval harness; 18 live parse cases) | `tests/` |
 
 The LLM has exactly three bounded jobs — parse, decide, phrase — and none of them can
 originate, alter, or skip a safety verdict: the engine package imports nothing from
@@ -67,6 +94,9 @@ python -m venv .venv && . .venv/Scripts/activate   # or .venv/bin/activate
 pip install -r requirements.txt
 python -m kb.schema      # validate the knowledge base
 python -m pytest         # engine + reflex + LLM-layer + loop + API tests (scripted model)
+python -m eval.harness --mode offline --assert-safe   # CI safety gate (no credentials)
+python -m eval.harness --mode live --out eval/out/results_live.json   # live suite
+dvc repro                # validate_kb → eval → report; dvc metrics show
 uvicorn api.server:app   # API on :8000 (needs the two credential env vars)
 streamlit run client/streamlit_app.py   # chat client against the API
 # with ANTHROPIC_AGENTIC_AI_PROJECT_KEY / DEEPSEEK_AGENTIC_AI_PROJECT_KEY set in the environment:

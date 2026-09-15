@@ -1,0 +1,30 @@
+scenario_id: qlm_clean_confirm
+klass: did_it_right
+locos:
+- loco_number: '27312'
+  type: wag7
+  config: unknown
+pilot_script:
+- QLM dropped, first time this trip. Checked HT2 compartment, TFP and GR oil, arc chutes and terminals - all normal.
+  Reset once and resumed.
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_ht2_compartment
+  - check_oil_levels
+  - check_arc_chutes_and_terminals
+  - reset_decision
+  abnormality_found: 'no'
+  was_reset_earlier_this_trip: 'no'
+  fault_presenting: 'yes'
+gold:
+  correct_terminal: confirm
+  must_fire_gates: []
+  must_not_do:
+  - refuse
+  - ask_config
+  - re_ask_claimed_step
+  max_turns: 1
+  expected_tool_path:
+  - diff_completed_steps

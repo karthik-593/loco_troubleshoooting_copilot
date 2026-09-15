@@ -1,0 +1,25 @@
+scenario_id: config_not_asked_when_no_branch_needs_it
+klass: config
+locos:
+- loco_number: '22451'
+  type: unknown
+  config: unknown
+pilot_script:
+- QLM dropped. I checked the transformer and oil level.
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_ht2_compartment
+  - check_oil_levels
+  fault_presenting: 'yes'
+gold:
+  correct_terminal: ask_step:check_arc_chutes_and_terminals
+  must_fire_gates: []
+  must_not_do:
+  - ask_config
+  max_turns: 1
+  expected_tool_path:
+  - diff_completed_steps
+  note: No encoded TSD section branches on SIV/ARNO or class; the mechanism is unit-tested with a synthetic fault
+    (tests/test_loco_context.py). This scenario asserts the §2.4 rule that config is never requested up front.

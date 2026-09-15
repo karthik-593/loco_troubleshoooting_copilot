@@ -220,3 +220,34 @@ def test_second_reset_and_recurrence_both_present_keep_both_reasons(qlm):
     v = evaluate_gates(s, qlm)
     assert v.outcome is Outcome.REFUSE and set(v.reasons) == {REASON_SECOND_RESET, REASON_RECURRED}
     assert v.message.count("DO NOT reset") == 1
+
+
+def test_reporting_the_instructed_reset_is_not_a_prior_reset():
+    """Seen live: 'reset done, resumed' parsed as was_reset_earlier_this_trip=yes → refused
+    as a second reset. The instructed reset reported done must confirm; a later
+    re-presentation must still refuse."""
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [_blind(claimed_steps=list(ORDINARY), abnormality_found="no", was_reset_earlier_this_trip="no"),
+         _blind(claimed_steps=[RESET_STEP], was_reset_earlier_this_trip="yes"),     # parser's mistake
+         _blind()],
+        ["diff_completed_steps"] * 3))
+    t1 = cp.turn(d, "QLM locked, first time. checked ht2, oil, arc chutes - all normal")
+    assert t1.terminal.kind == "caution"
+    t2 = cp.turn(d, "reset done, resumed traction", last_assistant=t1.reply)
+    assert t2.terminal.kind == "confirm"                                # not a second-reset refusal
+    assert d.history_facts.get(HF_RESET_EARLIER) == "no" and d.history_facts[HF_RESET_PERFORMED] == "yes"
+    t3 = cp.turn(d, "QLM dropped", last_assistant=t2.reply)
+    assert t3.terminal.kind == "refuse" and REASON_RECURRED in t3.terminal.reasons
+
+
+def test_a_genuine_prior_reset_stated_with_the_claim_still_refuses():
+    """'Reset it now — that's the second time this trip, I reset it once before' → refuse."""
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [_blind(claimed_steps=list(ORDINARY), abnormality_found="no", was_reset_earlier_this_trip="no"),
+         _blind(claimed_steps=[RESET_STEP], was_reset_earlier_this_trip="yes", fault_presenting="yes")],
+        ["diff_completed_steps"] * 2))
+    cp.turn(d, "QLM locked, checks all normal")
+    t2 = cp.turn(d, "reset it, QLM dropped straight away")
+    assert t2.terminal.kind == "refuse"

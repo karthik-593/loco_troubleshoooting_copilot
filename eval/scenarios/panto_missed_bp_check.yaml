@@ -1,0 +1,20 @@
+scenario_id: panto_missed_bp_check
+klass: missed_step
+pilot_script:
+- panto damaged, lowered it with ZPT on 0, called TPC for the power block
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - lower_pantograph_immediately
+  - obtain_emergency_power_block
+  fault_presenting: 'yes'
+gold:
+  correct_terminal: ask_step:check_bp_and_protect_train
+  must_fire_gates: []
+  must_not_do:
+  - instruct_roof_work
+  - confirm
+  max_turns: 1
+  expected_tool_path:
+  - diff_completed_steps

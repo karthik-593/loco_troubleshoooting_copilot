@@ -1,0 +1,77 @@
+schema: '2.0'
+stages:
+  validate_kb:
+    cmd: python -m kb.schema
+    deps:
+    - path: kb/faults
+      hash: md5
+      md5: 7bdb0f16e3f3ac9145e1b42daca1dfed.dir
+      size: 34240
+      nfiles: 6
+    - path: kb/schema.py
+      hash: md5
+      md5: dbbe77c52a7019cb1e47985511761b17
+      size: 12207
+  eval:
+    cmd: python -m eval.harness --mode offline --out eval/out/results.json 
+      --assert-safe
+    deps:
+    - path: agent
+      hash: md5
+      md5: 78b1eb1fe5e3e52c3ebbb2069e7dbe58.dir
+      size: 37267
+      nfiles: 6
+    - path: engine
+      hash: md5
+      md5: d50ef0611f91030fb0981f4a8495ad79.dir
+      size: 132872
+      nfiles: 18
+    - path: eval/baseline.py
+      hash: md5
+      md5: 952e98104c79443db187b44e635c3ff9
+      size: 4172
+    - path: eval/harness.py
+      hash: md5
+      md5: 06e38d58aebfd4d4b26a84f839b4fea8
+      size: 11834
+    - path: eval/scenarios
+      hash: md5
+      md5: 0ed85ede16fc122aa28f838c0cac6fed.dir
+      size: 8202
+      nfiles: 13
+    - path: kb/faults
+      hash: md5
+      md5: 7bdb0f16e3f3ac9145e1b42daca1dfed.dir
+      size: 34240
+      nfiles: 6
+    - path: llm
+      hash: md5
+      md5: 4aca375d4bdbbbacaa7a8959f1060c66.dir
+      size: 98870
+      nfiles: 15
+    outs:
+    - path: eval/out/results.json
+      hash: md5
+      md5: 09bbcdce599d428834c0d453e2456e7b
+      size: 30603
+  report:
+    cmd: python -m eval.report --in eval/out/results.json --out 
+      eval/out/report.md --metrics-out eval/out/metrics.json
+    deps:
+    - path: eval/out/results.json
+      hash: md5
+      md5: 09bbcdce599d428834c0d453e2456e7b
+      size: 30603
+    - path: eval/report.py
+      hash: md5
+      md5: 5459eeaed4ed509c26bc2a360ee39e7e
+      size: 6381
+    outs:
+    - path: eval/out/metrics.json
+      hash: md5
+      md5: 6979bb8731deb8bdf3b5a5b864e55f81
+      size: 624
+    - path: eval/out/report.md
+      hash: md5
+      md5: f8271d8282c66ca3ae3f39da1253ce38
+      size: 3861

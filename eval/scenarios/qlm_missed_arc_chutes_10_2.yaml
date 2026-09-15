@@ -1,0 +1,21 @@
+scenario_id: qlm_missed_arc_chutes_10_2
+klass: missed_step
+pilot_script:
+- QLM dropped. I checked the transformer and oil level.
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_ht2_compartment
+  - check_oil_levels
+  fault_presenting: 'yes'
+gold:
+  correct_terminal: ask_step:check_arc_chutes_and_terminals
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  - re_ask_claimed_step
+  max_turns: 1
+  expected_tool_path:
+  - diff_completed_steps

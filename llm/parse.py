@@ -137,7 +137,10 @@ def user_prompt(text: str, state: DiagnosisState, last_assistant: Optional[str])
     if state.history(HF_RESET_PERFORMED) == "yes" or state.history(HF_RESET_INSTRUCTED) == "yes":
         ctx.append("Context: a first reset of this relay has already been performed or instructed in "
                    "this session. If the pilot now reports the relay has acted / dropped / locked "
-                   "again, set fault_recurred = yes and fault_presenting = yes.")
+                   "again, set fault_recurred = yes and fault_presenting = yes. If they merely report "
+                   "that instructed reset as done ('reset done', 'resumed'), claim the reset step and "
+                   "leave was_reset_earlier_this_trip unknown — that field means a reset BEFORE this "
+                   "conversation.")
     ctx.append(f"Pilot's message: {text}")
     return "\n".join(ctx)
 

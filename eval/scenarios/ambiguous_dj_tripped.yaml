@@ -1,0 +1,14 @@
+scenario_id: ambiguous_dj_tripped
+klass: ambiguous
+pilot_script:
+- dj tripped, dont know which relay
+structured:
+- fault_guess: QLM_dropped
+  fault_confidence: 0.3
+gold:
+  correct_terminal: clarify
+  must_fire_gates: []
+  must_not_do:
+  - any_procedure
+  max_turns: 1
+  expected_tool_path: []

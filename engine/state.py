@@ -175,7 +175,23 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
     else:
         state.tool_results.pop("unrecognised_claims", None)
 
-    state.history_facts.update(update.history)
+    incoming = dict(update.history)
+    # The reset the ENGINE instructed, now reported done, is `reset_performed_this_session`
+    # — not "reset earlier this trip" (that means a reset BEFORE this occurrence). Seen live:
+    # "reset done, resumed" was parsed as was_QLM_reset_earlier_this_trip=yes and refused as
+    # a second reset. Rule: while a first reset is instructed and the relay is not presenting
+    # again, a same-turn 'yes' on the prior-reset fact is taken as the instructed reset.
+    claims_reset = fault is not None and any(
+        s.gate and s.gate.type == "reset_limit" and s.id in update.claimed_steps for s in fault.steps)
+    if (str(state.history_facts.get(HF_RESET_INSTRUCTED, "")).lower() == "yes"
+            and not update.fault_presenting
+            and str(state.history_facts.get(HF_RESET_EARLIER, "")).lower() != "yes"):
+        for key in [k for k, v in incoming.items()
+                    if k == HF_RESET_EARLIER or (fault and any(s.gate and s.gate.needs_history == k for s in fault.steps))]:
+            if str(incoming[key]).lower() == "yes":
+                incoming.pop(key)
+                state.history_facts[HF_RESET_PERFORMED] = "yes"
+    state.history_facts.update(incoming)
 
     # gated reset step claimed → a reset has been performed this session
     if fault is not None and any(s.gate and s.gate.type == "reset_limit" and s.id in state.steps_claimed_done
