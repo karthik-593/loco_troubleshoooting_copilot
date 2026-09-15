@@ -18,3 +18,4 @@ mlartifacts/
 .DS_Store
 Thumbs.db
 mlflow.db
+PROJECT_JOURNEY.md
