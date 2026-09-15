@@ -53,7 +53,7 @@ def render_verbatim(t: Terminal) -> str:
         return f"{cond}{t.message}"
     if t.kind == "refuse":
         return t.message
-    if t.kind in ("confirm_fault", "clarify"):
+    if t.kind in ("confirm_fault", "clarify", "ask_config"):
         return t.message
     if t.kind == "defer_to_TLC":
         return t.message
@@ -147,7 +147,7 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
                 v.append(f"caution_missing_{key}")
         if t.conditional and "abnormal" not in low:
             v.append("caution_dropped_condition")
-    elif t.kind in ("ask_step", "ask_history", "confirm_fault", "clarify"):
+    elif t.kind in ("ask_step", "ask_history", "confirm_fault", "clarify", "ask_config"):
         if "?" not in s:
             v.append("question_not_asked")
         if t.kind == "ask_step" and t.hold_action and not re.search(r"\b(before|until|after|hold|wait|first)\b", low):

@@ -12,7 +12,20 @@ from typing import Any, Literal, Optional
 from kb.schema import Fault
 
 Config = Literal["siv", "arno", "unknown"]
+LocoTypeOrUnknown = Literal["wag7", "wag5", "wap4", "unknown"]
 YesNo = Literal["yes", "no"]
+
+
+@dataclass
+class LocoInfo:
+    """One locomotive in the session. All three fields are ALWAYS carried; which of them a
+    fault may consult is decided by that fault's declared dependencies (kb.schema.Fault)."""
+    loco_number: str = ""
+    type: LocoTypeOrUnknown = "unknown"          # class axis: layout / equipment set
+    config: Config = "unknown"                   # auxiliary-build axis: SIV / ARNO
+
+    def as_dict(self) -> dict[str, str]:
+        return {"loco_number": self.loco_number, "type": self.type, "config": self.config}
 
 # History-fact keys used by the QLM procedure. ``was_QLM_reset_earlier_this_trip`` is
 # the reset_limit gate's ``needs_history`` key in kb/faults/qlm_dropped.yaml;
@@ -45,8 +58,38 @@ class DiagnosisState:
     stuck_at: Optional[str] = None
     tool_results: dict[str, Any] = field(default_factory=dict)  # idempotency / no-progress
     iter_count: int = 0                            # loop guard (§6)
+    # Session loco context ("session bar"): [leading] or [leading, trailing]. The fault is
+    # attributed to locos[active_loco]. Kept alongside §10.1's ``config`` (which mirrors the
+    # active loco's config for backward compatibility with BUILD_PLAN's state shape).
+    locos: list[LocoInfo] = field(default_factory=lambda: [LocoInfo()])
+    active_loco: int = 0
 
     # -- helpers -------------------------------------------------------------
+    @property
+    def loco(self) -> LocoInfo:
+        return self.locos[self.active_loco] if self.locos else LocoInfo()
+
+    def set_locos(self, locos: list[LocoInfo], active: int = 0) -> None:
+        assert 1 <= len(locos) <= 2, "single loco, or leading + trailing"
+        self.locos = list(locos)
+        self.active_loco = min(max(active, 0), len(locos) - 1)
+        self.config = self.loco.config
+
+    def swap_locos(self) -> None:
+        """Multi: swap leading and trailing; the attributed loco follows its row."""
+        if len(self.locos) == 2:
+            self.locos.reverse()
+            self.active_loco = 1 - self.active_loco
+            self.config = self.loco.config
+
+    def axis_value(self, axis_fact: str, fault: "Fault") -> Optional[str]:
+        """Resolve a loco-axis pseudo-fact for ``fault`` — ONLY if the fault declares that
+        dependency; otherwise None ("not consulted"), even if the value is known."""
+        if axis_fact == "loco_config" and fault.depends_on_config:
+            return None if self.loco.config == "unknown" else self.loco.config
+        if axis_fact == "loco_type" and fault.depends_on_type:
+            return None if self.loco.type == "unknown" else self.loco.type
+        return None
     def history(self, key: str) -> Optional[str]:
         """Tri-state read: 'yes' | 'no' | None (= not stated)."""
         v = self.history_facts.get(key)
@@ -58,6 +101,7 @@ class DiagnosisState:
             self.matched_fault,
             self.fault_confirmed,
             self.config,
+            tuple((l.loco_number, l.type, l.config) for l in self.locos), self.active_loco,
             tuple(self.steps_required),
             tuple(sorted(self.steps_claimed_done)),
             tuple(sorted((k, str(v)) for k, v in self.history_facts.items())),
@@ -77,6 +121,7 @@ class StateUpdate:
     # The M2 parser passes an explicit False for an LLM-guessed hard-gated fault (§5.5).
     fault_confirmed: Optional[bool] = None
     config: Optional[Config] = None
+    loco_type: Optional[LocoTypeOrUnknown] = None
     claimed_steps: tuple[str, ...] = ()
     history: dict[str, Any] = field(default_factory=dict)
     intended_action: Optional[str] = None
@@ -115,8 +160,12 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
         state.steps_required = list(fault.step_ids)
     if update.fault_confirmed is not None:
         state.fault_confirmed = update.fault_confirmed
-    if update.config is not None:
+    if update.config is not None:                 # pilot stated the config in free text
         state.config = update.config
+        if state.locos:
+            state.loco.config = update.config
+    if update.loco_type is not None and state.locos:
+        state.loco.type = update.loco_type
 
     known = set(state.steps_required)
     unrecognised = [s for s in update.claimed_steps if s not in known]

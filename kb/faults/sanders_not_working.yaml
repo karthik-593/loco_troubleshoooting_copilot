@@ -16,6 +16,7 @@ aliases:
   - "sanders failed"
   - "sanding not working"
 config_dependency: none            # §10.12 does not branch on loco type
+type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
 presenting_signs:                  # §10.12 causes
   - "No sand delivered when the sander pedal (PSA) is pressed"
 

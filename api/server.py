@@ -6,7 +6,7 @@ module-level ``app`` binds the real providers from the environment lazily.
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -14,15 +14,30 @@ from pydantic import BaseModel, Field
 from agent.graph import Copilot
 from agent.session import SessionStore
 from engine.gates import evaluate_gates
+from engine.state import LocoInfo
 from llm.interface import providers_from_env
 
 DISCLAIMER = ("Demonstrator only — not certified for operational use. Follow the printed "
               "troubleshooting directory and TLC instructions.")
 
 
+class LocoModel(BaseModel):
+    """One loco of the session bar. All three fields are always carried; a fault consults
+    only the axes it declares (kb.schema.Fault.config_dependency / type_dependency)."""
+    loco_number: str = Field(default="", max_length=32)
+    type: Literal["wag7", "wag5", "wap4", "unknown"] = "unknown"
+    config: Literal["siv", "arno", "unknown"] = "unknown"
+
+
+class LocosRequest(BaseModel):
+    locos: list[LocoModel] = Field(min_length=1, max_length=2)   # [leading] or [leading, trailing]
+    active: int = Field(default=0, ge=0, le=1)                    # which loco the fault is on
+
+
 class DiagnoseRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=128)
     pilot_turn: str = Field(min_length=1, max_length=2000)
+    locos: Optional[LocosRequest] = None                          # optional: set the bar with the turn
 
 
 class DiagnoseResponse(BaseModel):
@@ -41,6 +56,8 @@ class DiagnoseResponse(BaseModel):
 
 class StateResponse(BaseModel):
     session_id: str
+    locos: list[LocoModel]
+    active_loco: int
     matched_fault: Optional[str]
     fault_confirmed: bool
     steps_claimed_done: list[str]
@@ -63,9 +80,31 @@ def create_app(copilot: Optional[Copilot] = None) -> FastAPI:
     def health():
         return {"ok": True, "faults": app.state.store.copilot.kb.fault_ids, "disclaimer": DISCLAIMER}
 
+    def _apply_locos(sess, body: LocosRequest):
+        sess.diag.set_locos([LocoInfo(l.loco_number, l.type, l.config) for l in body.locos], body.active)
+
+    @app.put("/session/{session_id}/locos")
+    def set_locos(session_id: str, body: LocosRequest):
+        """Session bar: single [leading] or multi [leading, trailing]; every row carries
+        loco_number, type and config."""
+        sess = app.state.store.get_or_create(session_id)
+        _apply_locos(sess, body)
+        return {"ok": True, "locos": [l.as_dict() for l in sess.diag.locos], "active_loco": sess.diag.active_loco}
+
+    @app.post("/session/{session_id}/swap")
+    def swap_locos(session_id: str):
+        """Multi only: swap leading and trailing (the attributed loco follows its row)."""
+        sess = app.state.store.get_or_create(session_id)
+        if len(sess.diag.locos) != 2:
+            raise HTTPException(status_code=409, detail="swap needs a leading + trailing pair")
+        sess.diag.swap_locos()
+        return {"ok": True, "locos": [l.as_dict() for l in sess.diag.locos], "active_loco": sess.diag.active_loco}
+
     @app.post("/diagnose", response_model=DiagnoseResponse)
     def diagnose(req: DiagnoseRequest):
         store: SessionStore = app.state.store
+        if req.locos is not None:
+            _apply_locos(store.get_or_create(req.session_id), req.locos)
         try:
             r = store.diagnose(req.session_id, req.pilot_turn)
         except Exception as exc:             # provider outage etc. → 503, never a made-up reply
@@ -84,7 +123,8 @@ def create_app(copilot: Optional[Copilot] = None) -> FastAPI:
         d = sess.diag
         fault = store.copilot.kb.get(d.matched_fault) if d.matched_fault in store.copilot.kb.fault_ids else None
         return StateResponse(
-            session_id=session_id, matched_fault=d.matched_fault, fault_confirmed=d.fault_confirmed,
+            session_id=session_id, locos=[LocoModel(**l.as_dict()) for l in d.locos], active_loco=d.active_loco,
+            matched_fault=d.matched_fault, fault_confirmed=d.fault_confirmed,
             steps_claimed_done=sorted(d.steps_claimed_done), history_facts=d.history_facts,
             intended_action=d.intended_action, stuck_at=d.stuck_at,
             reflex_verdict=evaluate_gates(d, fault).outcome.value, transcript=sess.transcript,

@@ -23,9 +23,50 @@ if "session_id" not in st.session_state:
     st.session_state.session_id = uuid.uuid4().hex[:12]
     st.session_state.messages = []
 
+TYPES = ["unknown", "wag7", "wag5", "wap4"]
+TYPE_LABEL = {"unknown": "unknown", "wag7": "WAG-7", "wag5": "WAG-5", "wap4": "WAP-4"}
+CONFIGS = ["unknown", "siv", "arno"]
+CONFIG_LABEL = {"unknown": "unknown", "siv": "SIV", "arno": "ARNO"}
+
+
+def _loco_row(label: str, key: str, current: dict) -> dict:
+    st.markdown(f"**{label}**")
+    c1, c2, c3 = st.columns([1.2, 1, 1])
+    num = c1.text_input("Loco no.", value=current.get("loco_number", ""), key=f"{key}_num")
+    typ = c2.selectbox("Type", TYPES, index=TYPES.index(current.get("type", "unknown")),
+                       format_func=lambda v: TYPE_LABEL[v], key=f"{key}_type")
+    cfg = c3.selectbox("Config", CONFIGS, index=CONFIGS.index(current.get("config", "unknown")),
+                       format_func=lambda v: CONFIG_LABEL[v], key=f"{key}_cfg")
+    return {"loco_number": num, "type": typ, "config": cfg}
+
+
 with st.sidebar:
     st.subheader("Session")
     st.code(st.session_state.session_id)
+
+    # ---- session bar: locos (three fields each; single or leading + trailing; swap) ----
+    st.subheader("Loco(s)")
+    try:
+        cur = httpx.get(f"{API_URL}/session/{st.session_state.session_id}", timeout=10).json()
+        cur_locos, cur_active = cur.get("locos", [{}]), cur.get("active_loco", 0)
+    except (httpx.HTTPError, ValueError):
+        cur_locos, cur_active = [{}], 0
+    multi = st.toggle("Multi (leading + trailing)", value=len(cur_locos) == 2)
+    rows = [_loco_row("Leading", "lead", cur_locos[0] if cur_locos else {})]
+    if multi:
+        rows.append(_loco_row("Trailing", "trail", cur_locos[1] if len(cur_locos) > 1 else {}))
+        active = st.radio("Fault is on", [0, 1], index=min(cur_active, 1), horizontal=True,
+                          format_func=lambda i: ["leading", "trailing"][i])
+    else:
+        active = 0
+    b1, b2 = st.columns(2)
+    if b1.button("Apply"):
+        httpx.put(f"{API_URL}/session/{st.session_state.session_id}/locos",
+                  json={"locos": rows, "active": active}, timeout=10)
+        st.rerun()
+    if multi and b2.button("Swap ⇄"):
+        httpx.post(f"{API_URL}/session/{st.session_state.session_id}/swap", timeout=10)
+        st.rerun()
     if st.button("New session"):
         try:
             httpx.delete(f"{API_URL}/session/{st.session_state.session_id}", timeout=10)

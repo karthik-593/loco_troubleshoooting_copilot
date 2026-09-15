@@ -71,11 +71,19 @@ def get_required_observations(state: DiagnosisState, fault: Fault) -> dict[str, 
 
 
 def resolve_config(state: DiagnosisState, fault: Fault) -> dict[str, Any]:
-    """§2.4: ask for loco config only when a reached branch depends on it."""
-    if fault.config_dependency == "none":
-        return {"needed": False, "config": state.config}
-    return {"needed": state.config == "unknown", "config": state.config,
-            "dependency": fault.config_dependency}
+    """§2.4: report which loco axes THIS fault depends on and whether the active loco's
+    values for them are known. Axes the fault does not declare are not consulted at all."""
+    loco = state.loco
+    out: dict[str, Any] = {"loco_number": loco.loco_number, "active_loco": state.active_loco,
+                           "locos": len(state.locos), "axes": {}}
+    if fault.depends_on_config:
+        out["axes"]["loco_config"] = {"dependency": fault.config_dependency, "value": loco.config,
+                                      "needed": loco.config == "unknown"}
+    if fault.depends_on_type:
+        out["axes"]["loco_type"] = {"dependency": list(fault.type_axes), "value": loco.type,
+                                    "needed": loco.type == "unknown"}
+    out["needed"] = any(a["needed"] for a in out["axes"].values())
+    return out
 
 
 def read_siv_screen(state: DiagnosisState, fault: Fault) -> dict[str, Any]:
@@ -100,8 +108,8 @@ REGISTRY: dict[str, ToolSpec] = {t.name: t for t in (
              "rule can be ruled in or out.",
              get_required_observations),
     ToolSpec("resolve_config",
-             "Report whether the loco configuration (SIV/ARNO) is needed for the current "
-             "branch and whether it is known.",
+             "Report which loco axes (config SIV/ARNO, class WAG-7/WAG-5/WAP-4) the matched "
+             "fault depends on and whether they are known for the attributed loco.",
              resolve_config),
     ToolSpec("read_siv_screen",
              "Report whether the SIV converter's own displayed fault is applicable here.",

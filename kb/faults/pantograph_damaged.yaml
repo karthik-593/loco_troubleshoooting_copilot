@@ -19,6 +19,7 @@ aliases:
   - "panto entangled"
   - "pantograph entangled"
 config_dependency: none            # §10.03 / §11.04 do not branch on loco type
+type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
 presenting_signs:                  # §10.03 causes
   - "Pantograph damaged (OHE sag / cut / foreign body on OHE, or defective pantograph)"
 

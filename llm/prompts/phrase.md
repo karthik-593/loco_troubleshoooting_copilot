@@ -21,6 +21,7 @@ Output kinds you will be given:
                   earlier this trip — say that instead. Same actions either way.
 - confirm_fault → ask the one-line confirmation given.
 - clarify       → ask the clarification given.
+- ask_config    → ask the one loco-configuration question given (SIV/ARNO or class).
 - defer_to_TLC  → relay the reason given in content (it may be a specific situation from the
                   manual, e.g. "load and road do not permit") and say to contact TLC. Only
                   say "outside the procedure set" if the content says so.

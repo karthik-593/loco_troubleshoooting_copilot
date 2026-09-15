@@ -129,6 +129,8 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
 
     # 3. the delta over the ordinary checks.
     delta = diff_steps(state, fault)
+    if delta.needs_axis:                      # §2.4: the NEXT branch depends on an unknown loco axis
+        return Decision("need_pilot_input", T.ask_config(fault, delta.needs_axis), verdict, delta)
     hold = state.intended_action if state.intended_action and any(
         s.gate and (s.gate.action == state.intended_action or
                     (s.gate.type == "reset_limit" and state.intended_action == "reset_QLM"))

@@ -50,6 +50,10 @@ class ParseOutput(BaseModel):
         default=None,
         description="Other relay targets the pilot says have ALSO dropped (e.g. QOP-1, QRSI-2, "
                     "QLA, QOA). null if not mentioned.")
+    loco_type: Optional[Literal["wag7", "wag5", "wap4"]] = Field(
+        default=None, description="Loco class if the pilot states it (WAG-7 / WAG-5 / WAP-4).")
+    loco_config: Optional[Literal["siv", "arno"]] = Field(
+        default=None, description="Auxiliary configuration if the pilot states it (SIV or ARNO fitted).")
     intended_action: Optional[Literal["reset_QLM", "work_on_roof"]] = Field(
         default=None,
         description="The pilot's stated NEXT move, from the provided action list, or null. "

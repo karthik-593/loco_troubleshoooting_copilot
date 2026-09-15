@@ -10,6 +10,7 @@ fault_id: QLM_dropped
 aliases: ["QLM locked", "QLM acted", "QLM target dropped", "QLM red", "QLM LOCKED indication"]
 config_dependency: none            # §6.1.1 checks are identical across WAM4/WAP1/WAG5A/WAG7/WAP4
                                    # (only the relay set-point amps differ; the pilot does not act on that)
+type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
 presenting_signs:                  # §6.01 intro + p81 item 7
   - "DJ / VCB tripped"
   - "QLM red 'LOCKED' stencil target dropped"

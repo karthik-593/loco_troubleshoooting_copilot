@@ -237,6 +237,8 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
     update = StateUpdate(
         fault_id=fault_id if fault_id != state.matched_fault else None,
         fault_confirmed=confirmed,
+        config=out.loco_config,
+        loco_type=out.loco_type,
         claimed_steps=accepted + rejected,   # rejected ones are surfaced by update_state/diff
         history=history,
         intended_action=out.intended_action,

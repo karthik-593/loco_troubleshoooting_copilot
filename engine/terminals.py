@@ -10,7 +10,7 @@ from typing import Literal, Optional
 from kb.schema import Fault, Step
 
 TerminalKind = Literal["confirm", "ask_step", "ask_history", "caution", "refuse", "defer_to_TLC",
-                       "confirm_fault", "clarify"]
+                       "confirm_fault", "clarify", "ask_config"]
 
 # Refuse reasons (engine vocabulary; fix B in the gate review).
 REASON_SECOND_RESET = "second_reset"               # (f)(ii): pilot states a prior reset this trip
@@ -120,6 +120,15 @@ def confirm_fault(fault: Fault) -> Terminal:
         message=f"Sounds like {fault.fault_id.replace('_', ' ')} — {signs}?",
         source=fault.source,
     )
+
+
+def ask_config(fault: Fault, axis: str) -> Terminal:
+    """§2.4: ask for loco type / config ONLY when the reached branch depends on it."""
+    q = ("Is this loco SIV or ARNO fitted?" if axis == "loco_config"
+         else "Which class is this loco — WAG-7, WAG-5 or WAP-4?")
+    return Terminal(kind="ask_config", fault_id=fault.fault_id, message=q,
+                    source=f"BUILD_PLAN §2.4 (branch of {fault.fault_id} depends on {axis})",
+                    step_id=None, gate_type=None, reasons=(axis,))
 
 
 def clarify(question: str) -> Terminal:

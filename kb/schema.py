@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -28,6 +28,15 @@ GATE_TYPES = ("reset_limit", "hazard_exposure", "isolation_before_contact")
 GateType = Literal["reset_limit", "hazard_exposure", "isolation_before_contact"]
 
 ConfigDependency = Literal["none", "siv", "arno", "branch-specific"]
+# Loco CLASS axis — independent of config. Type drives physical layout / equipment set;
+# config (SIV/ARNO) drives the auxiliary build. Both are carried per loco in session state
+# from the start; a fault consults ONLY the axes it declares.
+LocoType = Literal["wag7", "wag5", "wap4"]
+LOCO_TYPES = ("wag7", "wag5", "wap4")
+# Pseudo-facts a step's applies_when may reference — resolved from the ACTIVE loco, and only
+# if the fault declares the matching dependency.
+AXIS_FACT_CONFIG = "loco_config"
+AXIS_FACT_TYPE = "loco_type"
 
 
 class _Strict(BaseModel):
@@ -140,6 +149,9 @@ class Fault(_Strict):
     fault_id: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]*$")
     aliases: list[str] = Field(min_length=1)
     config_dependency: ConfigDependency
+    # "none" | one class | a list of classes the procedure branches on. Parallel to
+    # config_dependency; both default to none unless the TSD text branches on the axis.
+    type_dependency: Union[Literal["none"], LocoType, list[LocoType]] = "none"
     presenting_signs: list[str] = Field(default_factory=list)
     combination_rules: list[CombinationRule] = Field(default_factory=list)
     defer_conditions: list[DeferCondition] = Field(default_factory=list)
@@ -156,6 +168,33 @@ class Fault(_Strict):
         if dupes:
             raise ValueError(f"duplicate step ids: {sorted(dupes)}")
         return steps
+
+    @model_validator(mode="after")
+    def _branches_only_on_declared_axes(self) -> "Fault":
+        """A step may branch on loco_config / loco_type ONLY if the fault declares that
+        dependency — the engine must never consult an axis it was not told to check."""
+        for s in self.steps:
+            if AXIS_FACT_CONFIG in s.applies_when and self.config_dependency == "none":
+                raise ValueError(f"step '{s.id}' branches on {AXIS_FACT_CONFIG} but config_dependency is none")
+            if AXIS_FACT_TYPE in s.applies_when and self.type_axes == ():
+                raise ValueError(f"step '{s.id}' branches on {AXIS_FACT_TYPE} but type_dependency is none")
+        return self
+
+    @property
+    def type_axes(self) -> tuple[str, ...]:
+        """Normalised type_dependency: () for none, else the classes the fault branches on."""
+        td = self.type_dependency
+        if td == "none":
+            return ()
+        return (td,) if isinstance(td, str) else tuple(td)
+
+    @property
+    def depends_on_config(self) -> bool:
+        return self.config_dependency != "none"
+
+    @property
+    def depends_on_type(self) -> bool:
+        return self.type_axes != ()
 
     # Convenience views used by the engine -------------------------------------
     @property

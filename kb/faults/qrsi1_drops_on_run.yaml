@@ -21,6 +21,7 @@ aliases:
 config_dependency: none            # §6.02.1 checks are the same on all types; only the TFR terminal
                                    # designations differ by transformer rating (3900 vs 5400 kVA) and
                                    # both are given in the step text. [candidate config axis — HANDOFF]
+type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
 presenting_signs:                  # §6.02
   - "DJ tripped"
   - "QRSI-1 red target dropped (traction power circuit-1 over-current)"

@@ -16,6 +16,7 @@ aliases:
   - "QLM and QOA"
   - "QLM acted along with QLA or QOA"
 config_dependency: none            # §6.1.3 lists ARNO among the aux equipment but does not branch on fitment
+type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
 presenting_signs:
   - "DJ / VCB tripped"
   - "QLM target dropped together with QLA or QOA"
