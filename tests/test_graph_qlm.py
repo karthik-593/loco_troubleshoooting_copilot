@@ -125,7 +125,23 @@ def test_low_confidence_clarifies_without_engine_or_agent():
 def test_unknown_fault_defers():
     cp = Copilot(_prov([ParseOutput(fault_guess="wipers_not_working", fault_confidence=0.95)], []))
     r = cp.turn(DiagnosisState(), "wipers dead")
-    assert r.terminal.kind in ("clarify", "defer_to_TLC")          # never a guessed procedure
+    assert r.terminal.kind == "defer_to_TLC" and r.stop_reason == "out_of_scope"   # never a guessed procedure
+    assert "isn't in my procedure set" in r.terminal.message and "QLM dropped" in r.terminal.message
+    assert r.reflex_runs == 0 and r.tool_path == ()
+
+
+def test_clarify_is_asked_once_then_out_of_scope_defers():
+    """§5.6 backstop through the graph: two unresolved turns → clarify, then defer — never the
+    same question twice. A later real fault resets the counter."""
+    vague = ParseOutput(fault_guess=None, fault_confidence=0.0)
+    cp = Copilot(_prov([vague, vague, ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes")],
+                       ["diff_completed_steps"]))
+    d = DiagnosisState()
+    assert cp.turn(d, "loco stopped").terminal.kind == "clarify" and d.clarify_asked == 1
+    r = cp.turn(d, "no relays dropped, just stopped")
+    assert r.terminal.kind == "defer_to_TLC" and r.stop_reason == "out_of_scope" and d.matched_fault is None
+    r = cp.turn(d, "QLM dropped")
+    assert r.terminal.kind != "defer_to_TLC" and d.matched_fault == QLM and d.clarify_asked == 0
 
 
 def test_state_persists_across_turns_and_iter_resets():

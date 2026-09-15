@@ -36,8 +36,18 @@ def test_heldout_parse(case, kb, provider):
     raw = r.raw
     print(f"\n{case['text']!r}\n  -> {raw.model_dump()}")
 
+    if case.get("out_of_scope"):
+        assert r.out_of_scope and r.update is None, "expected a §5.6 out-of-scope defer"
+        return
+    if case.get("never_acts"):
+        # borderline scope call left to the model; the invariant is: no update, and the
+        # deterministic backstop defers on the very next unresolved turn.
+        assert r.update is None and (r.out_of_scope or r.needs_clarification)
+        d = DiagnosisState(); d.clarify_asked = 1
+        assert parse_turn(case["text"], d, kb, provider).out_of_scope
+        return
     if "fault_confidence_below" in case:
-        assert r.needs_clarification
+        assert r.needs_clarification and not r.out_of_scope
         assert r.confidence < case["fault_confidence_below"]
         return
     if case.get("fault") is None and "fault" in case:

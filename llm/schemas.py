@@ -20,6 +20,12 @@ class ParseOutput(BaseModel):
         description="fault_id from the provided list, or null if none fits / not stated.")
     fault_confidence: float = Field(ge=0.0, le=1.0,
                                     description="0–1 confidence in fault_guess.")
+    problem_outside_list: YesNoUnknown = Field(
+        default="unknown",
+        description="'yes' if the pilot describes a concrete problem that is clearly NOT any "
+                    "listed fault — other equipment (headlight, wipers, brakes, horn...) or "
+                    "a relay not in the list. 'no' if it could be a listed fault once they say "
+                    "more (e.g. 'DJ tripped, relay unknown'). 'unknown' if no problem is stated.")
     confirms_fault: YesNoUnknown = Field(
         default="unknown",
         description="If the assistant just asked 'is it fault X?', the pilot's answer.")

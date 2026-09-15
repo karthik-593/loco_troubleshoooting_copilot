@@ -34,7 +34,7 @@ from engine.tools import run_tool
 from kb.schema import Fault
 from llm.decide import agent_decide
 from llm.interface import Providers
-from llm.parse import parse_turn
+from llm.parse import out_of_scope_reason, parse_turn
 from llm.phrase import phrase
 
 REFLEX_SHORT_CIRCUIT = "(reflex short-circuit)"
@@ -91,8 +91,12 @@ class Copilot:
     def parse_node(self, s: GraphState) -> GraphState:
         diag = s["diag"]
         r = parse_turn(s["pilot_text"], diag, self.kb, self.providers.parse, last_assistant=s.get("last_assistant"))
+        if r.out_of_scope:                          # §5.6: refuse gracefully, never guess
+            return {"update": None, "terminal": T.defer_to_TLC(out_of_scope_reason(self.kb)), "stop_reason": "out_of_scope"}
         if r.needs_clarification:
+            diag.clarify_asked += 1                 # backstop: the next unresolved turn defers
             return {"update": None, "terminal": T.clarify(r.clarification or ""), "stop_reason": "clarify"}
+        diag.clarify_asked = 0
         return {"update": r.update}
 
     def update_state_node(self, s: GraphState) -> GraphState:

@@ -16,6 +16,14 @@ def _caution(qlm, conditional=False):
     return T.caution(qlm, st, st.gate.on_first_reset, conditional=conditional)
 
 
+def test_out_of_scope_defer_keeps_the_covered_list(kb):
+    from llm.parse import out_of_scope_reason
+    t = T.defer_to_TLC(out_of_scope_reason(kb))
+    assert "I can verify: QLM dropped" in t.message
+    assert "out_of_scope_dropped_coverage" in guard(t, "This isn't in my procedure set. Contact TLC.")
+    assert not guard(t, t.message)
+
+
 def test_good_refusal_passes(qlm):
     r = phrase(_refuse(qlm), FakeProvider(text_queue=[
         "Do not reset QLM again. Make the log-book remark, inform TLC, and arrange a relief loco."]))

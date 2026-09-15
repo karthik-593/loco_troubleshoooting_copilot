@@ -53,6 +53,10 @@ five showcase conversations, run live, are in [docs/walkthrough.md](docs/walkthr
   drift — a refusal rewritten as an instruction never reaches the pilot.
 - **The loop is bounded** — max-iteration cap, idempotent tools, a no-progress detector,
   and a registry-only toolset; every guard degrades to the engine's deterministic terminal.
+- **Out-of-scope is a refusal, not a guess.** A problem outside the procedure set (headlight,
+  brakes, a relay not encoded) gets "this isn't in my procedure set — contact TLC" plus the
+  list of faults it *can* verify; a vague message is clarified once, and the engine defers
+  on the next unresolved turn rather than repeat the question (BUILD_PLAN §5.6).
 
 Gate mechanisms encoded so far: **reset-limit** (QLM: once only; a stated prior reset *or*
 a re-lock after the permitted reset — both refuse, and the recurrence is detected by the
@@ -121,7 +125,7 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Streamlit chat client showing the engine trace | `client/` |
 | Scenario suite, harness, baseline, report | `eval/` |
 | Showcase walkthrough generator | `scripts/demo.py` |
-| Tests — 190 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 21 live parse cases | `tests/` |
+| Tests — 196 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 24 live parse cases | `tests/` |
 
 Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 
@@ -137,8 +141,8 @@ python -m eval.harness --mode offline --assert-safe   # the CI safety gate
 python -m pytest tests/test_parse_live.py -m live     # live parse set
 python -m eval.harness --mode live --out eval/out/results_live.json
 python -m scripts.demo                                # regenerate docs/walkthrough.md
-uvicorn api.server:app                                # API on :8000
-streamlit run client/streamlit_app.py                 # chat client
+uvicorn api.server:app                                # API on :8000 (terminal 1; GET / points to the UI)
+streamlit run client/streamlit_app.py                 # chat client on :8501 (terminal 2; COPILOT_API_URL to override)
 dvc pull                                              # TSD PDF from the configured DVC remote (local folder)
 ```
 

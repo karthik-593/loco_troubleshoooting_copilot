@@ -50,9 +50,44 @@ def test_low_confidence_clarifies_instead_of_acting(kb):
 
 
 def test_unknown_fault_guess_is_dropped(kb):
+    """A fault named OUTSIDE the list is never acted on — and, per §5.6, it is out of scope
+    (a graceful defer), not a clarification loop."""
     p = _fake(ParseOutput(fault_guess="wipers_not_working", fault_confidence=0.95))
     r = parse_turn("wipers dead", DiagnosisState(), kb, p)
-    assert r.update is None and r.needs_clarification
+    assert r.update is None and r.out_of_scope and not r.needs_clarification
+
+
+def test_described_problem_with_no_listed_fault_is_out_of_scope(kb):
+    p = _fake(ParseOutput(fault_guess=None, fault_confidence=0.0, problem_outside_list="yes"))
+    r = parse_turn("headlight not working", DiagnosisState(), kb, p)
+    assert r.update is None and r.out_of_scope
+
+
+def test_in_scope_but_underspecified_clarifies_not_defers(kb):
+    """'DJ tripped, relay unknown' is inside the procedure set → clarify, not §5.6."""
+    p = _fake(ParseOutput(fault_guess=None, fault_confidence=0.0, problem_outside_list="no"))
+    r = parse_turn("dj tripped, dont know which relay", DiagnosisState(), kb, p)
+    assert r.needs_clarification and not r.out_of_scope
+
+
+def test_fact_key_of_another_fault_family_is_dropped(kb):
+    """Facts are KB-validated per family: a QRSI-1 key on a QLM message is dropped, not re-mapped."""
+    p = _fake(ParseOutput(fault_guess="QLM_dropped", fault_confidence=0.9,
+                          facts={"traction1_abnormality_found": "yes", "traction_abnormality_found": "yes"}))
+    r = parse_turn("QLM locked with QOP-1, RSI-1 smoking", DiagnosisState(), kb, p)
+    assert r.update.history.get("traction_abnormality_found") == "yes"      # QLM_with_QOP_QRSI is family
+    assert "traction1_abnormality_found" not in r.update.history
+
+
+def test_vague_message_clarifies_once_then_defers(kb):
+    """Deterministic backstop: the same clarification is never asked twice in a session."""
+    vague = ParseOutput(fault_guess=None, fault_confidence=0.0, problem_outside_list="unknown")
+    d = DiagnosisState()
+    r = parse_turn("something wrong", d, kb, _fake(vague))
+    assert r.needs_clarification and not r.out_of_scope
+    d.clarify_asked = 1                                  # the graph records the clarify
+    r = parse_turn("dunno", d, kb, _fake(vague))
+    assert r.out_of_scope and not r.needs_clarification
 
 
 def test_claimed_step_not_in_kb_is_rejected_and_surfaced(kb):

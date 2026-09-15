@@ -160,6 +160,8 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
     elif t.kind == "defer_to_TLC":
         if "tlc" not in low:
             v.append("defer_missing_TLC")
+        if "procedure set" in t.message and "i can verify" not in low:
+            v.append("out_of_scope_dropped_coverage")     # §5.6: the list of covered faults must survive
     return tuple(v)
 
 

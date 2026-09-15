@@ -76,6 +76,12 @@ def create_app(copilot: Optional[Copilot] = None) -> FastAPI:
     app = FastAPI(title="Loco Troubleshooting Verification Copilot", version="0.3.0")
     app.state.store = build_store(copilot)
 
+    @app.get("/")
+    def root():
+        """Browser landing: this is the API, not the UI (the chat client is Streamlit on :8501)."""
+        return {"service": app.title, "ui": "streamlit run client/streamlit_app.py  (http://localhost:8501)",
+                "docs": "/docs", "health": "/health", "diagnose": "POST /diagnose"}
+
     @app.get("/health")
     def health():
         return {"ok": True, "faults": app.state.store.copilot.kb.fault_ids, "disclaimer": DISCLAIMER}

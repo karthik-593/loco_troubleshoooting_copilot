@@ -77,3 +77,10 @@
   fault_any_of: [fire_on_loco]
   claimed: [open_dj_lower_panto_hba_off_flasher_stop, take_extinguisher_to_equipment]
   allow_clarify_if_no_fault: true
+# --- §5.6 out-of-scope: a concrete problem that is not in the procedure set ---
+- text: "my headlight is not working. i am going at normal speed. is there any issue?"
+  out_of_scope: true
+- text: "no traction suddenly. no relays dropped, loco just stopped"
+  never_acts: true            # borderline: clarify once or defer; never a procedure
+- text: "qop dropped"
+  never_acts: true            # QOP alone is not encoded (only QLM with QOP/QRSI); the relay IS in the vocabulary

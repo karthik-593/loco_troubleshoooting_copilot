@@ -385,3 +385,27 @@ requirements.txt                        # pinned
 - Safety gates are deterministic and always fire. The (future) LLM never decides a
   safety verdict and never invents procedure content (§5).
 - Show the YAML/code at each checkpoint and stop for review before moving on.
+
+## Post-M6: out-of-scope exit (BUILD_PLAN §5.6)
+
+Found in live use: a fault outside the KB (headlight, "no traction", QOP alone) looped on the
+same clarification every turn. §5.6 says "This isn't in my procedure set — contact TLC."
+
+- `ParseOutput.problem_outside_list` (yes/no/unknown): one bounded classification — is the
+  stated problem clearly outside the listed faults? It never selects a procedure. `yes`, or a
+  `fault_guess` naming a fault outside the list → `defer_to_TLC` with the §5.6 line plus the
+  list of faults the copilot CAN verify (`llm.parse.out_of_scope_reason`); `stop_reason=out_of_scope`.
+- Deterministic backstop (primary): `DiagnosisState.clarify_asked`. One clarify per unresolved
+  stretch; the next unresolved turn defers. A resolved fault resets it. The same clarification
+  is never asked twice.
+- Fact keys are now validated against the RESOLVED fault's family only (a QRSI-1 key on a
+  QLM-with-QOP message is dropped, not re-mapped), and the parser vocabulary tags each fact
+  with its owning fault(s).
+- Phrase guard: an out-of-scope defer that loses the "I can verify: ..." list falls back to
+  the engine's words (`out_of_scope_dropped_coverage`).
+- Held-out live parse set: 24 cases (headlight → out of scope; "qop dropped" and "no traction,
+  no relays" pinned as never-acts: the model's scope call is borderline and the backstop
+  defers on the next turn either way).
+
+Also: `GET /` on the API points at the Streamlit UI; the client's Apply/Swap buttons show an
+"API not reachable" error instead of a traceback.

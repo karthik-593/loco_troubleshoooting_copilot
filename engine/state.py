@@ -58,6 +58,7 @@ class DiagnosisState:
     stuck_at: Optional[str] = None
     tool_results: dict[str, Any] = field(default_factory=dict)  # idempotency / no-progress
     iter_count: int = 0                            # loop guard (§6)
+    clarify_asked: int = 0                         # unresolved-fault turns so far (§5.6 backstop)
     # Session loco context ("session bar"): [leading] or [leading, trailing]. The fault is
     # attributed to locos[active_loco]. Kept alongside §10.1's ``config`` (which mirrors the
     # active loco's config for backward compatibility with BUILD_PLAN's state shape).

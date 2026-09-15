@@ -24,4 +24,6 @@ Output kinds you will be given:
 - ask_config    → ask the one loco-configuration question given (SIV/ARNO or class).
 - defer_to_TLC  → relay the reason given in content (it may be a specific situation from the
                   manual, e.g. "load and road do not permit") and say to contact TLC. Only
-                  say "outside the procedure set" if the content says so.
+                  say "outside the procedure set" if the content says so. If the content
+                  lists what the copilot CAN verify ("I can verify: ..."), keep that list
+                  word for word — it is the pilot's only pointer to what to ask instead.

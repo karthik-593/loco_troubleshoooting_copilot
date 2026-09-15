@@ -48,6 +48,28 @@ class ParseResult:
     clarification: Optional[str] = None
     raw: Optional[ParseOutput] = None
     rejected_steps: tuple[str, ...] = field(default=())   # model claims not in the KB
+    out_of_scope: bool = False             # §5.6: a real problem, not in the procedure set → defer
+
+
+def _fault_name(fault_id: str) -> str:
+    return fault_id.replace("_", " ")
+
+
+def out_of_scope_reason(kb: KnowledgeBase) -> str:
+    """§5.6 wording. Lists what IS covered so the pilot is not left guessing; no procedure content."""
+    return ("This isn't in my procedure set. I can verify: "
+            + ", ".join(_fault_name(f) for f in kb.fault_ids) + ". Refer to the TSD for it.")
+
+
+def _unresolved(out: ParseOutput, state: DiagnosisState, kb: KnowledgeBase) -> ParseResult:
+    """No fault resolved this turn. Out-of-scope (§5.6) if the pilot described a concrete
+    problem clearly outside the list — or the model named one outside it — OR if
+    a clarification was already asked and still nothing resolves (deterministic backstop:
+    the same question is never asked twice). Otherwise a single clarify (§8)."""
+    named_outside = bool(out.fault_guess) and out.fault_guess not in kb.fault_ids
+    if (out.fault_guess is None and out.problem_outside_list == "yes") or named_outside or state.clarify_asked >= 1:
+        return ParseResult(None, out.fault_confidence, False, None, out, out_of_scope=True)
+    return ParseResult(None, out.fault_confidence, True, CLARIFY_QUESTION, out)
 
 
 # ---------------------------------------------------------------------------
@@ -69,12 +91,16 @@ def kb_vocabulary(kb: KnowledgeBase) -> str:
         for s in f.gated_steps:
             lines.append(f"- {fid}.{s.id}: (gated) the pilot says they already reset / performed the gated action")
     lines.append("")
-    extra = sorted({k for fid in kb.fault_ids for k in kb.get(fid).history_keys}
-                   - {HF_RESET_EARLIER, HF_ABNORMALITY})
-    if extra:
-        lines.append("Fault-specific facts (return under 'facts' only when the pilot states them):")
-        for k in extra:
-            lines.append(f"- {k}: " + _FACT_HINTS.get(k, "yes/no as stated by the pilot"))
+    owners: dict[str, list[str]] = {}
+    for fid in kb.fault_ids:
+        for k in kb.get(fid).history_keys:
+            if k not in (HF_RESET_EARLIER, HF_ABNORMALITY):
+                owners.setdefault(k, []).append(fid)
+    if owners:
+        lines.append("Fault-specific facts (return under 'facts' only when the pilot states them; "
+                     "each is valid only for the fault(s) in brackets):")
+        for k in sorted(owners):
+            lines.append(f"- {k} [{', '.join(owners[k])}]: " + _FACT_HINTS.get(k, "yes/no as stated by the pilot"))
         lines.append("")
     lines.append("Actions (intended_action): reset_QLM = about to reset the QLM relay target; "
                  "work_on_roof = about to climb on to the loco roof (pantograph work)")
@@ -218,11 +244,11 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
             if guess and guess != state.matched_fault:
                 fault_id, confirmed, confidence = guess, False, out.fault_confidence
             else:
-                return ParseResult(None, out.fault_confidence, True, CLARIFY_QUESTION, out)
+                return _unresolved(out, state, kb)
     else:
         guess = out.fault_guess if out.fault_guess in kb.fault_ids else None
         if guess is None or out.fault_confidence < CLARIFY_THRESHOLD:
-            return ParseResult(None, out.fault_confidence, True, CLARIFY_QUESTION, out)
+            return _unresolved(out, state, kb)
         fault_id, confirmed, confidence = guess, False, out.fault_confidence
 
     accepted, rejected = _validate(out, fault_id, kb)
@@ -238,9 +264,11 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         history[HF_RESOLVED] = out.fault_resolved
     if out.fault_recurred == "yes":                 # parser fast path; the engine backstop is primary
         history[HF_RECURRED] = "yes"
-    allowed = {k for fid in kb.fault_ids for k in kb.get(fid).history_keys}
+    # KB-declared keys of the resolved fault's family only (the fault + its reroute targets);
+    # a key belonging to another fault is dropped, never re-mapped.
+    allowed = {k for fid in kb.fault_ids if same_family(kb, fid, fault_id) for k in kb.get(fid).history_keys}
     for k, v in out.facts.items():
-        if k in allowed and _yn(v):            # KB-declared keys only; unknown keys dropped
+        if k in allowed and _yn(v):
             history[k] = v
 
     # Does this message PRESENT the fault (relay acted now)? Deterministic on an alias hit —

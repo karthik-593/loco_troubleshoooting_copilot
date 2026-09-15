@@ -60,13 +60,16 @@ with st.sidebar:
     else:
         active = 0
     b1, b2 = st.columns(2)
-    if b1.button("Apply"):
-        httpx.put(f"{API_URL}/session/{st.session_state.session_id}/locos",
-                  json={"locos": rows, "active": active}, timeout=10)
-        st.rerun()
-    if multi and b2.button("Swap ⇄"):
-        httpx.post(f"{API_URL}/session/{st.session_state.session_id}/swap", timeout=10)
-        st.rerun()
+    try:
+        if b1.button("Apply"):
+            httpx.put(f"{API_URL}/session/{st.session_state.session_id}/locos",
+                      json={"locos": rows, "active": active}, timeout=10).raise_for_status()
+            st.rerun()
+        if multi and b2.button("Swap ⇄"):
+            httpx.post(f"{API_URL}/session/{st.session_state.session_id}/swap", timeout=10).raise_for_status()
+            st.rerun()
+    except httpx.HTTPError as exc:
+        st.error(f"API not reachable at {API_URL} — start it with `uvicorn api.server:app` ({exc})")
     if st.button("New session"):
         try:
             httpx.delete(f"{API_URL}/session/{st.session_state.session_id}", timeout=10)
