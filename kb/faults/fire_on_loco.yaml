@@ -1,0 +1,108 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Procedure: Smoke or fire on any equipment of the loco (general fire response)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 1 "USE OF FIRE EXTINGUISHERS", section B "While using", items 1–12,
+#         printed pp.43–44; restated compactly in Chapter 4 "General Instructions",
+#         item 6, printed p.74.
+# This is the general procedure that the relay sections point at ("use fire extinguisher",
+# §6.1.1(c), §6.1.2(b), §6.02.1(a) …) without spelling out. Reachable directly when the
+# pilot reports smoke/fire (parser selection). An automatic cross-fault jump from an
+# abnormality refusal is NOT implemented — held pending an explicit decision (HANDOFF).
+# Gate-free: the TSD gives it as a fixed action sequence with one "if uncontrollable" clause.
+# STATUS: clauses quoted and encoding CONFIRMED by the user 2026-09-15 before encoding.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: fire_on_loco
+aliases:
+  - "fire on loco"
+  - "fire on the loco"
+  - "loco on fire"
+  - "smoke on loco"
+  - "smoke in loco"
+  - "fire in loco"
+  - "equipment on fire"
+  - "smoke or fire noticed"
+  - "smoke coming"
+  - "smoke is coming"
+  - "smoke coming out"
+  - "fire noticed"
+  - "smoke noticed"
+  - "caught fire"
+  - "is on fire"
+precedence: -1                     # general procedure: a specific fault alias in the same message wins
+config_dependency: none            # Ch.1 B / Ch.4 item 6 do not branch on loco type or fitment
+type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
+presenting_signs:                  # Ch.1 B.1; Ch.4 item 6
+  - "Smoke or fire noticed on any equipment on the loco"
+
+combination_rules: []
+
+defer_conditions:
+  - fact: fire_uncontrollable
+    text: >-
+      The fire is uncontrollable: inform the section controller or station master
+      to arrange a fire engine, and observe G & SR 6.03 and 6.10.
+    source: "Ch.1 B.9, p44"
+
+steps:
+  - id: open_dj_lower_panto_hba_off_flasher_stop
+    text: >-
+      Open DJ, lower the pantograph, switch OFF HBA, switch on the flasher light and
+      stop the train.
+    gate: null
+    source: "Ch.1 B.2, p43; Ch.4 General Instructions item 6, p74 (open DJ, switch on FL, stop the train, switch off HBA)"
+
+  - id: take_extinguisher_to_equipment
+    text: >-
+      Remove the fire extinguishers from the bracket, take one near the equipment on
+      fire and cover your nose with a wet cloth.
+    gate: null
+    source: "Ch.1 B.3, p43"
+
+  - id: break_seal_remove_clip
+    text: "Break the seal and remove the locking clip."
+    gate: null
+    source: "Ch.1 B.4, p43"
+
+  - id: direct_jet_at_base_of_fire
+    text: >-
+      Stand on the side opposite the smoke, press the spring valve and face the nozzle
+      towards the base of the fire; strike the knob by hand; direct the jet at the base
+      of the fire with a sweeping action.
+    gate: null
+    source: "Ch.1 B.5–B.7, p44"
+
+  - id: use_remaining_extinguishers_if_needed
+    text: >-
+      If the fire cannot be put out with one extinguisher, use the remaining fire
+      extinguishers in the same way. (DCP or CO2 extinguishers are the type for an
+      electrical fire.)
+    gate: null
+    source: "Ch.1 B.8, p44; Ch.1 A.4, p43 (DCP/CO2 for electrical fire)"
+
+  - id: discharge_remaining_pressure
+    text: >-
+      After putting out the fire, discharge the remaining pressure from the fire
+      extinguishers (DCP type).
+    gate: null
+    source: "Ch.1 B.10, p44"
+
+  - id: isolate_equipment_inform_tlc_work_onwards
+    text: >-
+      Isolate the affected equipment, inform TLC, and work onwards if possible.
+    gate: null
+    source: "Ch.1 B.11, p44"
+
+  - id: logbook_remark
+    text: >-
+      Make a remark in the loco log book regarding the fire extinguisher used and the
+      affected equipment.
+    gate: null
+    completes: true
+    source: "Ch.1 B.12, p44"
+
+terminal_actions:
+  resolved:   "fire out; affected equipment isolated; TLC informed; work onwards if possible; log-book remark made"   # B.11–B.12
+  unresolved: "fire uncontrollable — section controller / station master to arrange fire engine; G & SR 6.03 & 6.10"  # B.9
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.1 'USE OF FIRE EXTINGUISHERS' B.1–B.12 pp.43–44; Ch.4 General Instructions item 6 p.74"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

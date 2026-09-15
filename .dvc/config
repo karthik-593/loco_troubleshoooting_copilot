@@ -1,2 +1,5 @@
 [core]
     analytics = false
+    remote = localstore
+['remote "localstore"']
+    url = E:/loco_troubleshooting_dvc_remote

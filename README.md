@@ -105,7 +105,8 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | QLM with QOP/QRSI · QLM with QLA/QOA | §6.1.2 / 6.1.3 | combination reroute; isolate-then-reset |
 | Sanders not working | §10.12 | benign, gate-free, no confirmation turn |
 | Pantograph damaged | §10.03 / 11.04 | hazard-exposure gate |
-| QRSI-1 drops on run | §6.02.1 | isolate-and-retest ladder, resume-from-stuck |
+| QRSI-1 / QRSI-2 drop on run | §6.02.1 / §6.02.2 | isolate-and-retest ladder, resume-from-stuck; alternative branches |
+| Smoke or fire on any equipment | Ch.1 B.1–B.12 / Ch.4 item 6 | general fire response, gate-free |
 
 ## Layout
 

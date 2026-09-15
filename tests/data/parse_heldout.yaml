@@ -67,3 +67,13 @@
 - text: "QRSI-1 target dropped. SL-1 burning, tried to isolate but couldn't"
   fault: QRSI1_drops_on_run
   facts: {traction1_abnormality_found: "yes", isolation_successful: "no"}
+# --- M6-optional: QRSI-2 + fire_on_loco ---
+- text: "QRSI-2 target dropped on run. checked RSI-2, TM4 5 6, SL-2 all normal. reset, dropped again in 3 minutes. tried HMCS-2 in 2,3,4, drops in all positions"
+  fault: QRSI2_drops_on_run
+  claimed: [check_traction_circuit_2, reset_and_accelerate_gradually, try_hmcs2_positions_if_frequent]
+- text: "smoke coming from the machine room near the aux compressor"
+  fault: fire_on_loco
+- text: "opened DJ, panto down, HBA off, flasher on, train stopped. got the extinguisher there"
+  fault_any_of: [fire_on_loco]
+  claimed: [open_dj_lower_panto_hba_off_flasher_stop, take_extinguisher_to_equipment]
+  allow_clarify_if_no_fault: true

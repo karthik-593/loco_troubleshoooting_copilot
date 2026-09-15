@@ -55,7 +55,7 @@
             "tool_path": [],
             "stop": "clarify",
             "reflex_runs": 0,
-            "reply": "I didn't catch which relay or fault this is. Which relay target has dropped, and what have you checked so far?",
+            "reply": "I didn't catch which fault this is. Which relay target has dropped — or what exactly is wrong — and what have you checked so far?",
             "phrase_fallback": true,
             "violations": [],
             "source": "BUILD_PLAN §8 (low-confidence parse → clarify, never act)"

@@ -54,6 +54,9 @@ class KnowledgeBase:
             return self._faults[fid]
         hits = {f for alias, f in self._alias_index.items()
                 if re.search(rf"(?<![\w-]){re.escape(alias)}(?![\w-])", t)}
+        if len(hits) > 1:                       # a specific fault outranks a general procedure
+            top = max(self._faults[f].precedence for f in hits)
+            hits = {f for f in hits if self._faults[f].precedence == top}
         if len(hits) == 1:
             return self._faults[hits.pop()]
         return None  # none, or ambiguous across faults → not deterministic

@@ -103,6 +103,11 @@ class Step(_Strict):
     # step's own "If …" text asks the question. Lets alternative clauses ((b) long interval
     # vs (c) frequent) coexist in one ordered checklist without asking the wrong branch.
     applies_when: dict[str, str] = Field(default_factory=dict)
+    # Facts that CLAIMING this step establishes, when the TSD reaches the step only through a
+    # branch (e.g. the HMCS ladder is reached only in the "dropping frequently" branch). Set by
+    # the engine on the claim if the fact is not already stated — declarative, cited, and
+    # independent of whether the parser extracted the branch fact.
+    implies: dict[str, str] = Field(default_factory=dict)
     # Completing this step ends the procedure on its 'resolved' terminal (e.g. "isolate that
     # TM and work with 5/6 load" — a sanctioned way onward, not a failure).
     completes: bool = False
@@ -152,6 +157,10 @@ class Fault(_Strict):
     # "none" | one class | a list of classes the procedure branches on. Parallel to
     # config_dependency; both default to none unless the TSD text branches on the axis.
     type_dependency: Union[Literal["none"], LocoType, list[LocoType]] = "none"
+    # Alias-match precedence when ONE message matches several faults: the higher wins; a tie
+    # is ambiguous (no deterministic match). General procedures (fire_on_loco) declare -1 so
+    # a specific fault named in the same message ("QLM locked, arc chute burning") wins.
+    precedence: int = 0
     presenting_signs: list[str] = Field(default_factory=list)
     combination_rules: list[CombinationRule] = Field(default_factory=list)
     defer_conditions: list[DeferCondition] = Field(default_factory=list)
@@ -220,6 +229,7 @@ class Fault(_Strict):
             if s.finding_key:
                 keys.append(s.finding_key)
             keys.extend(s.applies_when.keys())
+            keys.extend(s.implies.keys())
             if s.isolation:
                 keys.append(s.isolation.needs_history)
             if s.gate and s.gate.needs_history:

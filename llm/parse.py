@@ -36,8 +36,8 @@ from llm.schemas import ParseOutput
 PROMPT_PATH = Path(__file__).with_name("prompts") / "parse.md"
 CLARIFY_THRESHOLD = 0.6
 
-CLARIFY_QUESTION = ("I didn't catch which relay or fault this is. Which relay target has "
-                    "dropped, and what have you checked so far?")
+CLARIFY_QUESTION = ("I didn't catch which fault this is. Which relay target has dropped — or what "
+                    "exactly is wrong — and what have you checked so far?")
 
 
 @dataclass(frozen=True)
@@ -99,6 +99,16 @@ _CLAIM_HINTS = {
     "try_hmcs1_positions_if_frequent": "tried HMCS-1 positions 2, 3, 4",
     "isolate_tm_of_bad_hmcs1_position": "isolated TM1 / TM2 / TM3 / that traction motor",
     "isolate_truck_1_if_all_positions": "isolated truck 1 / HVSI-1 HVMT-1 HVSL-1 on 0",
+    "check_traction_circuit_2": "checked RSI-2 / TM4-6 / SL-2 / L4-L6 / circuit-2 / traction circuit",
+    "try_hmcs2_positions_if_frequent": "tried HMCS-2 positions 2, 3, 4",
+    "isolate_tm_of_bad_hmcs2_position": "isolated TM4 / TM5 / TM6 / that traction motor",
+    "isolate_truck_2_if_all_positions": "isolated truck 2 / HVSI-2 HVMT-2 HVSL-2 on 0",
+    "open_dj_lower_panto_hba_off_flasher_stop": "opened DJ / lowered panto / HBA off / flasher on / stopped the train",
+    "take_extinguisher_to_equipment": "took the extinguisher to the equipment / wet cloth",
+    "direct_jet_at_base_of_fire": "used the extinguisher / sprayed the base of the fire",
+    "use_remaining_extinguishers_if_needed": "used a second / all the extinguishers",
+    "isolate_equipment_inform_tlc_work_onwards": "isolated the equipment / informed TLC / working onwards",
+    "logbook_remark": "made the log book remark",
 }
 
 # Plain-language hints for KB-declared fact keys (mapping guidance only, not procedure text).
@@ -114,10 +124,14 @@ _FACT_HINTS = {
     "pantograph_not_lowered": "the pantograph did NOT lower when ZPT was put on 0 / BPEMS pressed",
     "both_pantographs_damaged": "BOTH pantographs are damaged",
     "load_and_road_do_not_permit": "the pilot says the load and road do not permit working onwards (with the load restriction)",
-    "drops_after_long_interval": "QRSI-1 dropped again only after a LONG interval of running ('no' if it dropped again soon / repeatedly)",
-    "drops_frequently": "QRSI-1 is dropping frequently / repeatedly / soon after each reset ('no' if only after a long interval)",
+    "drops_after_long_interval": "the relay (QRSI-1/2) dropped again only after a LONG interval of running ('no' if it dropped again soon / repeatedly)",
+    "drops_frequently": "the relay (QRSI-1/2) is dropping frequently / repeatedly / soon after each reset ('no' if only after a long interval)",
     "drops_in_particular_hmcs1_position": "with HMCS-1 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
     "drops_in_all_hmcs1_positions": "with HMCS-1 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
+    "traction2_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-2 equipment (RSI-2, J2, SL-2, L4-L6, TM4-6, AM4 shunt, RU5/RU6, QD-2, SJ4-6, TFR terminals)",
+    "drops_in_particular_hmcs2_position": "with HMCS-2 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
+    "drops_in_all_hmcs2_positions": "with HMCS-2 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
+    "fire_uncontrollable": "the pilot says the fire cannot be put out / is out of control / extinguishers exhausted and still burning",
 }
 
 

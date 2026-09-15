@@ -83,6 +83,7 @@ steps:
       is no abnormality, change HMCS-1 to positions 2, 3 and 4 one by one and try.
     gate: null
     applies_when: {drops_frequently: "yes"}
+    implies: {drops_frequently: "yes", drops_after_long_interval: "no"}   # the HMCS ladder is reached only via (c)'s frequent branch
     source: "§6.02.1(c), p86"
 
   - id: isolate_tm_of_bad_hmcs1_position
@@ -91,6 +92,7 @@ steps:
       motor and work with 5/6 of the maximum permissible load.
     gate: null
     applies_when: {drops_frequently: "yes", drops_in_particular_hmcs1_position: "yes"}
+    implies: {drops_frequently: "yes", drops_after_long_interval: "no", drops_in_particular_hmcs1_position: "yes"}
     completes: true
     source: "§6.02.1(d), p86"
 
@@ -101,6 +103,7 @@ steps:
       otherwise work with 50% of the maximum permissible load.
     gate: null
     applies_when: {drops_frequently: "yes", drops_in_all_hmcs1_positions: "yes"}
+    implies: {drops_frequently: "yes", drops_after_long_interval: "no", drops_in_all_hmcs1_positions: "yes"}
     completes: true
     source: "§6.02.1(e), p86"
 

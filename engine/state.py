@@ -170,6 +170,12 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
     known = set(state.steps_required)
     unrecognised = [s for s in update.claimed_steps if s not in known]
     state.steps_claimed_done.update(s for s in update.claimed_steps if s in known)
+    # KB-declared implications of a claim (branch facts the step's position establishes)
+    if fault is not None:
+        for s in fault.steps:
+            if s.id in update.claimed_steps and s.id in known:
+                for k, v in s.implies.items():
+                    state.history_facts.setdefault(k, v)
     if unrecognised:
         state.tool_results["unrecognised_claims"] = unrecognised
     else:

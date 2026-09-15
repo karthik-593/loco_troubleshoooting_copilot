@@ -7,6 +7,24 @@ Milestone 1.
 ---
 
 ## Status
+- **Post-M6 additions (2026-09-15, all quote-first and user-confirmed):**
+  - `kb/faults/qrsi2_drops_on_run.yaml` (§6.02.2 pp.86–87): mirror of QRSI-1 — truck 2, TMs 4/5/6,
+    HMCS-2, HVSI-2/HVMT-2/HVSL-2, TFR terminals swapped (a3/a4 on 3900 kVA; a5/a6 on 5400 kVA);
+    "particular position" folded into (c), truck isolation (d), TLC clause (e). Same INFERRED
+    success-path provenance split as QRSI-1. `config_dependency: none` (both designations in text).
+  - `kb/faults/fire_on_loco.yaml` (Ch.1 "Use of fire extinguishers" B.2–B.12 pp.43–44; Ch.4
+    item 6 p.74): gate-free general fire response; defer `fire_uncontrollable` (B.9); completes
+    on the log-book remark (B.12). Reachable by parser selection / aliases. **Held, not built:**
+    an automatic cross-fault jump from an abnormality refusal to this procedure (test
+    `test_no_automatic_jump_from_abnormality_refusal_to_fire_procedure` pins the current behaviour).
+  - Engine: `Step.implies` — facts that CLAIMING a step establishes (the HMCS ladder is reached
+    only via the frequent branch); found live when the parser claimed the HMCS step without
+    setting `drops_frequently` and the engine asked clause (b) again. `Fault.precedence` —
+    alias-match tie-break so a specific fault named with smoke/fire wording outranks the general
+    fire procedure ("QLM locked, smoke coming from the CGR" → QLM_dropped). Clarify wording no
+    longer relay-centric. Held-out live parse: 21/21. Scenario suite 13/13 offline + live.
+  - **DVC remote configured (user choice: local folder)** — `.dvc/config` remote `localstore` →
+    `E:/loco_troubleshooting_dvc_remote`; PDF pushed. A fresh clone on this machine can `dvc pull`.
 - **Milestone: M6 — demo + write-up (2026-09-15).** 182 offline tests; 18/18 live parse; suite
   13/13 offline and live (unsafe 0, missed-gate 0, 7 paths). `scripts/demo.py` regenerates
   `docs/walkthrough.md` (five showcase conversations, live, with per-turn engine trace) and
@@ -229,8 +247,10 @@ Per BUILD_PLAN §13 layout:
 **Built in M4b:** `pantograph_damaged`, `QRSI1_drops_on_run` + engine above.
 **Built in M5:** `eval/` (scenarios, harness, baseline, report), `dvc.yaml`/`dvc.lock`, CI safety gate.
 **Built in M6:** `scripts/demo.py`, `docs/walkthrough.md` (+ offline), README write-up.
-**Open (all optional, all quote-first):** QRSI-2 (§6.02.2), `fire_on_loco`, a genuine
-config-dependent fault, `transformer_rating` axis, DVC remote, video walkthrough.
+**Built post-M6:** QRSI-2, `fire_on_loco`, DVC local remote.
+**Open (all optional, all quote-first):** a genuine config-dependent fault (none found in the
+TSD yet), `transformer_rating` axis (recorded), the abnormality→fire cross-fault jump (held),
+video walkthrough, mobile client.
 
 ---
 

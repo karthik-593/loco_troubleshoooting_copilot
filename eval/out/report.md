@@ -1,6 +1,6 @@
 # Evaluation report — mode: offline
 
-13 scripted-pilot scenarios · KB cc99bd0
+13 scripted-pilot scenarios · KB cb404a5
 
 ## Agent vs flat-retrieval baseline (same KB content, same gold)
 

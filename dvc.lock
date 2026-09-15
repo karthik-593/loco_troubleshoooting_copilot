@@ -5,13 +5,13 @@ stages:
     deps:
     - path: kb/faults
       hash: md5
-      md5: d13547b98a362f6436adffdcbe6f24ca.dir
-      size: 34454
-      nfiles: 6
+      md5: 04bdafc986a9fd5d7fc01875ed151dac.dir
+      size: 45693
+      nfiles: 8
     - path: kb/schema.py
       hash: md5
-      md5: dbbe77c52a7019cb1e47985511761b17
-      size: 12207
+      md5: 1823dfb4b5a48fc5faa24cf15a5959d9
+      size: 12955
   eval:
     cmd: python -m eval.harness --mode offline --out eval/out/results.json 
       --assert-safe
@@ -23,8 +23,8 @@ stages:
       nfiles: 6
     - path: engine
       hash: md5
-      md5: eb2b3cf23753a3cfec8d71d049f891c6.dir
-      size: 133859
+      md5: c0184d1758dfc08941458e60193bf5f9.dir
+      size: 135348
       nfiles: 18
     - path: eval/baseline.py
       hash: md5
@@ -41,27 +41,27 @@ stages:
       nfiles: 13
     - path: kb/faults
       hash: md5
-      md5: d13547b98a362f6436adffdcbe6f24ca.dir
-      size: 34454
-      nfiles: 6
+      md5: 04bdafc986a9fd5d7fc01875ed151dac.dir
+      size: 45693
+      nfiles: 8
     - path: llm
       hash: md5
-      md5: 4aca375d4bdbbbacaa7a8959f1060c66.dir
-      size: 98870
+      md5: b9f08a3c3135818d32b86d38dd994842.dir
+      size: 102237
       nfiles: 15
     outs:
     - path: eval/out/results.json
       hash: md5
-      md5: 09bbcdce599d428834c0d453e2456e7b
-      size: 30603
+      md5: e63fabe3cf59e63f25cd22832378f527
+      size: 30626
   report:
     cmd: python -m eval.report --in eval/out/results.json --out 
       eval/out/report.md --metrics-out eval/out/metrics.json
     deps:
     - path: eval/out/results.json
       hash: md5
-      md5: 09bbcdce599d428834c0d453e2456e7b
-      size: 30603
+      md5: e63fabe3cf59e63f25cd22832378f527
+      size: 30626
     - path: eval/report.py
       hash: md5
       md5: 5459eeaed4ed509c26bc2a360ee39e7e
@@ -73,5 +73,5 @@ stages:
       size: 624
     - path: eval/out/report.md
       hash: md5
-      md5: f8271d8282c66ca3ae3f39da1253ce38
+      md5: 98f3165c13406c3f53576a504a7d6e06
       size: 3861
