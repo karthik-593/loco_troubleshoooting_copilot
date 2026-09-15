@@ -176,6 +176,9 @@ class DeepSeekProvider:
                 {"role": "user", "content": user},
             ],
         )
+        if not resp.choices:
+            # Observed live: DeepSeek occasionally returns a 200 with ``choices: null``.
+            raise RuntimeError("empty response from DeepSeek (no choices)")
         choice = resp.choices[0]
         if choice.finish_reason not in (None, "stop"):
             raise RuntimeError(f"unexpected finish_reason={choice.finish_reason}")
@@ -193,6 +196,8 @@ class DeepSeekProvider:
             extra_body=dict(DEEPSEEK_NO_THINKING),  # non-thinking mode, sent explicitly
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
         )
+        if not resp.choices:
+            raise RuntimeError("empty response from DeepSeek (no choices)")
         return (resp.choices[0].message.content or "").strip()
 
 

@@ -156,3 +156,15 @@ def test_deepseek_unexpected_reasoning_content_is_an_error():
 
     with pytest.raises(RuntimeError, match="thinking mode was not disabled"):
         DeepSeekProvider(client=_ds_client(handler)).structured("sys", "user", DecideOutput)
+
+
+def test_deepseek_null_choices_is_a_clean_error():
+    """Seen live: HTTP 200 with ``choices: null``. Must raise a RuntimeError, not TypeError."""
+    def handler(request):
+        body = json.loads(request.content)
+        return httpx.Response(200, json={"id": "x", "object": "chat.completion", "created": 0,
+                                         "model": body["model"], "choices": None,
+                                         "usage": {"prompt_tokens": 1, "completion_tokens": 0, "total_tokens": 1}})
+
+    with pytest.raises(RuntimeError, match="no choices"):
+        DeepSeekProvider(client=_ds_client(handler)).structured("sys", "user", DecideOutput)
