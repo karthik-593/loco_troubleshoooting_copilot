@@ -7,8 +7,48 @@ Milestone 1.
 ---
 
 ## Status
-- **Milestone: M3 — LangGraph agent loop + FastAPI + Streamlit built (2026-09-15).**
-  116 offline tests green; 10 live parse tests pass on deepseek-flash. M2: 2026-09-14. M1: 2026-09-14.
+- **Milestone: M4a + §6.1.1(f) precision pass (2026-09-15).** 147 offline tests, 14/14 live
+  parse cases on deepseek-flash. M3: 2026-09-15. M2/M1: 2026-09-14.
+- **M4a KB additions — PENDING HUMAN CONFIRMATION (review against the TSD before treating as
+  locked):** `kb/faults/qlm_with_qop_qrsi.yaml` (§6.1.2), `kb/faults/qlm_with_qla_qoa.yaml`
+  (§6.1.3), `kb/faults/sanders_not_working.yaml` (§10.12). The combination faults reuse QLM's
+  three step ids for "(a) follow 6.1.1" (claims carry across a reroute), add the circuit-(b)
+  step with its own `abnormality_key` + `isolation:` block, and a `reset_decision` gate for
+  (c)/(d). **Confirmed by the user 2026-09-15:** `on_first_reset` inherits §6.1.1(d)(e)
+  (10-min feeding-circuit checks, log book, TLC) via §6.1.2(a)/§6.1.3(a) — keep, no trim.
+- **§6.1.1(f) precision pass (user-directed; both fixes approved and implemented):**
+  - **(f)(ii) recurrence.** Previously the gate knew one fact (`was_QLM_reset_earlier_this_trip`)
+    and could not tell "reset twice" from "reset once, then QLM re-locked" — a re-trip after a
+    valid first reset could be met with a second "reset once" caution. Now: `fault_recurred`
+    fact; rule 1 fires on EITHER a stated prior reset (`second_reset`) OR recurrence
+    (`recurred_after_reset`), same (f) text, engine framing sentence prepended for recurrence.
+    **PRIMARY mechanism = engine backstop in `update_state`:** once a reset was performed
+    (`reset_performed_this_session`, set when the gated step is claimed) or instructed
+    (`reset_instructed_this_session`, set by `reassess` when it emits the first-reset caution),
+    any later message that PRESENTS the fault (`StateUpdate.fault_presenting` — deterministic on
+    an alias hit; else a confident model guess that says so) sets `fault_recurred=yes` in the
+    engine regardless of the parser (parser flag = fast path). Biased to over-refuse.
+    `llm.parse.same_family()` keeps a re-presentation of "QLM" after a reroute on the RESOLVED
+    fault. Phrase guard enforces re-trip framing for the recurrence reason. YAML: gate `rule`
+    reworded, `recurrence_history: fault_recurred`, source cites (f)(ii); mirrored to both
+    combination faults' (d).
+  - **(f)(i) / (c) inline hazard.** (c)'s "use fire extinguisher and ask for Relief Engine" was
+    on step (c) but the engine appended it for ANY abnormality. Verified against the TSD text:
+    (a) and (b) are pure check clauses with no inline consequence of their own → generic (f)(i).
+    New `Step.finding_key` (`arc_chute_terminal_abnormality` on (c)): refuse TRIGGER stays the
+    fault-wide `abnormality_found`; (c)'s text attaches only when its finding fact is yes.
+    `terminal_actions.abnormality_found` trimmed to "do_not_reset; log; inform TLC; relief loco".
+  - Tests: `tests/test_recurrence.py` (9) incl. the four required: recurrence e2e; (a)-vs-(c)
+    text; parser-blind recurrence; recurrence across a reroute. Live verified.
+- **M4a engine decisions:** schema `Step.abnormality_key` / `Step.isolation` / `Fault.history_keys`;
+  reset_limit evaluator with per-step abnormality verdicts and rule 2b isolate-then-reset
+  (isolated → CAUTION "5-isolated"; not isolated → REFUSE `abnormality_not_isolated`; unstated
+  → ASK); `fault_resolved` → confirm with `terminal_actions.resolved`; **deviation from
+  BUILD_PLAN §7 (flagged, awaiting explicit OK):** combination rerouting is deterministic in
+  `engine.state.resolve_combination`, after every state update and before the reflex —
+  otherwise the reflex can fire under the wrong procedure (seen live). `check_combination`
+  remains a Class-A query tool. Parser: `facts{}` for KB-declared keys, per-step
+  `_CLAIM_HINTS`, any-fault prefix stripping, `abnormality_found` scoped to the feeding circuit.
 - **M3 decisions:**
   - `agent/graph.py`: nodes parse → update_state → reflex → agent_decide → execute_tool →
     reflex_after_tool → reassess → (loop | terminal) → phrase. The reflex is a node on every
