@@ -50,8 +50,16 @@ Milestone 1.
     **Interpretation flagged in the file:** post-isolation action on (a) is not stated by the TSD
     ("try to isolate the same, otherwise contact TLC"); encoded as returning to (a)'s
     no-abnormality path (reset, accelerate gradually), by analogy with §6.1.2(b). Confirm or trim.
-    Config-axis note: TFR terminal designations differ by transformer rating (3900 vs 5400 kVA);
-    both given in the text, `config_dependency: none` — a candidate config axis beyond SIV/ARNO.
+    **Config axis — RECORDED, not built (user decision 2026-09-15):** `transformer_rating`
+    (3900 | 5400 kVA) is a known future config axis, distinct from SIV/ARNO. TFR terminal
+    designations depend on it: 3900 kVA → a5/a6 on QRSI-1, a3/a4 on QRSI-2; 5400 kVA → reversed
+    (§6.02.1(a), §6.02.2(a)). Applies to QRSI-1/2 and any TFR-terminal-referencing fault. Capture
+    per loco (session bar) when equipment-position faults land; for V1 both designations stay in
+    the step text and every YAML keeps `config_dependency: none` (confirmed).
+    **QRSI-2 (§6.02.2, pp.86–87) — flagged M6-optional, NOT encoded:** mirror of QRSI-1 — truck 2,
+    TMs 4/5/6, HMCS-2, HVSI-2/HVMT-2/HVSL-2, TFR terminals swapped (a3/a4 on 3900 kVA; a5/a6 on
+    5400 kVA), no (f)-style separate TLC clause ((e) carries it). Trivial from the QRSI-1 template;
+    encode only after per-step §6.02.2(a)–(e) provenance is quoted and confirmed.
 - **M4b engine decisions:** `hazard_exposure` evaluator (`H-caution` unstated → proactive
   precondition statement; `H-no` → REFUSE; all yes → NO_FIRE and reassess asks the gated step
   itself, step 3b; claimed without preconditions → `H-ask`, never a confirmation). Diff is now

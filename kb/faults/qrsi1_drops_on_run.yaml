@@ -50,13 +50,16 @@ steps:
     on_abnormality: "Use fire extinguishers; try to isolate the abnormal equipment."   # §6.02.1(a)
     isolation:
       needs_history: isolation_successful
-      # [interpretation — flagged for review] §6.02.1(a) states the post-isolation action only
-      # by omission ("try to isolate the same, otherwise contact TLC"); the successful-isolation
-      # path is treated as returning to the no-abnormality path of (a): reset and accelerate
-      # gradually. §6.1.2(b) states this explicitly for the analogous QLM+QRSI case.
       on_isolated: "Reset the relay target and accelerate gradually, watching the ammeters."
       on_not_isolated: "Contact TLC for further instructions."                          # §6.02.1(a)
-      source: "§6.02.1(a), p86"
+      # Provenance is split deliberately so a reviewer sees what is STATED and what is INFERRED
+      # (confirmed as a kept inference, 2026-09-15):
+      source: >-
+        §6.02.1(a), p86 — states only the otherwise→TLC branch ("try to isolate the same,
+        otherwise contact TLC for further instructions"). Success path (on_isolated) is
+        INFERRED from the analogous §6.1.2(b), p84 ("try to isolate the same. If successful,
+        reset the relay targets and resume traction"), applied as (a)'s no-abnormality action
+        ("reset the relay target and accelerate gradually duly watching ammeters").
     source: "§6.02.1(a), p86"
 
   - id: reset_and_accelerate_gradually
