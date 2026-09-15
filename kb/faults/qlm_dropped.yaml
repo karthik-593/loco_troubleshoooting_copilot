@@ -36,6 +36,18 @@ steps:                             # §6.1.1 "QLM alone acted with locked indica
       and oil splashes from the transformer explosion vent, from underneath the
       loco via the vent pipe, and from the GR safety valve.
     gate: null
+    # KNOWN SCOPE BOUNDARY (recorded 2026-09-15, not a missing hazard response):
+    # §6.1.1(a) itself carries no inline fire action — its consequence is the generic
+    # §6.1.1(f)(i) terminal (do not reset; log; TLC; relief loco). Active smoke/fire found
+    # here is covered by the TSD's GENERAL fire procedure, which applies to "any equipment"
+    # and is NOT yet encoded in this KB:
+    #   - Ch.4 General Instructions item 6, p74: "If any smoke or fire is noticed on any
+    #     equipment open DJ, switch on FL, stop the train, switch off HBA and put out the
+    #     fire with approved type (DCP) of fire extinguisher available in the loco."
+    #   - Ch.1 "USE OF FIRE EXTINGUISHERS", B. While using, pp43–44: open DJ, lower panto,
+    #     HBA off, flasher on, stop; use extinguishers; if uncontrollable arrange fire
+    #     engine (G&SR 6.03/6.10); isolate affected equipment, inform TLC; log-book remark.
+    # TBD: encode as a generic `fire_on_loco` procedure (candidate for a later milestone).
     source: "§6.1.1(a), p83–84"
 
   - id: check_oil_levels
