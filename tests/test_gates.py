@@ -78,10 +78,20 @@ def test_second_reset_refused_even_with_checks_incomplete(qlm):
 
 def test_second_reset_refused_after_the_fact(qlm):
     """Pilot claims the reset is done but history says it was already reset earlier:
-    (f) still applies — log, TLC, relief loco."""
-    s = _state(qlm, claimed=(*ORDINARY, RESET_STEP), history={HF_RESET_EARLIER: "yes"})
+    (f) still applies — log, TLC, relief loco. (The prior reset is known BEFORE the reset
+    claim arrives; a claim and a 'yes' in one first-turn update is one reset booked twice —
+    see engine.state.update_state and test_recurrence.)"""
+    s = _state(qlm, claimed=ORDINARY, history={HF_RESET_EARLIER: "yes"})
+    update_state(s, StateUpdate(claimed_steps=(RESET_STEP,)), qlm)
     v = evaluate_gates(s, qlm)
     assert v.outcome is Outcome.REFUSE and REASON_SECOND_RESET in v.reasons
+
+
+def test_gate_still_refuses_when_state_carries_both_facts(qlm):
+    """The gate is fact-driven: if the state itself holds reset-done + prior-reset, REFUSE."""
+    s = _state(qlm, claimed=(*ORDINARY, RESET_STEP))
+    s.history_facts[HF_RESET_EARLIER] = "yes"
+    assert evaluate_gates(s, qlm).outcome is Outcome.REFUSE
 
 
 # ---------------------------------------------------------------------------

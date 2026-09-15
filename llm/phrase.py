@@ -64,6 +64,10 @@ def terminal_payload(t: Terminal) -> str:
     lines = [f"kind: {t.kind}", f"content: {t.message}"]
     if t.guidance:
         lines.append(f"guidance: {' '.join(t.guidance)}")
+    if t.kind == "confirm" and "reset has been done" in t.message:
+        lines.append("already_done: the reset in the guidance is DONE — phrase the guidance as what "
+                     "follows from here (resume, the 10-minute checks, log book, TLC); do not tell "
+                     "them to reset")
     if t.hold_action:
         lines.append(f"hold_action: the pilot intends to {t.hold_action.replace('_', ' ')} — "
                      f"say plainly that this waits until the check is done")

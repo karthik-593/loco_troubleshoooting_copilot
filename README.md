@@ -125,7 +125,7 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Streamlit chat client showing the engine trace | `client/` |
 | Scenario suite, harness, baseline, report | `eval/` |
 | Showcase walkthrough generator | `scripts/demo.py` |
-| Tests — 196 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 24 live parse cases | `tests/` |
+| Tests — 202 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 27 live parse cases | `tests/` |
 
 Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 

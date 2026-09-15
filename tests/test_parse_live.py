@@ -32,7 +32,10 @@ def _cases():
 
 @pytest.mark.parametrize("case", _cases(), ids=lambda c: c["text"][:40])
 def test_heldout_parse(case, kb, provider):
-    r = parse_turn(case["text"], DiagnosisState(), kb, provider)
+    d = DiagnosisState()
+    if case.get("state_fault"):                     # a mid-conversation line: fault already matched
+        d.matched_fault = case["state_fault"]; d.fault_confirmed = True
+    r = parse_turn(case["text"], d, kb, provider, last_assistant=case.get("last_assistant"))
     raw = r.raw
     print(f"\n{case['text']!r}\n  -> {raw.model_dump()}")
 
@@ -61,13 +64,15 @@ def test_heldout_parse(case, kb, provider):
         assert r.update.fault_id in case["fault_any_of"]
         case = {**case, "fault": r.update.fault_id}
     else:
-        assert r.update.fault_id == case["fault"]
+        assert (r.update.fault_id or d.matched_fault) == case["fault"]
     if "claimed" in case:
         assert set(r.update.claimed_steps) - set(r.rejected_steps) == set(case["claimed"])
     if "abnormality" in case:
         assert r.update.history.get("abnormality_found") == case["abnormality"]
     if "reset_earlier" in case:
         assert r.update.history.get("was_QLM_reset_earlier_this_trip") == case["reset_earlier"]
+    if "reset_earlier_not" in case:
+        assert r.update.history.get("was_QLM_reset_earlier_this_trip") != case["reset_earlier_not"]
     if "other_relays" in case:
         assert r.update.history.get("other_relays_acted") == case["other_relays"]
     if "intended_action" in case:

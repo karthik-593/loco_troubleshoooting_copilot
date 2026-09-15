@@ -51,7 +51,10 @@ class ParseOutput(BaseModel):
                     "'facts' under the fault-specific key, NOT here.")
     was_reset_earlier_this_trip: YesNoUnknown = Field(
         default="unknown",
-        description="Did the pilot state whether this relay was reset earlier this trip?")
+        description="A reset BEFORE the current occurrence of the fault (an earlier drop this "
+                    "trip). The reset of the CURRENT drop is a claimed_steps entry, not this. "
+                    "'no' for 'first time', 'only once', 'not reset before'; 'yes' for 'already "
+                    "reset once', 'reset near the last station'.")
     other_relays_acted: Optional[list[str]] = Field(
         default=None,
         description="Other relay targets the pilot says have ALSO dropped (e.g. QOP-1, QRSI-2, "

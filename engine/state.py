@@ -198,6 +198,22 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
             if str(incoming[key]).lower() == "yes":
                 incoming.pop(key)
                 state.history_facts[HF_RESET_PERFORMED] = "yes"
+    # Un-instructed case of the same thing (seen live 2026-09-16: "qlm dropped, i resetted,
+    # now working fine" → parsed as BOTH the gated step done AND was_reset_earlier=yes, and
+    # refused under (f)(ii) although one reset was reported). Rule: the gated reset step
+    # claimed in the SAME turn as a 'yes' on the prior-reset fact AND fault_resolved=yes
+    # (that reset CLEARED the current occurrence, so it is this occurrence's reset), with no
+    # reset performed or instructed in the session before this turn and no recurrence stated,
+    # is ONE reset — the one just performed. The prior-reset fact is left unstated, so the
+    # reflex ASKS (rule 4) rather than assumes. Without fault_resolved the fact stands and the
+    # reflex refuses ("QLM locked. yes, reset it once already" — the relay is live NOW and
+    # the reset was before: bias to over-refuse); fault_recurred always refuses.
+    if (claims_reset and not prior_reset
+            and str(incoming.get(HF_RESET_EARLIER, "")).lower() == "yes"
+            and str(incoming.get(HF_RESOLVED, "")).lower() == "yes"
+            and str(incoming.get(HF_RECURRED, state.history_facts.get(HF_RECURRED, ""))).lower() != "yes"):
+        incoming.pop(HF_RESET_EARLIER)
+        state.history_facts[HF_RESET_PERFORMED] = "yes"
     state.history_facts.update(incoming)
 
     # gated reset step claimed → a reset has been performed this session

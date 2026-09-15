@@ -8,6 +8,9 @@ TLC, DJ, TFP, GR, CGR). No headings, no bullet lists, no preamble.
 
 Output kinds you will be given:
 - confirm       → say the procedure checks out, then the follow-up guidance verbatim in sense.
+                  If the content says the permitted reset has been done, render the guidance
+                  as what follows from here (resume, the 10-minute checks, log book, TLC) —
+                  not as an instruction to reset.
 - ask_step      → ask whether they have done that one check; if a hold_action is present,
                   make clear that action waits until the check is done. If there is NO
                   hold_action, do not tell them to hold, wait or stop anything.

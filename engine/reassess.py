@@ -25,7 +25,7 @@ tested, but only exercised by the agent loop in M3.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Literal, Optional
 
 from engine import terminals as T
@@ -104,10 +104,13 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     if state.history(HF_RESOLVED) == "yes":
         state.stuck_at = None
         guidance = tuple(g for g in (fault.terminal_actions.get("resolved"),) if g)
-        guidance += tuple(s.gate.on_first_reset for s in fault.gated_steps
-                          if s.gate and s.gate.type == "reset_limit" and s.gate.on_first_reset
-                          and s.id in state.steps_claimed_done)
-        return Decision("terminal", T.confirm(fault, guidance=guidance, source=fault.source), verdict, None)
+        reset_done = [s for s in fault.gated_steps
+                      if s.gate and s.gate.type == "reset_limit" and s.id in state.steps_claimed_done]
+        guidance += tuple(s.gate.on_first_reset for s in reset_done if s.gate.on_first_reset)
+        t = T.confirm(fault, guidance=guidance, source=fault.source)
+        if reset_done:      # an engine fact, so the phrasing treats the guidance as follow-up
+            t = replace(t, message=t.message + " The one permitted reset has been done.")
+        return Decision("terminal", t, verdict, None)
 
     # 2d. "if <situation>, contact TLC" clauses.
     for dc in fault.defer_conditions:

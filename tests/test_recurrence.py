@@ -266,3 +266,78 @@ def test_confirm_after_reset_keeps_monitoring_guidance_even_if_marked_resolved()
     assert t2.terminal.kind == "confirm"
     assert any("10 minutes" in g and "TLC" in g for g in t2.terminal.guidance)
     assert "10 minutes" in t2.reply                      # verbatim fallback carries it too
+
+
+# ---------------------------------------------------------------------------
+# Un-instructed single reset reported in the first message (seen live 2026-09-16)
+# ---------------------------------------------------------------------------
+
+def test_first_message_single_reset_double_booked_by_parser_asks_not_refuses():
+    """'qlm dropped, i resetted, now working fine' parsed as BOTH reset_decision claimed AND
+    was_reset_earlier=yes (one reset, booked twice). Parser-blind engine rule: with no reset
+    known before this turn and no recurrence stated, that is ONE reset -> the reflex ASKS the
+    (before-this-reset) history question; it does not refuse under (f)(ii)."""
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes",
+                     claimed_steps=[RESET_STEP], was_reset_earlier_this_trip="yes", fault_resolved="yes"),
+         _blind(was_reset_earlier_this_trip="no"),
+         _blind(fault_presenting="yes")],
+        ["diff_completed_steps"] * 3))
+    t1 = cp.turn(d, "qlm dropped , i resetted, now working fine")
+    assert t1.terminal.kind == "ask_history" and t1.reflex_runs >= 1
+    assert "Before the reset you just did" in t1.terminal.message
+    assert HF_RESET_EARLIER not in d.history_facts and d.history_facts[HF_RESET_PERFORMED] == "yes"
+    t2 = cp.turn(d, "no, only once", last_assistant=t1.reply)
+    assert t2.terminal.kind == "confirm"
+    assert any("10 minutes" in g and "TLC" in g for g in t2.terminal.guidance)   # §6.1.1(d)(e) rides along
+    t3 = cp.turn(d, "QLM dropped again", last_assistant=t2.reply)
+    assert t3.terminal.kind == "refuse" and REASON_RECURRED in t3.terminal.reasons
+
+
+def test_first_message_single_reset_with_prior_answered_yes_refuses():
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes",
+                     claimed_steps=[RESET_STEP], was_reset_earlier_this_trip="yes", fault_resolved="yes"),
+         _blind(was_reset_earlier_this_trip="yes")],
+        ["diff_completed_steps"] * 2))
+    t1 = cp.turn(d, "qlm dropped, reset it, running fine")
+    assert t1.terminal.kind == "ask_history"
+    t2 = cp.turn(d, "yes, once before near the last station", last_assistant=t1.reply)
+    assert t2.terminal.kind == "refuse" and REASON_SECOND_RESET in t2.terminal.reasons
+
+
+def test_first_message_reset_with_recurrence_cue_still_refuses():
+    """'dropped again after reset, reset once more, running' -> fault_recurred wins; no ask."""
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes", fault_recurred="yes",
+                     claimed_steps=[RESET_STEP], was_reset_earlier_this_trip="yes")],
+        ["diff_completed_steps"]))
+    t1 = cp.turn(d, "qlm dropped again after reset, reset once more, running now")
+    assert t1.terminal.kind == "refuse" and REASON_RECURRED in t1.terminal.reasons
+
+
+def test_prior_reset_stated_without_a_reset_claim_still_refuses_on_the_spot():
+    """'QLM red. already reset once this trip near the last station' -> unchanged: refuse."""
+    d = DiagnosisState()
+    cp = Copilot(_prov([ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes",
+                                    was_reset_earlier_this_trip="yes")], ["diff_completed_steps"]))
+    t1 = cp.turn(d, "QLM red. already reset once this trip near the last station")
+    assert t1.terminal.kind == "refuse" and REASON_SECOND_RESET in t1.terminal.reasons
+
+
+def test_reset_claim_plus_prior_reset_without_resolution_still_refuses():
+    """'QLM locked.' then 'Yes, I reset it once already this trip' — seen live parsed as a
+    reset_decision claim AND was_reset_earlier=yes. The relay is live NOW and nothing says
+    that reset cleared it: the prior-reset fact stands → refuse (eval gold; over-refuse bias)."""
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes"),
+         ParseOutput(fault_guess=None, fault_confidence=0.0, confirms_fault="yes",
+                     claimed_steps=[RESET_STEP], was_reset_earlier_this_trip="yes")],
+        ["diff_completed_steps"] * 2))
+    t1 = cp.turn(d, "DJ tripped, QLM is locked.")
+    t2 = cp.turn(d, "Yes, I reset it once already this trip.", last_assistant=t1.reply)
+    assert t2.terminal.kind == "refuse" and REASON_SECOND_RESET in t2.terminal.reasons

@@ -119,8 +119,8 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Have you checked whether BP has dropped to '0' or less? If it has, switch on the flasher light immediately and send the Assistant Loco Pilot to protect the adjacent line as per GR & SR — do this now.",
-            "phrase_fallback": false,
+            "reply": "Next check: If BP has dropped to '0' or less, suspect an abnormality on the train: switch on the flasher light immediately and send the Assistant Loco Pilot to protect the adjacent line as per GR & SR. If there is no abnormality on the train, isolate the damaged pantograph in coordination with OHE staff, after taking the necessary precautions. Done?",
+            "phrase_fallback": true,
             "violations": [],
             "source": "§10.03(b), p164"
           }
@@ -189,7 +189,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Do not reset — an abnormality was found. Log it, inform TLC, and ask for relief engine. Use fire extinguisher if needed.",
+            "reply": "Do not reset. An abnormality was found. Log it, inform TLC, and ask for relief engine. Use fire extinguisher if needed.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
@@ -222,7 +222,7 @@
             "tool_path": [],
             "stop": "none",
             "reflex_runs": 1,
-            "reply": "Procedure verified complete. Reset QLM once and resume traction, checking feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC.",
+            "reply": "Procedure verified complete. Resume traction and check feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC.",
             "phrase_fallback": false,
             "violations": [],
             "source": "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.01/6.1.1–6.1.3, pp.83–86"
@@ -253,7 +253,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Have you checked the CGR arc chutes, RGR and RPGR for red-hot condition, and checked the TFR terminals, A33/A0/A34 bushings, HT cable, TFILM, TFSPM, and oil leakage from breathers, transformer drain plug and oil trap box for smell, smoke, or fire?",
+            "reply": "Have you checked the CGR arc chutes, RGR and RPGR for red-hot condition, and checked TFR terminals, A33/A0/A34 bushings, HT cable, TFILM, TFSPM, and oil leakage from breathers, transformer drain plug and oil trap box for any abnormality—smell, smoke, or fire?",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(c), p84"
@@ -336,7 +336,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Do not use fire extinguishers. Try to isolate the abnormal equipment. If you cannot isolate it, contact TLC for further instructions.",
+            "reply": "Do not use fire extinguishers. Try to isolate the abnormal equipment. Contact TLC for further instructions.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.2(c) reset; §6.1.2(d) second time forbidden; §6.1.2 note (reset direction); §6.1.2(a)→§6.1.1(d)(e), p84–85"
@@ -385,7 +385,7 @@
             "tool_path": [],
             "stop": "none",
             "reflex_runs": 1,
-            "reply": "Procedure verified complete. Reset QLM once and resume traction, checking feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC.",
+            "reply": "Procedure verified complete. Resume traction and check feeding-power-circuit items every 10 minutes. Make a remark in the loco log book and inform TLC.",
             "phrase_fallback": false,
             "violations": [],
             "source": "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.01/6.1.1–6.1.3, pp.83–86"
@@ -401,7 +401,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "QLM has tripped again after your first reset — the fault is real. Do not reset it again. Mark it clearly in the log book, call TLC now, and request a relief loco.",
+            "reply": "QLM has tripped again after your first reset — the fault is real. Do not reset it a second time. Mark it clearly in the loco log book, inform TLC now, and ask for a relief loco.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
@@ -435,7 +435,7 @@
             "tool_path": [],
             "stop": "reassess",
             "reflex_runs": 1,
-            "reply": "QLM dropped — DJ and VCB tripped; is the QLM red 'LOCKED' stencil target dropped?",
+            "reply": "Did the QLM red 'LOCKED' stencil target drop?",
             "phrase_fallback": false,
             "violations": [],
             "source": "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.01/6.1.1–6.1.3, pp.83–86"
@@ -451,7 +451,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "You've already reset that relay once this trip — do not reset it again. Mark it clearly in the log book, call TLC, and request a relief loco.",
+            "reply": "You've already reset that relay once this trip. Do not reset it again — mark it clearly in the log book, call TLC, and request a relief loco.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"

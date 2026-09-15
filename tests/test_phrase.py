@@ -111,3 +111,12 @@ def test_not_isolated_refusal_needs_tlc_but_not_a_negation(kb):
     assert "refusal_missing_fire_precaution" in guard(t, "Since it could not be isolated, contact TLC.")
     assert "refusal_missing_TLC" in guard(t, "Since it could not be isolated, wait for advice.")
     assert "refusal_instructs_reset" in guard(t, "Reset the targets and contact TLC.")
+
+
+def test_confirm_after_done_reset_carries_the_already_done_cue(kb):
+    from dataclasses import replace
+    f = kb.get("QLM_dropped")
+    t = T.confirm(f, guidance=(f.step(RESET_STEP).gate.on_first_reset,))
+    assert "already_done" not in terminal_payload(t)
+    t = replace(t, message=t.message + " The one permitted reset has been done.")
+    assert "already_done" in terminal_payload(t) and "10 minutes" in terminal_payload(t)

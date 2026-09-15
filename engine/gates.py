@@ -96,9 +96,12 @@ NO_FIRE = GateVerdict(Outcome.NO_FIRE)
 # reset_limit
 # ---------------------------------------------------------------------------
 
-def _history_question(gate_key: str) -> str:
+def _history_question(gate_key: str, reset_done: bool = False) -> str:
     # Derived from the gate's needs_history key, endorsed by BUILD_PLAN §2.3 wording.
     if gate_key == HF_RESET_EARLIER:
+        if reset_done:      # the pilot has just reset it: ask about BEFORE that, unambiguously
+            return ("Before the reset you just did, had QLM been reset earlier this trip? "
+                    "Check the loco log book.")
         return "Was QLM reset earlier this trip? Check the loco log book."
     return f"Please state: {gate_key.replace('_', ' ')}?"
 
@@ -271,7 +274,7 @@ def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> Gat
             gate_type=gate.type,
             step_id=step.id,
             rule="4",
-            question=_history_question(gate.needs_history),
+            question=_history_question(gate.needs_history, reset_done=step.id in state.steps_claimed_done),
             message=gate.rule,
             source=gate.source,
         )

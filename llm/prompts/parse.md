@@ -34,8 +34,13 @@ Rules
   traction-circuit equipment (RSI, line contactors, SLs, traction motors, J1/J2, CTFs…)
   or auxiliary equipment (ARNO, aux motors, CHBA, cab heaters…) is reported ONLY under
   the matching fault-specific fact in `facts` and leaves abnormality_found unchanged.
-- was_reset_earlier_this_trip: from statements like "reset once already", "first time",
-  "not reset before". Otherwise "unknown".
+- was_reset_earlier_this_trip: a reset BEFORE the current occurrence (an earlier drop this
+  trip): "yes" for "reset once already", "already reset near the last station"; "no" for
+  "first time", "only once", "not reset before". The reset of the CURRENT drop ("dropped, I
+  reset it, working now") is the gated step in claimed_steps — it is NOT a prior reset;
+  leave this "unknown" unless a prior one is stated. If the assistant just asked whether it
+  had been reset BEFORE the reset just done, "only once" / "just this once" / "no" → "no".
+  Otherwise "unknown".
 - other_relays_acted: relay names they say ALSO dropped, uppercased as written (QOP-1,
   QRSI-2, QLA, QOA). null if none mentioned.
 - intended_action: only if they state what they are about to do next and it is in the

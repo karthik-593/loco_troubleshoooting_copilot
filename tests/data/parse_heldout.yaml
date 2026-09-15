@@ -84,3 +84,19 @@
   never_acts: true            # borderline: clarify once or defer; never a procedure
 - text: "qop dropped"
   never_acts: true            # QOP alone is not encoded (only QLM with QOP/QRSI); the relay IS in the vocabulary
+# --- one reset reported in the first message is the gated step, NOT a prior reset ---
+- text: "qlm dropped , i resetted, now working fine"
+  fault: QLM_dropped
+  claimed: [reset_decision]
+  reset_earlier_not: "yes"    # unknown (or no) — never a prior reset from this sentence alone
+  resolved: "yes"
+- text: "no, only once"
+  state_fault: QLM_dropped
+  last_assistant: "Before the reset you just did, had QLM been reset earlier this trip? Check the loco log book."
+  fault: QLM_dropped
+  reset_earlier: "no"
+- text: "yes, once before near the last station"
+  state_fault: QLM_dropped
+  last_assistant: "Before the reset you just did, had QLM been reset earlier this trip? Check the loco log book."
+  fault: QLM_dropped
+  reset_earlier: "yes"

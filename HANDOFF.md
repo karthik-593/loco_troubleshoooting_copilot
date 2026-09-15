@@ -409,3 +409,29 @@ same clarification every turn. §5.6 says "This isn't in my procedure set — co
 
 Also: `GET /` on the API points at the Streamlit UI; the client's Apply/Swap buttons show an
 "API not reachable" error instead of a traceback.
+
+## Post-M6: one reset booked twice (seen live 2026-09-16; approved before change)
+
+"qlm dropped, i resetted, now working fine" parsed as BOTH `reset_decision` claimed AND
+`was_QLM_reset_earlier_this_trip=yes` — one reset counted as the performed reset and as a
+prior one — and refused under (f)(ii) with the relief-loco instruction. §6.1.1(e) after the
+permitted first reset is log + TLC + continue; relief loco is (f)(ii) only.
+
+- Engine rule (primary, `update_state`, beside the M5 instructed-reset rule): gated reset
+  claimed + prior-reset 'yes' + `fault_resolved=yes` in the SAME turn, no reset
+  performed/instructed before this turn, no recurrence stated → ONE reset, just performed:
+  `reset_performed=yes`, prior-reset fact left unstated → reflex rule 4 ASKS
+  "Before the reset you just did, had QLM been reset earlier this trip?" (wording is
+  reset-done-aware). 'no' → confirm with §6.1.1(d)(e) follow-up; 'yes' → refuse (second_reset).
+  Without `fault_resolved` the prior-reset fact stands and the reflex refuses ("QLM locked.
+  yes, reset it once already" — relay live now, reset before): eval gold, over-refuse bias.
+  `fault_recurred` ("again", "second time") always refuses.
+- Parser fast path: `was_reset_earlier_this_trip` is a reset BEFORE the current occurrence;
+  the current drop's reset is the gated-step claim. "only once" / "first time" → no.
+- Confirm after a done reset states "The one permitted reset has been done." (engine fact);
+  the phrase payload carries an `already_done` cue so the KB guidance is rendered as follow-up
+  (resume, 10-minute checks, log, TLC), not as "reset QLM".
+- Tests: 4 engine tests (double-booked ask→confirm→recurrence refuse; prior answered yes →
+  refuse; recurrence cue → refuse; prior stated without claim → refuse) + the no-resolution
+  refusal; gate test rebuilt as two updates plus a direct state-fact test; 3 held-out live
+  parse cases (27 total).
