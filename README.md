@@ -58,7 +58,8 @@ Gate mechanisms encoded so far: **reset-limit** (QLM: once only; a stated prior 
 a re-lock after the permitted reset — both refuse, and the recurrence is detected by the
 engine itself, not the parser), **isolate-then-reset** (QLM with QOP/QRSI or QLA/QOA),
 **hazard-exposure** (pantograph roof work gated on the OHE power block + earthing and
-loco grounding), and the gate-free **isolate-and-retest** ladder (QRSI-1).
+loco grounding), the gate-free **isolate-and-retest** ladders (QRSI-1/QRSI-2, with alternative
+branches), and the general **smoke/fire response** procedure.
 
 ## Evaluation
 
@@ -120,7 +121,7 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Streamlit chat client showing the engine trace | `client/` |
 | Scenario suite, harness, baseline, report | `eval/` |
 | Showcase walkthrough generator | `scripts/demo.py` |
-| Tests — 182 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + live parse set | `tests/` |
+| Tests — 190 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 21 live parse cases | `tests/` |
 
 Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 
@@ -138,7 +139,7 @@ python -m eval.harness --mode live --out eval/out/results_live.json
 python -m scripts.demo                                # regenerate docs/walkthrough.md
 uvicorn api.server:app                                # API on :8000
 streamlit run client/streamlit_app.py                 # chat client
-dvc pull                                              # TSD PDF (once a DVC remote is configured)
+dvc pull                                              # TSD PDF from the configured DVC remote (local folder)
 ```
 
 Models are pinned explicitly on every call: `deepseek-flash` (non-thinking, temperature 0)
