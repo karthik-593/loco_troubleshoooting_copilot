@@ -51,3 +51,19 @@
 - text: "qlm and qla dropped together. arno side burning smell, could not isolate"
   fault_any_of: [QLM_dropped, QLM_with_QLA_QOA]
   facts: {aux_abnormality_found: "yes", isolation_successful: "no"}
+# --- M4b: pantograph hazard + QRSI-1 ladder ---
+- text: "panto damaged by OHE, lowered it with ZPT 0, BP is fine, called TPC for power block. climbing on roof now"
+  fault: pantograph_damaged
+  claimed: [lower_pantograph_immediately, check_bp_and_protect_train, obtain_emergency_power_block]
+  intended_action: work_on_roof
+- text: "TPC gave power block, OHE staff earthed the wire both sides, I grounded loco with HOM"
+  fault_any_of: [pantograph_damaged]
+  facts: {ohe_power_block_obtained_and_earthed: "yes", loco_grounded: "yes"}
+  allow_clarify_if_no_fault: true
+- text: "QRSI-1 dropped on run. checked RSI-1 and TMs all normal. reset, dropped again after 2 min. tried HMCS-1 positions, drops only in position 2"
+  fault: QRSI1_drops_on_run
+  claimed: [check_traction_circuit_1, reset_and_accelerate_gradually, try_hmcs1_positions_if_frequent]
+  facts: {drops_frequently: "yes", drops_in_particular_hmcs1_position: "yes"}
+- text: "QRSI-1 target dropped. SL-1 burning, tried to isolate but couldn't"
+  fault: QRSI1_drops_on_run
+  facts: {traction1_abnormality_found: "yes", isolation_successful: "no"}

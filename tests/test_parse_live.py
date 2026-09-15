@@ -44,6 +44,8 @@ def test_heldout_parse(case, kb, provider):
         assert r.update is None or r.update.fault_id is None
         return
 
+    if case.get("allow_clarify_if_no_fault") and r.update is None:
+        return                               # a context-free follow-up line may legitimately clarify
     assert r.update is not None, "expected an actionable update"
     if "fault_any_of" in case:
         assert r.update.fault_id in case["fault_any_of"]

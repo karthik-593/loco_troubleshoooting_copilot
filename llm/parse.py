@@ -76,7 +76,8 @@ def kb_vocabulary(kb: KnowledgeBase) -> str:
         for k in extra:
             lines.append(f"- {k}: " + _FACT_HINTS.get(k, "yes/no as stated by the pilot"))
         lines.append("")
-    lines.append("Actions: reset_QLM")
+    lines.append("Actions (intended_action): reset_QLM = about to reset the QLM relay target; "
+                 "work_on_roof = about to climb on to the loco roof (pantograph work)")
     return "\n".join(lines)
 
 
@@ -89,6 +90,15 @@ _CLAIM_HINTS = {
     "check_auxiliary_power_circuit": "checked aux circuit / ARNO / aux motors / CHBA / cab heaters",
     "check_psa_and_sander_cocs": "pressed pedal / PSA / checked or opened sander COCs",
     "check_lamps_and_ccls": "pressed BPT / LSP and LSRSI lamps / checked CCLS fuse / VESA energising",
+    "lower_pantograph_immediately": "lowered panto / ZPT on 0 / pressed BPEMS / panto down",
+    "check_bp_and_protect_train": "BP ok / BP fine / BP not dropped / checked BP / flasher on, ALP sent to protect",
+    "obtain_emergency_power_block": "called TPC / asked for power block / emergency telephone",
+    "secure_damaged_pantograph_on_roof": "climbed on roof / tied the panto / secured with rope",
+    "earth_damaged_pantograph_hpt": "HPT in earthing clip / earthed the panto",
+    "check_traction_circuit_1": "checked RSI-1 / TM1-3 / SL-1 / L1-L3 / circuit-1 / traction circuit",
+    "try_hmcs1_positions_if_frequent": "tried HMCS-1 positions 2, 3, 4",
+    "isolate_tm_of_bad_hmcs1_position": "isolated TM1 / TM2 / TM3 / that traction motor",
+    "isolate_truck_1_if_all_positions": "isolated truck 1 / HVSI-1 HVMT-1 HVSL-1 on 0",
 }
 
 # Plain-language hints for KB-declared fact keys (mapping guidance only, not procedure text).
@@ -98,6 +108,16 @@ _FACT_HINTS = {
     "isolation_successful": "the pilot tried to isolate the abnormal equipment: 'yes' if isolation succeeded, 'no' if it could not be isolated",
     "arc_chute_terminal_abnormality": "the abnormality (smell/smoke/fire/red-hot/oil leak) was found in the arc chutes, RGR/RPGR, TFR terminals, bushings, HT cable, breathers, drain plug or oil trap box",
     "fault_recurred": "(use the top-level fault_recurred field instead)",
+    "traction1_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-1 equipment (RSI-1, J1, SL-1, L1-L3, TM1-3, AM3 shunt, Q20/RQ20, QD1, SJ1-3, TFR terminals)",
+    "ohe_power_block_obtained_and_earthed": "OHE/TRD staff have obtained the emergency power block AND earthed the contact wire on both sides of the loco",
+    "loco_grounded": "the loco has been grounded (HOM operated)",
+    "pantograph_not_lowered": "the pantograph did NOT lower when ZPT was put on 0 / BPEMS pressed",
+    "both_pantographs_damaged": "BOTH pantographs are damaged",
+    "load_and_road_do_not_permit": "the pilot says the load and road do not permit working onwards (with the load restriction)",
+    "drops_after_long_interval": "QRSI-1 dropped again only after a LONG interval of running ('no' if it dropped again soon / repeatedly)",
+    "drops_frequently": "QRSI-1 is dropping frequently / repeatedly / soon after each reset ('no' if only after a long interval)",
+    "drops_in_particular_hmcs1_position": "with HMCS-1 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
+    "drops_in_all_hmcs1_positions": "with HMCS-1 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
 }
 
 

@@ -43,14 +43,24 @@ class Gate(_Strict):
     recurrence_history: Optional[str] = None     # relay acted AGAIN after the first reset — (f)(ii) recurrence
     on_first_reset: Optional[str] = None
     on_already_reset: Optional[str] = None       # (f) text; covers both (f)(ii) triggers
+    # hazard_exposure fields (BUILD_PLAN §2.3): the action is dangerous unless every
+    # precondition fact is 'yes'. Unknown → proactive CAUTION stating the preconditions;
+    # 'no' → REFUSE with the same text. ``action`` is the intended_action that puts the
+    # gate in play early (before the prior steps are complete).
+    preconditions: list[str] = Field(default_factory=list)
+    on_precondition_unmet: Optional[str] = None
+    action: Optional[str] = None
 
     @model_validator(mode="after")
-    def _reset_limit_fields(self) -> "Gate":
+    def _type_fields(self) -> "Gate":
         if self.type == "reset_limit":
             missing = [f for f in ("needs_history", "on_first_reset", "on_already_reset")
                        if getattr(self, f) is None]
             if missing:
                 raise ValueError(f"reset_limit gate missing {missing}")
+        if self.type == "hazard_exposure":
+            if not self.preconditions or not self.on_precondition_unmet:
+                raise ValueError("hazard_exposure gate needs preconditions + on_precondition_unmet")
         return self
 
 
@@ -79,6 +89,14 @@ class Step(_Strict):
     # extinguisher and ask for Relief Engine" is tied to (c)'s findings only.)
     finding_key: Optional[str] = Field(default=None, pattern=r"^[a-z][a-z0-9_]*$")
     isolation: Optional[Isolation] = None
+    # Conditional branch (TSD "If <situation>, ..."): fact → required value. The step is due
+    # only while no stated fact contradicts it; unstated facts leave the step in play, so the
+    # step's own "If …" text asks the question. Lets alternative clauses ((b) long interval
+    # vs (c) frequent) coexist in one ordered checklist without asking the wrong branch.
+    applies_when: dict[str, str] = Field(default_factory=dict)
+    # Completing this step ends the procedure on its 'resolved' terminal (e.g. "isolate that
+    # TM and work with 5/6 load" — a sanctioned way onward, not a failure).
+    completes: bool = False
     # TSD section this step is taken from. A gated step may carry its citation on the
     # gate instead (that is how the locked qlm_dropped.yaml encodes reset_decision).
     source: Optional[str] = Field(default=None, min_length=1)
@@ -110,12 +128,21 @@ class CombinationRule(_Strict):
     source: str = Field(min_length=1)
 
 
+class DeferCondition(_Strict):
+    """A TSD clause of the form "if <situation>, contact TLC" — a terminal, not a step.
+    When the fact is 'yes' the engine defers with the clause's own text."""
+    fact: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    text: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+
+
 class Fault(_Strict):
     fault_id: str = Field(pattern=r"^[A-Za-z][A-Za-z0-9_]*$")
     aliases: list[str] = Field(min_length=1)
     config_dependency: ConfigDependency
     presenting_signs: list[str] = Field(default_factory=list)
     combination_rules: list[CombinationRule] = Field(default_factory=list)
+    defer_conditions: list[DeferCondition] = Field(default_factory=list)
     steps: list[Step] = Field(min_length=1)
     terminal_actions: dict[str, str] = Field(default_factory=dict)
     source: str = Field(min_length=1)
@@ -153,12 +180,16 @@ class Fault(_Strict):
                 keys.append(s.abnormality_key)
             if s.finding_key:
                 keys.append(s.finding_key)
+            keys.extend(s.applies_when.keys())
             if s.isolation:
                 keys.append(s.isolation.needs_history)
             if s.gate and s.gate.needs_history:
                 keys.append(s.gate.needs_history)
             if s.gate and s.gate.recurrence_history:
                 keys.append(s.gate.recurrence_history)
+            if s.gate:
+                keys.extend(s.gate.preconditions)
+        keys.extend(d.fact for d in self.defer_conditions)
         return list(dict.fromkeys(keys))
 
     def step(self, step_id: str) -> Step:

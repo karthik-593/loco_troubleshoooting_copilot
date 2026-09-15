@@ -50,9 +50,10 @@ class ParseOutput(BaseModel):
         default=None,
         description="Other relay targets the pilot says have ALSO dropped (e.g. QOP-1, QRSI-2, "
                     "QLA, QOA). null if not mentioned.")
-    intended_action: Optional[Literal["reset_QLM"]] = Field(
+    intended_action: Optional[Literal["reset_QLM", "work_on_roof"]] = Field(
         default=None,
-        description="The pilot's stated NEXT move, from the provided action list, or null.")
+        description="The pilot's stated NEXT move, from the provided action list, or null. "
+                    "'work_on_roof' = about to climb on to the loco roof (pantograph work).")
     unmapped_claims: list[str] = Field(
         default_factory=list,
         description="Things the pilot says they did that do not map to any checklist step "

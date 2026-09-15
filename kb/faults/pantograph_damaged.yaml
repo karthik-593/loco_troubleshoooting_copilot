@@ -1,0 +1,123 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Pantograph damaged
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.03 (incl. "Obtaining emergency power
+#         block"), printed pp.164–165; and Chapter 11 "Isolation of Equipment",
+#         §11.04 "Isolation of damaged/defective pantograph", printed p.178.
+# Mechanism proved: HAZARD-EXPOSURE gate — roof work on a loco under a 25 kV contact wire
+# is gated on the OHE power block + earthing by OHE/TRD staff and the loco being grounded.
+# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: pantograph_damaged
+aliases:
+  - "pantograph damaged"
+  - "panto damaged"
+  - "damaged pantograph"
+  - "damaged panto"
+  - "pantograph broken"
+  - "panto broken"
+  - "panto entangled"
+  - "pantograph entangled"
+config_dependency: none            # §10.03 / §11.04 do not branch on loco type
+presenting_signs:                  # §10.03 causes
+  - "Pantograph damaged (OHE sag / cut / foreign body on OHE, or defective pantograph)"
+
+combination_rules: []
+
+# "if <situation>, contact TLC" clauses — terminals, not steps
+defer_conditions:
+  - fact: pantograph_not_lowered
+    text: >-
+      The pantograph has not lowered: stop the train immediately, protect as per
+      GR & SR, and contact TLC.
+    source: "§10.03(a), p164"
+  - fact: both_pantographs_damaged
+    text: "Both pantographs are damaged — contact TLC."
+    source: "§10.03 emergency power block (h), p165; §11.04 note, p178"
+
+steps:
+  - id: lower_pantograph_immediately
+    text: >-
+      Lower the pantograph immediately by placing ZPT on '0' or pressing BPEMS if
+      provided. If the pantograph does not lower, stop the train immediately,
+      protect as per GR & SR and contact TLC. If it is lowered, not entangled with
+      the OHE and the OHE is undamaged, clear the spot in coasting.
+    gate: null
+    source: "§10.03(a), p164; §10.03 'If Pantograph is damaged, lower the pantograph immediately', p165"
+
+  - id: check_bp_and_protect_train
+    text: >-
+      If BP has dropped to '0' or less, suspect an abnormality on the train: switch
+      on the flasher light immediately and send the Assistant Loco Pilot to protect
+      the adjacent line as per GR & SR. If there is no abnormality on the train,
+      isolate the damaged pantograph in coordination with OHE staff, after taking
+      the necessary precautions.
+    gate: null
+    source: "§10.03(b), p164"
+
+  - id: obtain_emergency_power_block
+    text: >-
+      Contact TPC through the emergency telephone and give the particulars of the
+      OHE / pantograph damage: loco number, train number, kilometre, between
+      stations, up/down line, time of occurrence and duration of emergency power
+      block required.
+    gate: null
+    source: "§10.03 emergency power block (a)(b), p165"
+
+  # HAZARD-EXPOSURE gate. §10.03 (c): "After power block is obtained by OHE staff and
+  # grounding of the contact wire on either sides of loco, operate HOM and ground the
+  # loco. Climb on to the roof ..." §11.04: "1. Take safety measures and ensure earthing of
+  # OHE by the TRD staff. 2. Ground the loco as per procedure. 3. Climb on the roof ..."
+  - id: secure_damaged_pantograph_on_roof
+    text: >-
+      Climb on to the roof of the loco, ensure the damaged pantograph is fully
+      lowered, and secure it with a rope or insulated wire so that the damaged
+      part does not touch the locomotive body.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Roof work only after the emergency power block is obtained and the contact
+        wire is earthed on both sides of the loco by OHE/TRD staff, and the loco is
+        grounded (HOM operated).
+      action: work_on_roof
+      preconditions:
+        - ohe_power_block_obtained_and_earthed   # §10.03 EPB (c); §11.04 1
+        - loco_grounded                          # §10.03 EPB (c) "operate HOM and ground the loco"; §11.04 2
+      on_precondition_unmet: >-
+        Do not climb on to the roof until OHE staff have obtained the emergency
+        power block and earthed the contact wire on either side of the loco, and the
+        loco has been grounded by operating HOM.
+      source: "§10.03 emergency power block (c), p165; §11.04 steps 1–3, p178"
+    source: "§10.03 emergency power block (c), p165; §11.04 step 3, p178"
+
+  - id: earth_damaged_pantograph_hpt
+    text: >-
+      Ground the damaged pantograph by placing the concerned HPT link in the
+      earthing clip (isolating the defective pantograph).
+    gate: null
+    source: "§10.03 emergency power block (d), p165; §10.03 p164 note; §11.04 step 4, p178"
+
+  - id: clear_roof_unground_and_raise_good_panto
+    text: >-
+      After completing the work, ensure all tools and damaged parts are removed
+      from the roof. After the earthing poles are removed from the contact wire
+      and the power block is cancelled by OHE staff, un-ground the loco, close the
+      isolating COC of the damaged pantograph and raise the good pantograph.
+    gate: null
+    source: "§10.03 emergency power block (e)(f), p165; §11.04 step 5, p178"
+
+  - id: resume_traction_and_report
+    text: >-
+      When the power is restored, close DJ and resume traction. Work the train up
+      to the next locomotive relief point with the healthy pantograph. Report to
+      TLC and enter the defect in the loco log book.
+    gate: null
+    completes: true
+    source: "§10.03 emergency power block (g), p165; §11.04 steps 6–7, p178"
+
+terminal_actions:
+  resolved:   "work onwards on the healthy pantograph to the next relief point; report to TLC; log-book entry"   # §11.04 6–7
+  unresolved: "contact TLC"                                                                                        # §10.03 (h)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10 §10.03 pp.164–165; Ch.11 §11.04 p.178"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

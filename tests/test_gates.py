@@ -216,7 +216,7 @@ def test_unimplemented_gate_types_fail_closed(qlm):
     """A gate type without an evaluator must raise, never silently NO_FIRE."""
     s = _state(qlm)
     step = qlm.step(RESET_STEP)
-    for t in ("hazard_exposure", "isolation_before_contact"):
+    for t in ("isolation_before_contact",):          # hazard_exposure implemented in M4b
         with pytest.raises(NotImplementedError):
             GATE_EVALUATORS[t](s, qlm, step)
 

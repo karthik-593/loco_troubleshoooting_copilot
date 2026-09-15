@@ -119,6 +119,73 @@ def _reset_in_play(state: DiagnosisState, fault: Fault, step: Step) -> bool:
     return step.id in state.steps_claimed_done or checks_complete(state, fault)
 
 
+def prior_ordinary_complete(state: DiagnosisState, fault: Fault, step: Step) -> bool:
+    """Every ordinary step BEFORE ``step`` (in TSD order) is claimed done."""
+    for s in fault.steps:
+        if s.id == step.id:
+            return True
+        if s.gate is None and s.id not in state.steps_claimed_done:
+            return False
+    return True
+
+
+def isolation_status(state: DiagnosisState, fault: Fault):
+    """For steps with an ``isolation`` block: (pending_step, failed_step, isolated_step) —
+    abnormality found and isolation unstated / failed / succeeded. Used by the reset gate
+    and, for gate-free faults, by reassess."""
+    pending = failed = isolated = None
+    for s in fault.ordinary_steps:
+        if s.isolation is None or state.history(s.abnormality_key or HF_ABNORMALITY) != "yes":
+            continue
+        iso = state.history(s.isolation.needs_history)
+        if iso == "yes":
+            isolated = s
+        elif iso == "no":
+            failed = s
+        else:
+            pending = s
+    return pending, failed, isolated
+
+
+# ---------------------------------------------------------------------------
+# hazard_exposure  (BUILD_PLAN §2.3 — "a precondition, not a question")
+# ---------------------------------------------------------------------------
+
+def evaluate_hazard_exposure(state: DiagnosisState, fault: Fault, step: Step) -> GateVerdict:
+    """The gated action is dangerous unless every precondition fact is 'yes'.
+
+    In play when: the pilot states the intent (gate.action), or every ordinary step before
+    the gated step is claimed (the action is next), or the step is claimed done.
+      any precondition == 'no'      → REFUSE (do not do it; the precondition text)
+      all preconditions == 'yes'    → NO_FIRE (proceed; reassess asks/confirms the step)
+      otherwise (unstated), not yet claimed → CAUTION: proactive precondition statement
+      otherwise, claimed done       → ASK whether the preconditions were met (never
+                                      confirm a hazardous step on an unstated precondition)
+    """
+    gate = step.gate
+    assert gate is not None and gate.type == "hazard_exposure"
+    claimed = step.id in state.steps_claimed_done
+    in_play = (claimed or state.intended_action == gate.action
+               or prior_ordinary_complete(state, fault, step))
+    if not in_play:
+        return NO_FIRE
+    values = {p: state.history(p) for p in gate.preconditions}
+    if any(v == "no" for v in values.values()):
+        return GateVerdict(Outcome.REFUSE, gate.type, step.id, rule="H-no",
+                           reasons=tuple(p for p, v in values.items() if v == "no"),
+                           message=gate.on_precondition_unmet or gate.rule, source=gate.source)
+    if all(v == "yes" for v in values.values()):
+        return NO_FIRE
+    unstated = tuple(p for p, v in values.items() if v is None)
+    if claimed:
+        return GateVerdict(Outcome.ASK, gate.type, step.id, rule="H-ask", reasons=unstated,
+                           question="Before the roof work, was the OHE power block obtained and the "
+                                    "contact wire earthed by OHE staff, and was the loco grounded?",
+                           message=gate.on_precondition_unmet or gate.rule, source=gate.source)
+    return GateVerdict(Outcome.CAUTION, gate.type, step.id, rule="H-caution", reasons=unstated,
+                       message=gate.on_precondition_unmet or gate.rule, source=gate.source)
+
+
 def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> GateVerdict:
     gate = step.gate
     assert gate is not None and gate.type == "reset_limit"
@@ -246,7 +313,7 @@ def _not_implemented(gate_type: str) -> Callable[[DiagnosisState, Fault, Step], 
 
 GATE_EVALUATORS: dict[str, Callable[[DiagnosisState, Fault, Step], GateVerdict]] = {
     "reset_limit": evaluate_reset_limit,
-    "hazard_exposure": _not_implemented("hazard_exposure"),           # pantograph / HT — M4
+    "hazard_exposure": evaluate_hazard_exposure,                      # pantograph roof work — M4b
     "isolation_before_contact": _not_implemented("isolation_before_contact"),  # TM / RSI — M4
 }
 assert set(GATE_EVALUATORS) == set(GATE_TYPES), "every KB gate type needs an evaluator"

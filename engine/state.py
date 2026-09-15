@@ -29,6 +29,8 @@ HF_RESET_INSTRUCTED = "reset_instructed_this_session" # engine emitted the first
 
 # Intended-action vocabulary (structured; the M2 parser maps free text onto these).
 ACTION_RESET_QLM = "reset_QLM"
+ACTION_WORK_ON_ROOF = "work_on_roof"          # pantograph_damaged hazard gate (§10.03 / §11.04)
+ACTIONS = (ACTION_RESET_QLM, ACTION_WORK_ON_ROOF)
 
 
 @dataclass

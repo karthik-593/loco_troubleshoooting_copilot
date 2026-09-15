@@ -1,0 +1,108 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: QRSI-1 target drops on run
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 6 "DJ Tripping through Safety Relays", §6.02 (relay description) and
+#         §6.02.1 "QRSI-1 target drops on run", printed pp.86–87.
+# Mechanism proved: ISOLATE-AND-RETEST ladder + resume-from-stuck — HMCS-1 positions one
+# by one → isolate the traction motor of the bad position (5/6 load) → isolate truck 1
+# (50% load) → TLC. There is NO reset-once rule for QRSI ((b) permits a further reset after
+# a long interval), so this fault has no reset_limit gate.
+# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: QRSI1_drops_on_run
+aliases:
+  - "QRSI-1 dropped"
+  - "QRSI-1 acted"
+  - "QRSI-1 target dropped"
+  - "QRSI-1 drops on run"
+  - "QRSI-1 tripped"
+  - "QRSI1 dropped"
+  - "QRSI 1 dropped"
+config_dependency: none            # §6.02.1 checks are the same on all types; only the TFR terminal
+                                   # designations differ by transformer rating (3900 vs 5400 kVA) and
+                                   # both are given in the step text. [candidate config axis — HANDOFF]
+presenting_signs:                  # §6.02
+  - "DJ tripped"
+  - "QRSI-1 red target dropped (traction power circuit-1 over-current)"
+
+# §6.02 (background, not a step): over-current relays in the traction power circuits
+# protecting traction motors, RSI blocks, SLs, line contactors, meters, reversers; set at
+# 3600 A (WAG5/WAP1) / 4000 A (WAG7/WAP4). When it energises its N/C interlock opens on the
+# MTDJ branch, DJ trips and a red target drops.
+
+combination_rules: []
+
+defer_conditions:
+  - fact: load_and_road_do_not_permit
+    text: "Load and road do not permit working onwards — contact TLC."
+    source: "§6.02.1(f), p86"
+
+steps:
+  - id: check_traction_circuit_1
+    text: >-
+      Check for smoke, burning smell, fire or any abnormality in the TFR terminals
+      (a5, a6 on 3900 kVA transformer locos; a3, a4 on 5400 kVA), RSI-1, J1,
+      CTF-1/2/3, SL-1, L1, L2, L3, traction motors 1, 2 and 3, RU1, RU2, the AM3
+      shunt, Q20, RQ20, QD1 and SJ 1, 2, 3.
+    gate: null
+    abnormality_key: traction1_abnormality_found
+    on_abnormality: "Use fire extinguishers; try to isolate the abnormal equipment."   # §6.02.1(a)
+    isolation:
+      needs_history: isolation_successful
+      # [interpretation — flagged for review] §6.02.1(a) states the post-isolation action only
+      # by omission ("try to isolate the same, otherwise contact TLC"); the successful-isolation
+      # path is treated as returning to the no-abnormality path of (a): reset and accelerate
+      # gradually. §6.1.2(b) states this explicitly for the analogous QLM+QRSI case.
+      on_isolated: "Reset the relay target and accelerate gradually, watching the ammeters."
+      on_not_isolated: "Contact TLC for further instructions."                          # §6.02.1(a)
+      source: "§6.02.1(a), p86"
+    source: "§6.02.1(a), p86"
+
+  - id: reset_and_accelerate_gradually
+    text: >-
+      If everything is normal, reset the relay target and accelerate gradually,
+      watching the ammeters.
+    gate: null
+    source: "§6.02.1(a), p86"
+
+  - id: recheck_and_reset_if_drops_after_long_interval
+    text: >-
+      If QRSI-1 drops again after a long interval, check the equipment listed
+      above again; if everything is normal, reset the target and resume traction.
+    gate: null
+    applies_when: {drops_after_long_interval: "yes"}     # (b) vs (c) are alternative branches
+    source: "§6.02.1(b), p86"
+
+  - id: try_hmcs1_positions_if_frequent
+    text: >-
+      If QRSI-1 is dropping frequently, check the equipment listed above; if there
+      is no abnormality, change HMCS-1 to positions 2, 3 and 4 one by one and try.
+    gate: null
+    applies_when: {drops_frequently: "yes"}
+    source: "§6.02.1(c), p86"
+
+  - id: isolate_tm_of_bad_hmcs1_position
+    text: >-
+      If QRSI-1 drops in a particular position of HMCS-1, isolate that traction
+      motor and work with 5/6 of the maximum permissible load.
+    gate: null
+    applies_when: {drops_frequently: "yes", drops_in_particular_hmcs1_position: "yes"}
+    completes: true
+    source: "§6.02.1(d), p86"
+
+  - id: isolate_truck_1_if_all_positions
+    text: >-
+      If QRSI-1 drops in all positions of HMCS-1, isolate truck no. 1 by placing
+      HVSI-1, HVMT-1 and HVSL-1 on '0'. Resume traction if road and load permit;
+      otherwise work with 50% of the maximum permissible load.
+    gate: null
+    applies_when: {drops_frequently: "yes", drops_in_all_hmcs1_positions: "yes"}
+    completes: true
+    source: "§6.02.1(e), p86"
+
+terminal_actions:
+  resolved:   "resume traction (with the load restriction that applies: full, 5/6 with one TM isolated, or 50% with truck 1 isolated)"   # §6.02.1(a)(b)(d)(e)
+  unresolved: "contact TLC"                                                                                                                 # §6.02.1(f)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.02 / §6.02.1, pp.86–87"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

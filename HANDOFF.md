@@ -7,8 +7,38 @@ Milestone 1.
 ---
 
 ## Status
-- **Milestone: M4a + §6.1.1(f) precision pass (2026-09-15).** 147 offline tests, 14/14 live
-  parse cases on deepseek-flash. M3: 2026-09-15. M2/M1: 2026-09-14.
+- **Milestone: M4b — pantograph hazard gate + QRSI-1 isolate-and-retest (2026-09-15).**
+  166 offline tests, 18/18 live parse cases. M4a + §6.1.1(f) pass: 2026-09-15. M3: 2026-09-15.
+- **M4b KB additions — PENDING HUMAN CONFIRMATION:**
+  - `kb/faults/pantograph_damaged.yaml` (§10.03 pp.164–165 incl. "Obtaining emergency power
+    block"; §11.04 p.178). Ordinary: lower panto → BP/protect → contact TPC; **gated**
+    `secure_damaged_pantograph_on_roof` = `hazard_exposure` with preconditions
+    `ohe_power_block_obtained_and_earthed` + `loco_grounded` (EPB (c); §11.04 1–2), in play on
+    intent `work_on_roof` or when it is the next step; then HPT earthing clip → clear roof /
+    un-ground / raise good panto → resume + TLC + log (completes). `defer_conditions`:
+    `pantograph_not_lowered` (§10.03(a) stop/protect/TLC), `both_pantographs_damaged` (h).
+  - `kb/faults/qrsi1_drops_on_run.yaml` (§6.02 / §6.02.1 pp.86–87). Gate-free (no reset-once
+    rule: (b) permits a further reset after a long interval). (a) circuit check with
+    `abnormality_key` + isolation block; ladder (b)|(c)→(d)|(e) as `applies_when` branches on
+    facts `drops_after_long_interval` / `drops_frequently` / `drops_in_particular_hmcs1_position`
+    / `drops_in_all_hmcs1_positions`; (d),(e) `completes: true`; defer `load_and_road_do_not_permit` (f).
+    **Interpretation flagged in the file:** post-isolation action on (a) is not stated by the TSD
+    ("try to isolate the same, otherwise contact TLC"); encoded as returning to (a)'s
+    no-abnormality path (reset, accelerate gradually), by analogy with §6.1.2(b). Confirm or trim.
+    Config-axis note: TFR terminal designations differ by transformer rating (3900 vs 5400 kVA);
+    both given in the text, `config_dependency: none` — a candidate config axis beyond SIV/ARNO.
+- **M4b engine decisions:** `hazard_exposure` evaluator (`H-caution` unstated → proactive
+  precondition statement; `H-no` → REFUSE; all yes → NO_FIRE and reassess asks the gated step
+  itself, step 3b; claimed without preconditions → `H-ask`, never a confirmation). Diff is now
+  ordered: steps after an unclaimed gated step are not due; `applies_when` skips a branch only
+  when a STATED fact contradicts it. Generic `Fault.defer_conditions` ("if <situation>, contact
+  TLC" → defer with the clause text). Gate-free isolate-then-reset handled in reassess 2e.
+  `Step.completes` → 'resolved' terminal when the last claimed step completes the procedure.
+  Actions vocabulary: `reset_QLM`, `work_on_roof`. `isolation_before_contact` still fails closed
+  (no TSD section so far needed it: in §6.02.1 isolation is the remedy, not a precondition).
+  Live: panto intent → proactive caution, agent never consulted; preconditions → ask the roof
+  step. QRSI frequent/position-2 → skips (b), isolates TM → resolved (5/6 load); SL-1 burning,
+  not isolable → TLC.
 - **M4a KB additions — PENDING HUMAN CONFIRMATION (review against the TSD before treating as
   locked):** `kb/faults/qlm_with_qop_qrsi.yaml` (§6.1.2), `kb/faults/qlm_with_qla_qoa.yaml`
   (§6.1.3), `kb/faults/sanders_not_working.yaml` (§10.12). The combination faults reuse QLM's
@@ -153,11 +183,11 @@ Per BUILD_PLAN §13 layout:
 **Built in M3:** `agent/graph.py`, `agent/session.py`, `api/server.py`, `client/streamlit_app.py`,
 `tests/test_loop_guards.py`, `tests/test_graph_qlm.py`, `tests/test_api.py`.
 **Built in M4a:** `QLM_with_QOP_QRSI`, `QLM_with_QLA_QOA`, `sanders_not_working` + engine above.
-**Next (M4b):** `pantograph_damaged` (§10.03 + §11.04, `hazard_exposure` gate with
-preconditions OHE-earthed-by-TRD + loco-grounded) and `QRSI1_drops_on_run` (§6.02.1,
-isolate-and-retest via HMCS positions, no reset-once rule). Config-dependent fault deferred
-until a genuine SIV/ARNO branch is found in the TSD. `hazard_exposure` /
-`isolation_before_contact` evaluators still fail closed (`NotImplementedError`).
+**Built in M4b:** `pantograph_damaged`, `QRSI1_drops_on_run` + engine above.
+**Next (M5):** evaluation — scenario suite (three classes + ambiguous + config), harness,
+flat-retrieval baseline, MLflow, tool-path-divergence report, unsafe-instruction-rate = 0 as a
+CI gate; `dvc.yaml` pipeline (validate_kb → eval → report). Config-dependent fault still
+deferred (no genuine SIV/ARNO branch found; transformer-kVA axis noted in QRSI-1).
 
 ---
 
