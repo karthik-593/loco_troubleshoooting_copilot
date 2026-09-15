@@ -96,3 +96,77 @@ def test_specific_fault_alias_outranks_the_general_fire_procedure(kb):
     assert kb.match_alias("panto damaged and smoke coming from roof").fault_id == "pantograph_damaged"
     assert kb.match_alias("smoke coming from the machine room").fault_id == FIRE
     assert kb.match_alias("ht2 checked, no smoke, oil ok") is None      # a negative finding is not the fire procedure
+
+
+# ---------------------------------------------------------------------------
+# Seen live 2026-09-16 on QRSI-2: "no" to "have you checked ...?" was asked again verbatim;
+# a branch step was asked as "have you done (c)?"; step (d) lost its substance in phrasing.
+# ---------------------------------------------------------------------------
+
+def _cp(parses, tools):
+    return Copilot(Providers(parse=FakeProvider(structured_queue=list(parses)),
+                             decide=FakeProvider(structured_queue=[DecideOutput(tool=t, reason="t") for t in tools]),
+                             phrase=FakeProvider()))
+
+
+def test_declined_check_is_put_as_the_next_action_not_asked_again():
+    d = DiagnosisState()
+    cp = _cp([ParseOutput(fault_guess=Q2, fault_confidence=0.9, fault_presenting="yes", claimed_steps=[Q2_STEPS[1]]),
+              ParseOutput(fault_guess=None, fault_confidence=0.0, denies_asked_step="yes"),
+              ParseOutput(fault_guess=None, fault_confidence=0.0, claimed_steps=[Q2_STEPS[0]],
+                          facts={"traction2_abnormality_found": "no"})],
+             ["diff_completed_steps"] * 3)
+    t1 = cp.turn(d, "qrsi2 dropped. i resetted")
+    assert t1.terminal.kind == "ask_step" and t1.terminal.step_id == Q2_STEPS[0] and not t1.terminal.do_now
+    t2 = cp.turn(d, "no", last_assistant=t1.reply)
+    assert t2.terminal.step_id == Q2_STEPS[0] and t2.terminal.do_now and not t2.repeat
+    assert t2.reply.startswith("Do this now:") and "RSI-2" in t2.reply
+    t3 = cp.turn(d, "checked all, nothing abnormal", last_assistant=t2.reply)
+    assert Q2_STEPS[0] in d.steps_claimed_done and Q2_STEPS[0] not in d.steps_declined
+    assert t3.terminal.step_id != Q2_STEPS[0]
+
+
+def test_backstop_a_repeated_ask_on_the_same_step_becomes_do_now_without_any_parser_flag():
+    d = DiagnosisState()
+    blind = ParseOutput(fault_guess=None, fault_confidence=0.0)          # parser saw nothing at all
+    cp = _cp([ParseOutput(fault_guess=Q2, fault_confidence=0.9, fault_presenting="yes"), blind, blind],
+             ["diff_completed_steps"] * 3)
+    t1 = cp.turn(d, "qrsi2 dropped")
+    t2 = cp.turn(d, "no i didnt", last_assistant=t1.reply)
+    assert t2.repeat and t2.terminal.do_now and Q2_STEPS[0] in d.steps_declined
+    t3 = cp.turn(d, "hmm", last_assistant=t2.reply)
+    assert t3.terminal.do_now                                            # stays an instruction
+
+
+def test_unstated_branch_asks_the_condition_not_a_branch_step(kb):
+    """After (a)+(b) with nothing said about recurrence, (c) 'after a long interval' and (d)
+    'frequently' are alternatives: ask which applies, assembled from the KB 'If ...' heads."""
+    d = DiagnosisState()
+    t = run_turn(d, StateUpdate(fault_id=Q2, claimed_steps=Q2_STEPS[:2],
+                                history={"traction2_abnormality_found": "no"}), kb)
+    assert t.terminal.kind == "ask_history" and t.terminal.message.startswith("Which applies now")
+    assert "after a long interval" in t.terminal.message and "dropping frequently" in t.terminal.message
+    assert "§6.02.2(b)" in t.terminal.source and "§6.02.2(c)" in t.terminal.source
+    # the answer routes to (d) directly
+    t = run_turn(d, StateUpdate(history={"drops_frequently": "yes", "drops_after_long_interval": "no"}), kb)
+    assert t.terminal.kind == "ask_step" and t.terminal.step_id == Q2_STEPS[3] and "HMCS-2" in t.terminal.message
+    # ... or to the resolved confirm
+    d2 = DiagnosisState()
+    run_turn(d2, StateUpdate(fault_id=Q2, claimed_steps=Q2_STEPS[:2], history={"traction2_abnormality_found": "no"}), kb)
+    t = run_turn(d2, StateUpdate(history={"fault_resolved": "yes"}), kb)
+    assert t.terminal.kind == "confirm"
+
+
+def test_branch_question_only_when_no_condition_is_stated(kb):
+    d = DiagnosisState()
+    t = run_turn(d, StateUpdate(fault_id=Q2, claimed_steps=Q2_STEPS[:2],
+                                history={"traction2_abnormality_found": "no", "drops_after_long_interval": "yes"}), kb)
+    assert t.terminal.kind == "ask_step" and t.terminal.step_id == Q2_STEPS[2]
+
+
+def test_phrase_guard_rejects_an_ask_step_that_lost_the_equipment(kb):
+    from llm.phrase import guard
+    from engine import terminals as T
+    f = kb.get(Q2); t = T.ask_step(f, f.step(Q2_STEPS[3]))
+    assert "ask_step_lost_substance" in guard(t, "Have you checked the equipment listed above for abnormality?")
+    assert not guard(t, "If it is dropping frequently and the traction circuit-2 equipment is normal, have you tried HMCS-2 in positions 2, 3 and 4 one by one?")

@@ -41,11 +41,23 @@ class PhraseResult:
 # deterministic rendering (fallback + the content the model is shown)
 # ---------------------------------------------------------------------------
 
+_STOP = {"everything", "whether", "otherwise", "further", "normal", "abnormality", "condition",
+         "anything", "before", "after", "through", "again", "should", "please", "maximum"}
+
+
+def _key_words_present(clause: str, low: str) -> bool:
+    """A KB clause survives phrasing if its distinctive words (≥5 letters, or an identifier) do."""
+    words = [w for w in re.findall(r"[A-Za-z][A-Za-z0-9-]+", clause) if len(w) >= 5 or w.isupper()]
+    return all(w.lower() in low for w in words)
+
+
 def render_verbatim(t: Terminal) -> str:
     if t.kind == "confirm":
         return " ".join([t.message, *t.guidance]).strip()
     if t.kind == "ask_step":
         hold = f" Hold the {t.hold_action.replace('_', ' ')} until this is done." if t.hold_action else ""
+        if t.do_now:
+            return f"Do this now: {t.message}{hold} Then tell me what you found."
         return f"Next check: {t.message}{hold} Done?"
     if t.kind == "ask_history":
         return t.message
@@ -61,10 +73,25 @@ def render_verbatim(t: Terminal) -> str:
     raise AssertionError(t.kind)
 
 
+_IF_HEAD = re.compile(r"^\s*If\s+(.+?)[,;:]\s*(.+)$", re.IGNORECASE | re.DOTALL)
+
+
 def terminal_payload(t: Terminal) -> str:
-    lines = [f"kind: {t.kind}", f"content: {t.message}"]
+    lines = [f"kind: {t.kind}"]
+    m = _IF_HEAD.match(t.message) if t.kind == "ask_step" else None
+    if m:
+        # A conditional KB step reached because its condition holds: the pilot is asked about
+        # the ACTION, never about the condition (seen live: "have you checked whether it drops
+        # in a particular position?" for "isolate that traction motor").
+        lines.append(f"condition_already_met: {' '.join(m.group(1).split())}")
+        lines.append(f"content: {' '.join(m.group(2).split())}")
+    else:
+        lines.append(f"content: {t.message}")
     if t.guidance:
         lines.append(f"guidance: {' '.join(t.guidance)}")
+    if t.kind == "ask_step" and t.do_now:
+        lines.append("do_now: the pilot has said this check is NOT done. Tell them to do it now and "
+                     "report what they find. Do NOT ask whether they have done it.")
     if t.hold_action:
         lines.append(f"hold_action: the pilot intends to {t.hold_action.replace('_', ' ')} — "
                      f"say plainly that this waits until the check is done")
@@ -148,9 +175,33 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
                 v.append(f"caution_missing_{key}")
         if t.conditional and "abnormal" not in low:
             v.append("caution_dropped_condition")
+    if t.kind == "ask_step":
+        # The rendering must keep the step's substance: its equipment identifiers (HMCS-2,
+        # RSI-2, L4...) and the distinctive words of its ACTION clause (isolate, traction,
+        # motor, permissible...). Seen live: an action rendered as a question about its own
+        # "If ..." condition, and "the equipment listed above" for a full checklist.
+        action = re.sub(r"^\s*If\s.+?[,;:]", "", t.message, count=1, flags=re.IGNORECASE | re.DOTALL)
+        idents = {m for m in re.findall(r"\b[A-Z][A-Z0-9]*(?:[-/][A-Z0-9]+)*\b", action) if len(m) >= 2}
+        words = {w.lower() for w in re.findall(r"[A-Za-z][A-Za-z-]{5,}", action)} - _STOP
+        lost_i = [i for i in idents if i.lower() not in low]
+        lost_w = [w for w in words if w not in low]
+        if (idents and len(lost_i) / len(idents) > 0.34) or (words and len(lost_w) / len(words) > 0.5):
+            v.append("ask_step_lost_substance")           # a paraphrase keeps most; a substitution loses most
+    if t.kind == "ask_step" and t.do_now:
+        if re.search(r"\bhave you\b|\bdid you\b|\bhas .* been\b", low):
+            v.append("do_now_asked_again")               # they said no; do not ask again
+        if t.hold_action and not re.search(r"\b(before|until|after|hold|wait|first)\b", low):
+            v.append("hold_action_dropped")
+        if not t.hold_action and re.search(r"\b(hold|wait|do not (move|resume|proceed))\b", low):
+            v.append("added_hold_instruction")
     elif t.kind in ("ask_step", "ask_history", "confirm_fault", "clarify", "ask_config"):
         if "?" not in s:
             v.append("question_not_asked")
+        if t.kind == "ask_history" and t.message.startswith("Which applies now"):
+            # the branch question must keep every alternative the KB names
+            alts = [a.strip() for a in t.message[len("Which applies now:"):].split("? Or")[0].split("; or")]
+            if any(not _key_words_present(a, low) for a in alts):
+                v.append("branch_question_dropped_alternative")
         if t.kind == "ask_step" and t.hold_action and not re.search(r"\b(before|until|after|hold|wait|first)\b", low):
             v.append("hold_action_dropped")
         if t.kind == "ask_step" and not t.hold_action and re.search(r"\b(hold|wait|do not (move|resume|proceed))\b", low):

@@ -4,6 +4,7 @@ never from model knowledge. Each terminal carries its TSD citation.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Literal, Optional
 
@@ -33,6 +34,8 @@ class Terminal:
     conditional: bool = False           # fix C: caution is conditional on "no abnormality"
     guidance: tuple[str, ...] = ()      # extra KB text (e.g. on_first_reset after confirm)
     unrecognised_claims: tuple[str, ...] = field(default=())
+    do_now: bool = False                # ask_step: the pilot has said this check is NOT done —
+                                        # tell them to do it now, do not ask again
 
     @property
     def instructs_reset(self) -> bool:
@@ -67,8 +70,10 @@ def confirm(fault: Fault, guidance: tuple[str, ...] = (), source: str = "") -> T
 
 
 def ask_step(fault: Fault, step: Step, hold_action: Optional[str] = None,
-             unrecognised: tuple[str, ...] = ()) -> Terminal:
-    """The ONE specific missed ordinary step (§2.2)."""
+             unrecognised: tuple[str, ...] = (), do_now: bool = False) -> Terminal:
+    """The ONE specific missed ordinary step (§2.2). ``do_now``: the pilot has already said
+    it is not done, so it is put as the next action (the TSD step text IS an instruction),
+    not as a question again."""
     return Terminal(
         kind="ask_step",
         fault_id=fault.fault_id,
@@ -77,6 +82,7 @@ def ask_step(fault: Fault, step: Step, hold_action: Optional[str] = None,
         step_id=step.id,
         hold_action=hold_action,
         unrecognised_claims=unrecognised,
+        do_now=do_now,
     )
 
 
@@ -90,6 +96,30 @@ def ask_history(fault: Fault, step: Step, question: str) -> Terminal:
         source=step.gate.source,
         step_id=step.id,
         gate_type=step.gate.type,
+    )
+
+
+_IF_CLAUSE = re.compile(r"^\s*If\s+(.+?)[,;:]", re.IGNORECASE | re.DOTALL)
+
+
+def branch_condition(step: Step) -> Optional[str]:
+    """The KB step's own "If <condition>," head, verbatim — None if the step has no such head."""
+    m = _IF_CLAUSE.match(step.text)
+    return " ".join(m.group(1).split()) if m else None
+
+
+def ask_branch(fault: Fault, steps: list[Step]) -> Terminal:
+    """The next due steps are alternative branches whose conditions the pilot has not stated
+    (§2.3: ask the ONE fact that decides the route, not "have you done <branch>"). The
+    question is assembled from the steps' own "If ..." clauses; nothing is composed."""
+    conds = [c for c in (branch_condition(s) for s in steps) if c]
+    question = "Which applies now: " + "; or ".join(conds) + "? Or has it not recurred?"
+    return Terminal(
+        kind="ask_history",
+        fault_id=fault.fault_id,
+        message=question,
+        source="; ".join(dict.fromkeys(s.citation for s in steps)),
+        step_id=steps[0].id,
     )
 
 

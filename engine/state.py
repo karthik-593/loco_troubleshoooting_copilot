@@ -56,6 +56,7 @@ class DiagnosisState:
     history_facts: dict[str, Any] = field(default_factory=dict)  # e.g. reset-earlier: yes/no
     intended_action: Optional[str] = None          # pilot's next move, for the reflex
     stuck_at: Optional[str] = None
+    steps_declined: set[str] = field(default_factory=set)    # pilot said "not done" when asked
     tool_results: dict[str, Any] = field(default_factory=dict)  # idempotency / no-progress
     iter_count: int = 0                            # loop guard (§6)
     clarify_asked: int = 0                         # unresolved-fault turns so far (§5.6 backstop)
@@ -132,6 +133,9 @@ class StateUpdate:
     # merely referring to it. Set deterministically by parse on an alias hit, or on a
     # confident model guess that says the fault is presenting. Drives the recurrence backstop.
     fault_presenting: bool = False
+    # The pilot says the check the assistant just asked about is NOT done (parser fast path;
+    # the engine also treats a repeated ask on the same step as this).
+    denies_asked_step: bool = False
 
     def brings_news(self, state: "DiagnosisState") -> bool:
         """Does this update change anything the engine acts on? False for "ok" / "anything
@@ -140,7 +144,8 @@ class StateUpdate:
             (self.fault_id and self.fault_id != state.matched_fault)
             or (self.fault_confirmed is not None and self.fault_confirmed != state.fault_confirmed)
             or self.config or self.loco_type or self.claimed_steps or self.history
-            or self.intended_action or self.clear_intended_action or self.fault_presenting)
+            or self.intended_action or self.clear_intended_action or self.fault_presenting
+            or self.denies_asked_step)
 
 
 def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fault]) -> DiagnosisState:
@@ -181,6 +186,9 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
     known = set(state.steps_required)
     unrecognised = [s for s in update.claimed_steps if s not in known]
     state.steps_claimed_done.update(s for s in update.claimed_steps if s in known)
+    state.steps_declined.difference_update(update.claimed_steps)      # now done → no longer declined
+    if update.denies_asked_step and state.stuck_at and state.stuck_at not in state.steps_claimed_done:
+        state.steps_declined.add(state.stuck_at)
     # KB-declared implications of a claim (branch facts the step's position establishes)
     if fault is not None:
         for s in fault.steps:

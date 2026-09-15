@@ -65,15 +65,15 @@ steps:
 
   - id: recheck_and_reset_if_drops_after_long_interval
     text: >-
-      If QRSI-2 drops again after a long interval, check the equipment listed
-      above again; if everything is normal, reset the target and resume traction.
+      If QRSI-2 drops again after a long interval, check the traction circuit-2
+      equipment again; if everything is normal, reset the target and resume traction.
     gate: null
     applies_when: {drops_after_long_interval: "yes"}     # (b) vs (c) are alternative branches
     source: "§6.02.2(b), p87"
 
   - id: try_hmcs2_positions_if_frequent
     text: >-
-      If QRSI-2 is dropping frequently, check the equipment listed above; if there
+      If QRSI-2 is dropping frequently, check the traction circuit-2 equipment; if there
       is no abnormality, change HMCS-2 to positions 2, 3 and 4 one by one and try.
     gate: null
     applies_when: {drops_frequently: "yes"}

@@ -61,7 +61,7 @@ def test_10_2_trace_free_text_end_to_end(kb):
     # Turn 1 — "QLM locked. I checked the transformer and oil level."
     p = FakeProvider(
         structured_queue=[ParseOutput(fault_guess=QLM, fault_confidence=0.95, claimed_steps=list(ORDINARY[:2]))],
-        text_queue=["Next, have you checked the CGR arc chutes, RGR/RPGR and the transformer terminals and bushings?"])
+        text_queue=["Next, have you checked the CGR arc chutes, RGR and RPGR for red-hot condition, and the TFR terminals, bushings, HT cable, TFILM, TFSPM and breathers for smell, smoke, fire or oil leakage?"])
     r = parse_turn("QLM locked. I checked the transformer and oil level.", s, kb, p)
     t1 = run_turn(s, r.update, kb)
     assert t1.terminal.kind == "ask_step" and t1.terminal.step_id == ORDINARY[2]

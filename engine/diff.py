@@ -36,6 +36,10 @@ def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
     claimed = state.steps_claimed_done
     due: list[str] = []
     needs_axis: str | None = None
+    if any(s.completes and s.id in claimed for s in fault.steps):
+        # a completing step is done: the procedure ended on it (its alternatives are not due)
+        return StepDelta(next_unmet=None, missing=(), complete=True,
+                         unrecognised=tuple(state.tool_results.get("unrecognised_claims", ())))
     for s in fault.steps:
         if s.gate is not None and s.id not in claimed:
             break

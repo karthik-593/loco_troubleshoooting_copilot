@@ -139,10 +139,18 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     if not delta.complete:
         assert delta.next_unmet is not None
         step = fault.step(delta.next_unmet)
+        branches = _unstated_branches(state, fault, step)
+        if len(branches) >= 2:
+            # 3a. the next due step is one of several alternative branches and NONE of their
+            #     conditions has been stated: ask which applies (one fact question, §2.3)
+            #     instead of "have you done <branch (c)>", which presumes a route.
+            state.stuck_at = step.id
+            return Decision("need_pilot_input", T.ask_branch(fault, branches), verdict, delta)
         state.stuck_at = step.id
         return Decision(
             "need_pilot_input",
-            T.ask_step(fault, step, hold_action=hold, unrecognised=delta.unrecognised),
+            T.ask_step(fault, step, hold_action=hold, unrecognised=delta.unrecognised,
+                       do_now=step.id in state.steps_declined),       # "no, not done" → do it now
             verdict,
             delta,
         )
@@ -170,6 +178,32 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
             guidance = (fault.terminal_actions["unresolved"],)   # every step tried, still not cleared
     src = "; ".join(s.gate.source for s in fault.gated_steps if s.gate) or fault.source
     return Decision("terminal", _confirm_after_reset(state, fault, guidance, src), verdict, delta)
+
+
+def _unstated_branches(state: DiagnosisState, fault: Fault, first: Step) -> list[Step]:
+    """Consecutive not-done, gate-free steps starting at ``first`` that each carry an
+    ``applies_when`` whose facts are ALL unstated — the alternative routes the pilot has not
+    chosen between yet. Stops at the first step that is done, gated, unconditional, or has
+    a stated condition."""
+    out: list[Step] = []
+    seen_keys: set[str] = set()
+    started = False
+    for s in fault.steps:
+        if s.id == first.id:
+            started = True
+        if not started:
+            continue
+        if s.id in state.steps_claimed_done or s.gate is not None or not s.applies_when:
+            break
+        if any(state.history_facts.get(k) is not None for k in s.applies_when):
+            break
+        if T.branch_condition(s) is None:
+            break
+        if seen_keys & set(s.applies_when):
+            break           # shares a condition with an earlier alternative: a sub-branch, not a route
+        seen_keys |= set(s.applies_when)
+        out.append(s)
+    return out
 
 
 def _confirm_after_reset(state: DiagnosisState, fault: Fault, guidance: tuple[str, ...], src: str) -> T.Terminal:

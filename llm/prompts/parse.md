@@ -46,5 +46,8 @@ Rules
 - intended_action: only if they state what they are about to do next and it is in the
   action list.
 - unmapped_claims: anything they say they did that fits no listed step.
+- denies_asked_step: "yes" when the assistant's last message asked whether a check was done
+  and the pilot answers no / not yet / didn't. A bare "no" after such a question is "yes"
+  here. Never put a denied check in claimed_steps.
 
 {kb_vocabulary}

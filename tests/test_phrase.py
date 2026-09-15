@@ -69,9 +69,13 @@ def test_conditional_caution_keeps_the_condition(qlm):
 
 def test_questions_must_still_ask(qlm):
     t = T.ask_step(qlm, qlm.step(ORDINARY[2]), hold_action=ACTION_RESET_QLM)
-    assert "question_not_asked" in guard(t, "Check the CGR arc chutes and terminals.")
-    assert "hold_action_dropped" in guard(t, "Have you checked the CGR arc chutes and terminals?")
-    assert guard(t, "Before resetting, have you checked the CGR arc chutes and terminals?") == ()
+    full = "the CGR arc chutes, RGR and RPGR for red-hot condition, and the TFR terminals, bushings, HT cable, TFILM, TFSPM and breathers"
+    assert "question_not_asked" in guard(t, f"Check {full}.")
+    assert "hold_action_dropped" in guard(t, f"Have you checked {full}?")
+    assert guard(t, f"Before resetting, have you checked {full}?") == ()
+    # a rendering that loses most of the equipment named is not the step (seen live: step (d)
+    # of QRSI-2 rendered as "have you checked the equipment listed above?")
+    assert "ask_step_lost_substance" in guard(t, "Before resetting, have you checked the CGR arc chutes and terminals?")
     assert "Hold the reset QLM" in render_verbatim(t)
 
 
@@ -99,8 +103,8 @@ def test_payload_contains_only_terminal_content(qlm):
 
 def test_invented_hold_instruction_is_rejected(qlm):
     t = T.ask_step(qlm, qlm.step(ORDINARY[0]))                      # no hold_action
-    assert "added_hold_instruction" in guard(t, "Have you checked the HT-2 compartment? Hold traction until that's done.")
-    assert guard(t, "Have you checked the HT-2 compartment for smoke or oil splashes?") == ()
+    assert "added_hold_instruction" in guard(t, "Have you checked the HT-2 compartment and GR safety valve? Hold traction until that's done.")
+    assert guard(t, "Have you checked the HT-2 compartment for smoke, smell, fire, heat or oil splashes from the explosion vent, vent pipe and GR safety valve?") == ()
 
 
 def test_not_isolated_refusal_needs_tlc_but_not_a_negation(kb):

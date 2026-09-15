@@ -65,6 +65,8 @@ def test_heldout_parse(case, kb, provider):
         case = {**case, "fault": r.update.fault_id}
     else:
         assert (r.update.fault_id or d.matched_fault) == case["fault"]
+    if "denies_asked_step" in case:
+        assert r.update.denies_asked_step == case["denies_asked_step"]
     if "claimed" in case:
         assert set(r.update.claimed_steps) - set(r.rejected_steps) == set(case["claimed"])
     if "abnormality" in case:

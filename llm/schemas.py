@@ -71,6 +71,12 @@ class ParseOutput(BaseModel):
         default_factory=list,
         description="Things the pilot says they did that do not map to any checklist step "
                     "(short phrases, verbatim-ish).")
+    denies_asked_step: YesNoUnknown = Field(
+        default="unknown",
+        description="'yes' if the assistant's last message asked whether a specific check was "
+                    "done and the pilot answers that it was NOT done ('no', 'not yet', 'didn't "
+                    "check'). 'no' if they say it was done (then also list it in claimed_steps). "
+                    "'unknown' otherwise, including when no check was asked about.")
     fault_resolved: YesNoUnknown = Field(
         default="unknown",
         description="'yes' only if the pilot says the fault is now cleared / equipment working "

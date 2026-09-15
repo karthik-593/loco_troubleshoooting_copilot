@@ -23,7 +23,7 @@ def test_build_plan_10_2_trace_through_the_graph():
          ParseOutput(fault_guess=None, fault_confidence=0.0, claimed_steps=[ORDINARY[2]],
                      abnormality_found="no", was_reset_earlier_this_trip="yes", intended_action="reset_QLM")],
         ["diff_completed_steps"],
-        ["Next, have you checked the CGR arc chutes, RGR/RPGR and the transformer terminals and bushings?",
+        ["Next, have you checked the CGR arc chutes, RGR and RPGR for red-hot condition, and the TFR terminals, bushings, HT cable, TFILM, TFSPM and breathers for smell, smoke, fire or oil leakage?",
          "Do not reset QLM again. Make the log-book remark, inform TLC and arrange a relief loco."]))
 
     # TURN 1

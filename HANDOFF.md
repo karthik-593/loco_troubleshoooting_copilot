@@ -465,3 +465,33 @@ answered — the LLM has no answer-from-knowledge job (§8). If wanted, the safe
 bounded job / Class-A tool `explain_current_step` that returns the KB step text + TSD citation
 verbatim, selected by the agent, never composed by the model. Needs a parse flag for
 "asks a question about the current guidance" and a guard that the reply quotes KB text only.
+
+## Post-M6: "this tool is useless" (live QRSI-2, 2026-09-16)
+
+Seen: "qrsi2 dropped. i resetted" → asked (a); "no" → asked (a) again, verbatim; "no i didnt" →
+again. Then, continuing the conversation: the branch step (c) was asked as "have you checked the
+equipment listed above?"; step (d) was rendered by the phrase model as a question about its own
+condition; a completed branch (e) did not end the checklist. All fixed deterministically:
+
+1. **"No" is an answer.** `ParseOutput.denies_asked_step` (fast path) → `StateUpdate.denies_asked_step`
+   → `DiagnosisState.steps_declined` (keyed on `stuck_at`). A declined step is returned as
+   `ask_step(do_now=True)`: the TSD step text put as the next action ("Do this now: ... Then tell
+   me what you found"), never asked again. Engine backstop: a repeated ask on the same step with
+   no news → `do_now` (a pilot who had done it would have said so). Guard `do_now_asked_again`.
+2. **Branch condition, not branch step.** When the next due steps are alternative branches whose
+   conditions are all unstated ((c) long interval vs (d) frequently), `reassess` asks
+   `T.ask_branch` — "Which applies now: <If-clause of (c)>; or <If-clause of (d)>? Or has it not
+   recurred?" — assembled from the steps' own "If ...," heads (`terminals.branch_condition`);
+   sub-branches (sharing a condition key with an earlier alternative) are excluded. Guard
+   `branch_question_dropped_alternative`. The answer routes to the step directly, or "not
+   recurred" → resolved confirm.
+3. **`completes: true` ends the checklist** (`diff_steps`): later alternatives are not due.
+4. **Phrase substance guard** `ask_step_lost_substance`: the rendering must keep the step's
+   equipment identifiers (>2/3) and the distinctive words of its ACTION clause (>1/2). The payload
+   splits a conditional step into `condition_already_met:` + `content:` so the model asks about
+   the action. Fallback = KB text ("Next check: ... Done?").
+5. **KB wording (QRSI-1/2 (b),(c)):** "the equipment listed above" → "the traction circuit-N
+   equipment" — same meaning and citation, readable in a chat. Recorded, not a content change.
+
+Known model slip not caught by a generic guard: "breakers" rendered for "breathers" once on
+QLM (c). Candidate: a KB-declared equipment vocabulary check per step.

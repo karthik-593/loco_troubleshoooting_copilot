@@ -100,3 +100,26 @@
   last_assistant: "Before the reset you just did, had QLM been reset earlier this trip? Check the loco log book."
   fault: QLM_dropped
   reset_earlier: "yes"
+# --- QRSI-2 conversation seen live 2026-09-16: "no" to an asked check; branch answers ---
+- text: "no"
+  state_fault: QRSI2_drops_on_run
+  last_assistant: "Have you checked for smoke, burning smell or abnormality in the TFR terminals, RSI-2, J2, CTF-1/2/3, SL-2, L4, L5, L6, traction motors 4, 5 and 6, the AM4 shunt, RU5, RU6, QD-2 and SJ 4, 5, 6?"
+  fault: QRSI2_drops_on_run
+  claimed: []
+  denies_asked_step: true
+- text: "it dropped again after 2 minutes"
+  state_fault: QRSI2_drops_on_run
+  last_assistant: "Which applies now: QRSI-2 drops again after a long interval; or QRSI-2 is dropping frequently? Or has it not recurred?"
+  fault: QRSI2_drops_on_run
+  facts: {drops_frequently: "yes"}
+- text: "tried 2,3,4 - drops only in position 3"
+  state_fault: QRSI2_drops_on_run
+  last_assistant: "Have you checked the traction circuit-2 equipment for abnormality, and if there is none, changed HMCS-2 to positions 2, 3 and 4 one by one to try?"
+  fault: QRSI2_drops_on_run
+  claimed: [try_hmcs2_positions_if_frequent]
+  facts: {drops_in_particular_hmcs2_position: "yes"}
+- text: "isolated TM5, running with reduced load"
+  state_fault: QRSI2_drops_on_run
+  last_assistant: "Have you isolated that traction motor and set your load to 5/6 of the maximum permissible?"
+  fault: QRSI2_drops_on_run
+  claimed: [isolate_tm_of_bad_hmcs2_position]

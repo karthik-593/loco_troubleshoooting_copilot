@@ -20,7 +20,7 @@ Two properties are enforced by the graph's SHAPE, not by any node's good behavio
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Literal, Optional, TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -210,9 +210,15 @@ class Copilot:
         # engine landed on exactly what it told them last turn ("anything else?", "ok").
         sig = T.signature(t)
         repeat = (not s.get("news", True)) and diag.last_terminal_sig == sig
+        if repeat and t.kind == "ask_step" and t.step_id and not t.do_now:
+            # Backstop (parser-independent): the same check asked twice with nothing new in
+            # between — a pilot who had done it would have said so. Put it as the next action.
+            diag.steps_declined.add(t.step_id)
+            t = replace(t, do_now=True)
         diag.last_terminal_sig = sig
         r = phrase(t, self.providers.phrase, repeat=repeat)
-        return {"reply": r.text, "phrase_fallback": r.used_fallback, "last_assistant": r.text, "repeat": repeat}
+        return {"reply": r.text, "phrase_fallback": r.used_fallback, "last_assistant": r.text, "repeat": repeat,
+                "terminal": t}
 
     # ---- routing ---------------------------------------------------------
     @staticmethod

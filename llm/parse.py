@@ -288,5 +288,6 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         history=history,
         intended_action=out.intended_action,
         fault_presenting=presenting,
+        denies_asked_step=(out.denies_asked_step == "yes"),
     )
     return ParseResult(update, confidence, False, None, out, rejected_steps=rejected + tuple(out.unmapped_claims))
