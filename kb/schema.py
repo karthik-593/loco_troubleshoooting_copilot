@@ -53,11 +53,26 @@ class Gate(_Strict):
         return self
 
 
+class Isolation(_Strict):
+    """TSD pattern "if any abnormality … try to isolate; if successful, reset and resume;
+    otherwise contact TLC" (e.g. §6.1.2(b), §6.1.3(b)). Declared on the step whose
+    abnormality it qualifies; the reset_limit evaluator consults it."""
+    needs_history: str = Field(min_length=1)          # e.g. isolation_successful
+    on_isolated: str = Field(min_length=1)
+    on_not_isolated: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+
+
 class Step(_Strict):
     id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
     text: str = Field(min_length=1)
     gate: Optional[Gate] = None
     on_abnormality: Optional[str] = None
+    # History-fact key holding the pilot's abnormality verdict for THIS step's checks.
+    # Default (None) = the fault-wide "abnormality_found". A step may name its own key when
+    # the TSD gives its abnormality a different consequence (e.g. isolate-then-reset).
+    abnormality_key: Optional[str] = Field(default=None, pattern=r"^[a-z][a-z0-9_]*$")
+    isolation: Optional[Isolation] = None
     # TSD section this step is taken from. A gated step may carry its citation on the
     # gate instead (that is how the locked qlm_dropped.yaml encodes reset_decision).
     source: Optional[str] = Field(default=None, min_length=1)
@@ -66,6 +81,12 @@ class Step(_Strict):
     def _must_cite(self) -> "Step":
         if self.source is None and self.gate is None:
             raise ValueError(f"step '{self.id}' has no TSD source citation")
+        return self
+
+    @model_validator(mode="after")
+    def _isolation_needs_key(self) -> "Step":
+        if self.isolation is not None and self.abnormality_key is None:
+            raise ValueError(f"step '{self.id}': isolation requires its own abnormality_key")
         return self
 
     @property
@@ -116,6 +137,19 @@ class Fault(_Strict):
     @property
     def step_ids(self) -> list[str]:
         return [s.id for s in self.steps]
+
+    @property
+    def history_keys(self) -> list[str]:
+        """Every history-fact key this fault's gates / steps consult (for the parser's vocabulary)."""
+        keys: list[str] = []
+        for s in self.steps:
+            if s.abnormality_key:
+                keys.append(s.abnormality_key)
+            if s.isolation:
+                keys.append(s.isolation.needs_history)
+            if s.gate and s.gate.needs_history:
+                keys.append(s.gate.needs_history)
+        return list(dict.fromkeys(keys))
 
     def step(self, step_id: str) -> Step:
         for s in self.steps:

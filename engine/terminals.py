@@ -15,6 +15,7 @@ TerminalKind = Literal["confirm", "ask_step", "ask_history", "caution", "refuse"
 # Refuse reasons (engine vocabulary; fix B in the gate review).
 REASON_SECOND_RESET = "second_reset"
 REASON_ABNORMALITY = "abnormality_found"
+REASON_NOT_ISOLATED = "abnormality_not_isolated"   # M4: isolate-then-reset step, isolation failed
 
 
 @dataclass(frozen=True)

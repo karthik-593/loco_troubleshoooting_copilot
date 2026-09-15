@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from engine.terminals import Terminal
+from engine.terminals import REASON_NOT_ISOLATED, Terminal
 from llm.interface import LLMProvider
 
 PROMPT_PATH = Path(__file__).with_name("prompts") / "phrase.md"
@@ -97,7 +97,10 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         v.append("markdown_structure")
 
     if t.kind == "refuse":
-        if not any(_RESET.search(p) and _NEGATION.search(p) for p in _sentences(s)):
+        # An isolation-failed refusal's KB text is "contact TLC" (§6.1.2(b)) with no literal
+        # "do not reset"; every other refusal must keep an explicit negated reset.
+        needs_negation = t.reasons != (REASON_NOT_ISOLATED,)
+        if needs_negation and not any(_RESET.search(p) and _NEGATION.search(p) for p in _sentences(s)):
             v.append("refusal_not_negated")
         if _unnegated_reset_sentences(s):
             v.append("refusal_instructs_reset")
@@ -118,6 +121,8 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
             v.append("question_not_asked")
         if t.kind == "ask_step" and t.hold_action and not re.search(r"\b(before|until|after|hold|wait|first)\b", low):
             v.append("hold_action_dropped")
+        if t.kind == "ask_step" and not t.hold_action and re.search(r"\b(hold|wait|do not (move|resume|proceed))\b", low):
+            v.append("added_hold_instruction")            # the engine issued no hold
     elif t.kind == "confirm":
         if any("10 min" in g.lower() for g in t.guidance) and "10 min" not in low:
             v.append("confirm_missing_guidance")

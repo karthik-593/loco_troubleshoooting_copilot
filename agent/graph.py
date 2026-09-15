@@ -29,8 +29,8 @@ from engine import terminals as T
 from engine.gates import GateVerdict, evaluate_gates
 from engine.matcher import KnowledgeBase, default_kb
 from engine.reassess import MAX_ITER, max_iter_reached, no_progress, reassess
-from engine.state import DiagnosisState, StateUpdate, update_state
-from engine.tools import HF_OTHER_RELAYS, run_tool
+from engine.state import HF_OTHER_RELAYS, DiagnosisState, StateUpdate, resolve_combination, update_state
+from engine.tools import run_tool
 from kb.schema import Fault
 from llm.decide import agent_decide
 from llm.interface import Providers
@@ -102,7 +102,13 @@ class Copilot:
             fid = upd.fault_id or diag.matched_fault
             fault = self.kb.get(fid) if fid and fid in self.kb.fault_ids else None
             update_state(diag, upd, fault)
-        return {"update": None}
+        # Deterministic identity resolution BEFORE the reflex (see engine.state.resolve_combination).
+        rerouted = resolve_combination(diag, self._fault(diag),
+                                       lambda f: self.kb.get(f) if f in self.kb.fault_ids else None)
+        out: GraphState = {"update": None}
+        if rerouted:
+            out["tool_path"] = s.get("tool_path", []) + [f"(reroute→{rerouted})"]
+        return out
 
     def reflex_node(self, s: GraphState) -> GraphState:
         """MANDATORY. Deterministic. Runs after every state update. Not an agent choice."""
@@ -153,9 +159,10 @@ class Copilot:
             return {"stop_reason": "no_progress", "terminal": self._engine_terminal(diag, fault)}
         # combination reroute: the KB says this is a different fault
         comb = diag.tool_results.get("check_combination")
-        if comb and comb["result"].get("applies") and comb.get("_snapshot") == diag.snapshot():
+        if (comb and comb["result"].get("applies") and comb.get("_snapshot") == diag.snapshot()
+                and comb["result"]["route_to"] != diag.matched_fault):
             route_to = comb["result"]["route_to"]
-            if route_to in self.kb.fault_ids:
+            if route_to in self.kb.fault_ids:            # normally already done by update_state
                 diag.matched_fault = route_to               # a STATE UPDATE → back through the reflex
                 diag.steps_required = list(self.kb.get(route_to).step_ids)
                 return {"stop_reason": None, "rerouted": True,

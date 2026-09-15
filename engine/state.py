@@ -18,7 +18,9 @@ YesNo = Literal["yes", "no"]
 # the reset_limit gate's ``needs_history`` key in kb/faults/qlm_dropped.yaml;
 # ``abnormality_found`` is the pilot's verdict on §6.1.1(a)–(c).
 HF_RESET_EARLIER = "was_QLM_reset_earlier_this_trip"
-HF_ABNORMALITY = "abnormality_found"
+HF_ABNORMALITY = "abnormality_found"          # fault-wide default abnormality verdict
+HF_RESOLVED = "fault_resolved"                 # pilot reports the fault cleared (gate-free faults)
+HF_OTHER_RELAYS = "other_relays_acted"         # list of other relay targets the pilot reported
 
 # Intended-action vocabulary (structured; the M2 parser maps free text onto these).
 ACTION_RESET_QLM = "reset_QLM"
@@ -112,6 +114,34 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
     elif update.intended_action is not None:
         state.intended_action = update.intended_action
     return state
+
+
+def resolve_combination(state: DiagnosisState, fault: Optional[Fault], lookup) -> Optional[str]:
+    """DETERMINISTIC fault-identity resolution, run right after every state update and
+    BEFORE the reflex: if the pilot has reported other relays that match one of the matched
+    fault's combination rules and the target fault is in the KB, switch ``matched_fault``
+    to it (claimed steps carry over — the combination faults reuse the step ids).
+
+    Why here and not left to the agent's ``check_combination`` tool: the reflex evaluates
+    gates against ``matched_fault``; if identity waited on a discretionary tool, a gate
+    could fire (and short-circuit the loop) under the WRONG procedure — observed live
+    2026-09-15. ``check_combination`` remains available to the agent as a query.
+    ``lookup(fault_id) -> Fault | None`` is the KB accessor. Returns the new fault_id or None."""
+    if fault is None or state.matched_fault != fault.fault_id:
+        return None
+    reported = {str(r).upper() for r in (state.history_facts.get(HF_OTHER_RELAYS) or [])}
+    if not reported:
+        return None
+    for rule in fault.combination_rules:
+        if reported & {r.upper() for r in rule.if_also}:
+            target = lookup(rule.route_to)
+            if target is None:
+                return None                              # not encoded → stays; reassess defers to TLC
+            state.matched_fault = target.fault_id
+            state.steps_required = list(target.step_ids)
+            state.steps_claimed_done &= set(target.step_ids)
+            return target.fault_id
+    return None
 
 
 def checks_complete(state: DiagnosisState, fault: Fault) -> bool:

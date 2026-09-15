@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Sanders are not working
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.12, printed pp.172–173.
+# Benign, gate-free, config-independent. Linear trouble-shooting (a)→(g); the pilot
+# resumes traction at whichever step clears the fault.
+# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: sanders_not_working
+aliases:
+  - "sanders not working"
+  - "sanders are not working"
+  - "sander not working"
+  - "sanders not working on both sides"
+  - "no sanding"
+  - "sanders failed"
+  - "sanding not working"
+config_dependency: none            # §10.12 does not branch on loco type
+presenting_signs:                  # §10.12 causes
+  - "No sand delivered when the sander pedal (PSA) is pressed"
+
+# Causes listed by §10.12 (background, not steps): sanders COCs closed; defective VESA;
+# CCLS fuse blown.
+
+combination_rules: []
+
+steps:
+  - id: check_psa_and_sander_cocs
+    text: >-
+      Ensure the left foot pedal (PSA) is pressed for sanding and check the
+      position of the sanders COCs. If they are closed, open them and resume
+      traction.
+    gate: null
+    source: "§10.12(a), p173"
+
+  - id: check_lamps_and_ccls
+    text: >-
+      If the sanders COCs are open, press BPT and check lamps LSP and LSRSI. If
+      both lamps are not glowing, check CCLS: if it is melted, renew it and resume
+      traction; if it melts again, keep HOBA off and replace it. If both pilot
+      lamps are glowing, check whether the concerned VESAs are getting energised
+      when PSA is pressed.
+    gate: null
+    source: "§10.12(b)(i)(ii), p173"
+
+  - id: operate_vesas_manually
+    text: >-
+      If the VESAs are not energised, manually operate the VESAs 2 or 3 times and
+      check the working of the sanders.
+    gate: null
+    source: "§10.12(c), p173"
+
+  - id: check_sand_in_sandboxes
+    text: >-
+      If the VESAs are energised, check the availability of sand in the
+      sandboxes. If there is no sand, try to fill from the adjacent box or
+      provide manual sanding if necessary, and resume traction.
+    gate: null
+    source: "§10.12(d), p173"
+
+  - id: tap_sander_nozzle
+    text: >-
+      If there is sand in the sandboxes, gently tap the sander nozzle with a
+      wooden handle and check the sanders. If working, resume traction.
+    gate: null
+    source: "§10.12(e), p173"
+
+  - id: work_without_sanders
+    text: "If the sanders are still not working, try to work without sanders."
+    gate: null
+    source: "§10.12(f), p173"
+
+  - id: progress_notches_gradually
+    text: >-
+      Progress the notches gradually while starting and provide manual sanding if
+      necessary. If load and road do not permit, contact TLC for advice.
+    gate: null
+    source: "§10.12(g), p173"
+
+terminal_actions:
+  resolved:   "resume traction"                                                        # §10.12(a)(b)(d)(e)
+  unresolved: "work without sanders; progress notches gradually; manual sanding; contact TLC if load and road do not permit"  # §10.12(f)(g)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.12, pp.172–173"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

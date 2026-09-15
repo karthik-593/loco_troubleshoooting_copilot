@@ -8,6 +8,9 @@ Routing, in this fixed order:
   2b. matched fault carries a hard gate and is not yet confirmed → confirm_fault (§5.5):
      a misparse must not route the pilot into a gated procedure. (A REFUSE from step 1
      still fires first — refusing is always safe.)
+  2c. pilot reports the fault cleared (history fault_resolved == yes) → confirm with the
+     KB's `resolved` terminal action (gate-free faults such as sanders end this way at
+     whichever step cleared it — §10.12). Gated faults reach here only after the reflex.
   3. ordinary checks incomplete → ask_step(next_unmet) — the ONE specific missed check,
      carrying hold_action if the pilot said they intend the gated action (fix D);
   4. everything (incl. the gated step) claimed done → confirm + KB follow-up guidance.
@@ -23,7 +26,7 @@ from typing import Any, Literal, Optional
 from engine import terminals as T
 from engine.diff import StepDelta, diff_steps
 from engine.gates import GateVerdict, Outcome, evaluate_gates
-from engine.state import ACTION_RESET_QLM, DiagnosisState
+from engine.state import ACTION_RESET_QLM, HF_RESOLVED, DiagnosisState
 from kb.schema import Fault
 
 # ---------------------------------------------------------------------------
@@ -87,6 +90,12 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     if fault.gated_steps and not state.fault_confirmed:
         return Decision("need_pilot_input", T.confirm_fault(fault), verdict, None)
 
+    # 2c. fault cleared → confirm + the KB's 'resolved' action.
+    if state.history(HF_RESOLVED) == "yes":
+        state.stuck_at = None
+        guidance = tuple(g for g in (fault.terminal_actions.get("resolved"),) if g)
+        return Decision("terminal", T.confirm(fault, guidance=guidance, source=fault.source), verdict, None)
+
     # 3. the delta over the ordinary checks.
     delta = diff_steps(state, fault)
     if not delta.complete:
@@ -109,5 +118,7 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
         s.gate.on_first_reset for s in fault.gated_steps
         if s.gate and s.gate.type == "reset_limit" and s.gate.on_first_reset
     )
+    if not fault.gated_steps and fault.terminal_actions.get("unresolved"):
+        guidance = (fault.terminal_actions["unresolved"],)   # every step tried, still not cleared
     src = "; ".join(s.gate.source for s in fault.gated_steps if s.gate) or fault.source
     return Decision("terminal", T.confirm(fault, guidance=guidance, source=src), verdict, delta)

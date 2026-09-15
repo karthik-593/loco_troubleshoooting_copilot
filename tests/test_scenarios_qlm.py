@@ -135,7 +135,7 @@ def test_abnormality_found_refuses_regardless_of_progress(kb):
 def test_unknown_fault_defers_to_tlc(kb):
     """§5.6: not in the procedure set → never guess."""
     state = DiagnosisState()
-    t = run_turn(state, StateUpdate(fault_id="sanders_not_working"), kb)
+    t = run_turn(state, StateUpdate(fault_id="wipers_not_working"), kb)
     assert t.terminal.kind == "defer_to_TLC"
     assert not t.short_circuit
 
@@ -144,7 +144,7 @@ def test_alias_match_and_llm_stub(kb):
     assert match_alias("qlm locked", kb).fault_id == QLM
     assert match_alias("  QLM  Target Dropped ", kb).fault_id == QLM
     assert match_alias("QLM_dropped", kb).fault_id == QLM
-    assert match_alias("sanders not working", kb) is None
+    assert match_alias("wipers not working", kb) is None
     with pytest.raises(NotImplementedError):
         match_free_text("dj tripped and the main relay thing is red", kb)
 

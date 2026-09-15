@@ -24,11 +24,11 @@ every file and every step cites its TSD section. The schema (`kb/schema.py`) enf
 this in CI. The PDF itself is DVC-tracked (`1566969531009-ETTC_TSD.pdf.dvc`) and kept
 out of git.
 
-## Status — Milestone 3 (engine + bounded LLM layer + LangGraph agent loop + API + client)
+## Status — Milestone 4a (four TSD faults; agent loop; API; client)
 
 | Piece | Where |
 |---|---|
-| Fault knowledge base (QLM only, depth-first) | `kb/faults/qlm_dropped.yaml` |
+| Fault knowledge base — QLM, QLM+QOP/QRSI, QLM+QLA/QOA, sanders (each cites its TSD section) | `kb/faults/*.yaml` |
 | KB schema + `validate_kb` CI check | `kb/schema.py` |
 | KB loader + alias match (LLM match stubbed for M2) | `engine/matcher.py` |
 | Conversation state (`DiagnosisState`) | `engine/state.py` |
@@ -47,7 +47,7 @@ out of git.
 | Session store (per-pilot state + trace) | `agent/session.py` |
 | FastAPI `POST /diagnose` (+ `/session/{id}`, `/health`) | `api/server.py` |
 | Streamlit chat client showing the engine trace | `client/streamlit_app.py` |
-| Tests (114 offline incl. loop guards, graph traces, API; plus 10 live parse tests) | `tests/` |
+| Tests (137 offline incl. loop guards, graph traces, API; 14 live parse cases) | `tests/` |
 
 The LLM has exactly three bounded jobs — parse, decide, phrase — and none of them can
 originate, alter, or skip a safety verdict: the engine package imports nothing from

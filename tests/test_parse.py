@@ -50,8 +50,8 @@ def test_low_confidence_clarifies_instead_of_acting(kb):
 
 
 def test_unknown_fault_guess_is_dropped(kb):
-    p = _fake(ParseOutput(fault_guess="sanders_not_working", fault_confidence=0.95))
-    r = parse_turn("sanders dead", DiagnosisState(), kb, p)
+    p = _fake(ParseOutput(fault_guess="wipers_not_working", fault_confidence=0.95))
+    r = parse_turn("wipers dead", DiagnosisState(), kb, p)
     assert r.update is None and r.needs_clarification
 
 

@@ -32,7 +32,7 @@ def test_import_does_not_build_clients():
 def test_health():
     c = _client()
     r = c.get("/health")
-    assert r.status_code == 200 and r.json()["faults"] == ["QLM_dropped"]
+    assert r.status_code == 200 and "QLM_dropped" in r.json()["faults"]
     assert "not certified" in r.json()["disclaimer"]
 
 

@@ -15,10 +15,8 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
 from engine.diff import diff_steps
-from engine.state import DiagnosisState
+from engine.state import HF_OTHER_RELAYS, DiagnosisState
 from kb.schema import Fault
-
-HF_OTHER_RELAYS = "other_relays_acted"   # history key: list of other relay names the pilot reported
 
 ToolFn = Callable[[DiagnosisState, Fault], dict[str, Any]]
 

@@ -112,10 +112,12 @@ Per BUILD_PLAN §13 layout:
 **Built in M2:** `engine/tools.py`, `llm/` (interface, schemas, parse, decide, phrase, prompts).
 **Built in M3:** `agent/graph.py`, `agent/session.py`, `api/server.py`, `client/streamlit_app.py`,
 `tests/test_loop_guards.py`, `tests/test_graph_qlm.py`, `tests/test_api.py`.
-**Next (M4):** encode isolate-and-retest, pantograph (hazard gate), a config-dependent fault,
-and the combination fault(s) `QLM_with_QOP_QRSI` / `QLM_with_QLA_QOA` — each from the TSD
-only, each with its own scenario. Gate evaluators for `hazard_exposure` /
-`isolation_before_contact` currently fail closed (`NotImplementedError`).
+**Built in M4a:** `QLM_with_QOP_QRSI`, `QLM_with_QLA_QOA`, `sanders_not_working` + engine above.
+**Next (M4b):** `pantograph_damaged` (§10.03 + §11.04, `hazard_exposure` gate with
+preconditions OHE-earthed-by-TRD + loco-grounded) and `QRSI1_drops_on_run` (§6.02.1,
+isolate-and-retest via HMCS positions, no reset-once rule). Config-dependent fault deferred
+until a genuine SIV/ARNO branch is found in the TSD. `hazard_exposure` /
+`isolation_before_contact` evaluators still fail closed (`NotImplementedError`).
 
 ---
 

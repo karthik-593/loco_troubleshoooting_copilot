@@ -45,7 +45,11 @@ def test_heldout_parse(case, kb, provider):
         return
 
     assert r.update is not None, "expected an actionable update"
-    assert r.update.fault_id == case["fault"]
+    if "fault_any_of" in case:
+        assert r.update.fault_id in case["fault_any_of"]
+        case = {**case, "fault": r.update.fault_id}
+    else:
+        assert r.update.fault_id == case["fault"]
     if "claimed" in case:
         assert set(r.update.claimed_steps) - set(r.rejected_steps) == set(case["claimed"])
     if "abnormality" in case:
@@ -56,6 +60,10 @@ def test_heldout_parse(case, kb, provider):
         assert r.update.history.get("other_relays_acted") == case["other_relays"]
     if "intended_action" in case:
         assert r.update.intended_action == case["intended_action"]
+    if "resolved" in case:
+        assert r.update.history.get("fault_resolved") == case["resolved"]
+    for k, v in case.get("facts", {}).items():
+        assert r.update.history.get(k) == v, k
     if "unmapped_min" in case:
         assert len(r.rejected_steps) >= case["unmapped_min"]
     # never a step outside the KB

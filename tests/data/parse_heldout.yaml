@@ -29,10 +29,25 @@
   fault: QLM_dropped
   other_relays: [QLA]
 - text: "sanders not working on both sides"
-  fault: null
+  fault: sanders_not_working
 - text: "dj tripped, dont know which relay"
   fault_confidence_below: 0.6
 - text: "QLM dropped. checked the horn and the headlight, both fine"
   fault: QLM_dropped
   claimed: []
   unmapped_min: 1
+# --- M4a: combination faults + sanders ---
+- text: "sanders not working. pressed pedal, sander COCs were closed, opened them, sanding now"
+  fault: sanders_not_working
+  claimed: [check_psa_and_sander_cocs]
+  resolved: "yes"
+- text: "no sand coming out even with PSA pressed, cocs are open, LSP and LSRSI both glowing"
+  fault: sanders_not_working
+  claimed: [check_psa_and_sander_cocs, check_lamps_and_ccls]
+- text: "QLM locked with QOP-1. feeding circuit all ok. traction circuit RSI-1 smoking, isolated it successfully"
+  fault_any_of: [QLM_dropped, QLM_with_QOP_QRSI]      # alias → QLM_dropped + relays, or a direct guess
+  abnormality: "no"
+  facts: {traction_abnormality_found: "yes", isolation_successful: "yes"}
+- text: "qlm and qla dropped together. arno side burning smell, could not isolate"
+  fault_any_of: [QLM_dropped, QLM_with_QLA_QOA]
+  facts: {aux_abnormality_found: "yes", isolation_successful: "no"}

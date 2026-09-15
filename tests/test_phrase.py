@@ -87,3 +87,19 @@ def test_payload_contains_only_terminal_content(qlm):
     p = terminal_payload(t)
     assert t.message in p and "conditional: yes" in p
     assert ORDINARY[0] not in p          # the rest of the KB is not shown to the model
+
+
+def test_invented_hold_instruction_is_rejected(qlm):
+    t = T.ask_step(qlm, qlm.step(ORDINARY[0]))                      # no hold_action
+    assert "added_hold_instruction" in guard(t, "Have you checked the HT-2 compartment? Hold traction until that's done.")
+    assert guard(t, "Have you checked the HT-2 compartment for smoke or oil splashes?") == ()
+
+
+def test_not_isolated_refusal_needs_tlc_but_not_a_negation(kb):
+    f = kb.get("QLM_with_QOP_QRSI"); st = f.step("reset_decision")
+    t = T.refuse(f, st, "Use fire extinguishers; try to isolate the abnormal equipment. Contact TLC for further instructions.",
+                 (T.REASON_NOT_ISOLATED,))
+    assert guard(t, "Use the fire extinguisher if needed; since it could not be isolated, contact TLC for further instructions.") == ()
+    assert "refusal_missing_fire_precaution" in guard(t, "Since it could not be isolated, contact TLC.")
+    assert "refusal_missing_TLC" in guard(t, "Since it could not be isolated, wait for advice.")
+    assert "refusal_instructs_reset" in guard(t, "Reset the targets and contact TLC.")

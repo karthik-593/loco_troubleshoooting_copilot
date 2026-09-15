@@ -54,29 +54,50 @@ def test_confirm_path_pilot_did_it_right():
 
 
 def test_tool_path_diverges_for_combination_fault():
-    """§12.2 proof-of-agency: reported relays → a different tool path and a reroute/defer,
-    versus the single-tool path for clean QLM."""
+    """§12.2 proof-of-agency: reported relays → a different tool path and a reroute into
+    the KB's combination fault, versus the single-tool path for clean QLM."""
     clean = Copilot(_prov([ParseOutput(fault_guess=None, fault_confidence=0.0, claimed_steps=list(ORDINARY[:2]))],
                           ["diff_completed_steps"])).turn(DiagnosisState(), "QLM locked, checked tfp and oil")
+    d = DiagnosisState()
     comb = Copilot(_prov([ParseOutput(fault_guess=None, fault_confidence=0.0, claimed_steps=list(ORDINARY[:2]),
                                       other_relays_acted=["QOP-1"])],
-                         ["get_required_observations", "check_combination"])
-                   ).turn(DiagnosisState(), "QLM locked and QOP-1 also, checked tfp and oil")
+                         ["get_required_observations", "check_combination", "diff_completed_steps"])
+                   ).turn(d, "QLM locked and QOP-1 also, checked tfp and oil")
     assert clean.tool_path == ("diff_completed_steps",)
-    assert comb.tool_path == ("get_required_observations", "check_combination")
-    assert comb.stop_reason == "reroute"
-    assert comb.terminal.kind == "defer_to_TLC"
-    assert "QLM_with_QOP_QRSI" in comb.terminal.message and "§6.1.2" in comb.terminal.source
-    assert comb.reflex_runs == 3
+    # identity is resolved deterministically at update time (before the reflex); the agent's
+    # own tool choices then differ from the clean case too.
+    assert comb.tool_path == ("(reroute→QLM_with_QOP_QRSI)", "get_required_observations",
+                              "check_combination", "diff_completed_steps")
+    assert d.matched_fault == "QLM_with_QOP_QRSI"
+    assert d.steps_claimed_done == set(ORDINARY[:2])                # claims carried across the reroute
+    assert comb.terminal.kind == "ask_step" and comb.terminal.step_id == ORDINARY[2]
+    assert "§6.1.2(a)" in comb.terminal.source
+    assert comb.reflex_runs == 4                                    # after update (rerouted) + 3 tools
 
 
 def test_combination_pending_keeps_looping_until_checked():
     """Fresh diff alone is not enough when relays were reported: reassess loops back."""
+    d = DiagnosisState()
     cp = Copilot(_prov([ParseOutput(fault_guess=None, fault_confidence=0.0, other_relays_acted=["QLA"])],
-                       ["diff_completed_steps", "check_combination"]))
-    r = cp.turn(DiagnosisState(), "QLM locked with QLA")
-    assert r.tool_path == ("diff_completed_steps", "check_combination")
-    assert r.terminal.kind == "defer_to_TLC" and "QLM_with_QLA_QOA" in r.terminal.message
+                       ["diff_completed_steps", "check_combination", "diff_completed_steps"]))
+    r = cp.turn(d, "QLM locked with QLA")
+    assert r.tool_path[0] == "(reroute→QLM_with_QLA_QOA)"
+    assert d.matched_fault == "QLM_with_QLA_QOA" and r.terminal.kind == "ask_step"
+
+
+def test_reflex_evaluates_the_rerouted_fault_not_the_original():
+    """Seen live 2026-09-15: all three QLM checks claimed + QOP-1 reported. Before the fix
+    the reflex fired QLM_dropped's history question and short-circuited, so the reroute
+    never happened and the pilot was later told to reset without §6.1.2(b)'s traction
+    check. Now identity resolves first and the engine asks for the traction check."""
+    d = DiagnosisState()
+    cp = Copilot(_prov([ParseOutput(fault_guess=None, fault_confidence=0.0, claimed_steps=list(ORDINARY),
+                                    abnormality_found="no", other_relays_acted=["QOP-1"])],
+                       ["diff_completed_steps"]))
+    r = cp.turn(d, "QLM locked and QOP-1 also dropped. checked ht2, oil, arc chutes - all normal")
+    assert d.matched_fault == "QLM_with_QOP_QRSI"
+    assert r.terminal.kind == "ask_step" and r.terminal.step_id == "check_traction_power_circuit"
+    assert r.tool_path == ("(reroute→QLM_with_QOP_QRSI)", "diff_completed_steps")
 
 
 def test_llm_guessed_fault_gets_confirmation_not_tools():
@@ -102,8 +123,8 @@ def test_low_confidence_clarifies_without_engine_or_agent():
 
 
 def test_unknown_fault_defers():
-    cp = Copilot(_prov([ParseOutput(fault_guess="sanders_not_working", fault_confidence=0.95)], []))
-    r = cp.turn(DiagnosisState(), "sanders dead")
+    cp = Copilot(_prov([ParseOutput(fault_guess="wipers_not_working", fault_confidence=0.95)], []))
+    r = cp.turn(DiagnosisState(), "wipers dead")
     assert r.terminal.kind in ("clarify", "defer_to_TLC")          # never a guessed procedure
 
 

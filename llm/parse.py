@@ -22,6 +22,7 @@ from engine.matcher import KnowledgeBase
 from engine.state import (
     HF_ABNORMALITY,
     HF_RESET_EARLIER,
+    HF_RESOLVED,
     DiagnosisState,
     StateUpdate,
 )
@@ -60,12 +61,39 @@ def kb_vocabulary(kb: KnowledgeBase) -> str:
     for fid in kb.fault_ids:
         f = kb.get(fid)
         for s in f.ordinary_steps:
-            lines.append(f"- {fid}.{s.id}: {s.text}")
+            hint = _CLAIM_HINTS.get(s.id)
+            lines.append(f"- {fid}.{s.id}: {s.text}" + (f"  [pilot may say: {hint}]" if hint else ""))
         for s in f.gated_steps:
             lines.append(f"- {fid}.{s.id}: (gated) the pilot says they already reset / performed the gated action")
     lines.append("")
+    extra = sorted({k for fid in kb.fault_ids for k in kb.get(fid).history_keys}
+                   - {HF_RESET_EARLIER, HF_ABNORMALITY})
+    if extra:
+        lines.append("Fault-specific facts (return under 'facts' only when the pilot states them):")
+        for k in extra:
+            lines.append(f"- {k}: " + _FACT_HINTS.get(k, "yes/no as stated by the pilot"))
+        lines.append("")
     lines.append("Actions: reset_QLM")
     return "\n".join(lines)
+
+
+# How pilots loosely refer to a step (mapping guidance only, not procedure text).
+_CLAIM_HINTS = {
+    "check_ht2_compartment": "checked the transformer / TFP / HT2 / HT-2 compartment / explosion vent / no smoke",
+    "check_oil_levels": "oil ok / oil level normal / checked TFP and GR oil",
+    "check_arc_chutes_and_terminals": "checked arc chutes / CGRs / RGR / terminals / bushings / HT cable",
+    "check_traction_power_circuit": "checked traction circuit / RSI / line contactors / SLs / traction motors",
+    "check_auxiliary_power_circuit": "checked aux circuit / ARNO / aux motors / CHBA / cab heaters",
+    "check_psa_and_sander_cocs": "pressed pedal / PSA / checked or opened sander COCs",
+    "check_lamps_and_ccls": "pressed BPT / LSP and LSRSI lamps / checked CCLS fuse / VESA energising",
+}
+
+# Plain-language hints for KB-declared fact keys (mapping guidance only, not procedure text).
+_FACT_HINTS = {
+    "traction_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in the TRACTION power circuit equipment",
+    "aux_abnormality_found": "abnormality found in the AUXILIARY power circuit equipment",
+    "isolation_successful": "the pilot tried to isolate the abnormal equipment: 'yes' if isolation succeeded, 'no' if it could not be isolated",
+}
 
 
 def system_prompt(kb: KnowledgeBase) -> str:
@@ -101,7 +129,11 @@ def _validate(out: ParseOutput, fault_id: Optional[str], kb: KnowledgeBase
     known = set(kb.get(fault_id).step_ids)
     accepted, rejected = [], []
     for s in out.claimed_steps:
-        sid = s.split(".", 1)[1] if s.startswith(fault_id + ".") else s
+        sid = s
+        for fid in kb.fault_ids:                       # model may prefix with ANY fault id
+            if s.startswith(fid + "."):
+                sid = s[len(fid) + 1:]
+                break
         (accepted if sid in known else rejected).append(sid)
     return tuple(accepted), tuple(rejected)
 
@@ -142,6 +174,12 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         history[HF_RESET_EARLIER] = out.was_reset_earlier_this_trip
     if out.other_relays_acted is not None:
         history[HF_OTHER_RELAYS] = [r.upper() for r in out.other_relays_acted]
+    if _yn(out.fault_resolved):
+        history[HF_RESOLVED] = out.fault_resolved
+    allowed = {k for fid in kb.fault_ids for k in kb.get(fid).history_keys}
+    for k, v in out.facts.items():
+        if k in allowed and _yn(v):            # KB-declared keys only; unknown keys dropped
+            history[k] = v
 
     update = StateUpdate(
         fault_id=fault_id if fault_id != state.matched_fault else None,

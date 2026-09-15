@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from engine.gates import GateVerdict, evaluate_gates
 from engine.matcher import KnowledgeBase, default_kb
 from engine.reassess import Decision, reassess
-from engine.state import DiagnosisState, StateUpdate, update_state
+from engine.state import DiagnosisState, StateUpdate, resolve_combination, update_state
 from engine.terminals import Terminal
 
 
@@ -36,6 +36,9 @@ def run_turn(state: DiagnosisState, update: StateUpdate, kb: KnowledgeBase | Non
     fault = kb.get(fault_id) if fault_id and fault_id in kb.fault_ids else None
 
     update_state(state, update, fault)
+    rerouted = resolve_combination(state, fault, lambda fid: kb.get(fid) if fid in kb.fault_ids else None)
+    if rerouted:
+        fault = kb.get(rerouted)
 
     # SAFETY REFLEX — mandatory, right after the state update (§5.1).
     verdict = evaluate_gates(state, fault)
@@ -44,7 +47,9 @@ def run_turn(state: DiagnosisState, update: StateUpdate, kb: KnowledgeBase | Non
         # verdict and builds the terminal.
         decision = reassess(state, fault)
         assert decision.route == "gate_terminal"
-        return TurnTrace(verdict, True, decision, tool_path=("(reflex short-circuit)",))
+        path = (f"(reroute→{rerouted})", "(reflex short-circuit)") if rerouted else ("(reflex short-circuit)",)
+        return TurnTrace(verdict, True, decision, tool_path=path)
 
     decision = reassess(state, fault)
-    return TurnTrace(verdict, False, decision, tool_path=("diff",))
+    path = (f"(reroute→{rerouted})", "diff") if rerouted else ("diff",)
+    return TurnTrace(verdict, False, decision, tool_path=path)

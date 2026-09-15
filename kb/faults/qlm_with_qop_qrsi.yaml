@@ -1,0 +1,99 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: QLM acted along with QOP-1 / QOP-2 / QRSI-1 / QRSI-2
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 6 "DJ Tripping through Safety Relays", §6.1.2, printed pp.84–85.
+# This is the reroute target of qlm_dropped.yaml's first combination rule.
+# All step logic, gates and terminals below are facts taken from §6.1.2 (and, where
+# §6.1.2(a) says "for QLM above said 6.1.1 procedure to be followed", from §6.1.1).
+# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: QLM_with_QOP_QRSI
+aliases:
+  - "QLM with QOP"
+  - "QLM with QRSI"
+  - "QLM along with QOP"
+  - "QLM along with QRSI"
+  - "QLM and QOP"
+  - "QLM and QRSI"
+  - "QLM acted along with QOP-1/QOP-2/QRSI-1/QRSI-2"
+config_dependency: none            # §6.1.2 does not branch on loco type
+presenting_signs:                  # §6.1.2 heading; §6.01 / §6.02 mechanism
+  - "DJ / VCB tripped"
+  - "QLM target dropped together with QOP-1, QOP-2, QRSI-1 or QRSI-2"
+
+combination_rules: []              # §6.1.2(d) already covers 'along with other relays or alone'
+
+steps:
+  # §6.1.2(a): "For QLM above said 6.1.1 procedure to be followed." — the three feeding-
+  # power-circuit checks of §6.1.1(a)–(c), SAME step ids as qlm_dropped.yaml so claims made
+  # before a reroute carry over.
+  - id: check_ht2_compartment
+    text: >-
+      Check the HT-2 compartment for smoke, burning smell, fire, high temperature
+      and oil splashes from the transformer explosion vent, from underneath the
+      loco via the vent pipe, and from the GR safety valve.
+    gate: null
+    source: "§6.1.2(a) → §6.1.1(a), p83–84"
+
+  - id: check_oil_levels
+    text: "Check TFP and GR oil level for any abnormal increase."
+    gate: null
+    source: "§6.1.2(a) → §6.1.1(b), p84"
+
+  - id: check_arc_chutes_and_terminals
+    text: >-
+      Check CGR-1/CGR-2/CGR-3 arc chutes, RGR and RPGR for red-hot condition;
+      check TFR terminals, A33/A0/A34 bushings, HT cable, TFILM, TFSPM, and oil
+      leakage from breathers, transformer drain plug and oil trap box for any
+      abnormality (smell, smoke, fire).
+    gate: null
+    on_abnormality: "Use fire extinguisher; ask for relief engine."   # §6.1.1(c)
+    source: "§6.1.2(a) → §6.1.1(c), p84"
+
+  # §6.1.2(b): traction power circuit — its abnormality has a DIFFERENT consequence from
+  # the feeding-circuit one: isolate; if successful, reset and resume; otherwise TLC.
+  - id: check_traction_power_circuit
+    text: >-
+      If everything is normal in the feeding power circuit, check the traction
+      power circuit equipment completely: TFP terminals, RSI-1, RSI-2, line
+      contactors, shunting contactors and their resistances, SJs, J1, J2, QD1,
+      QD-2, SL-1, SL-2, CTFs, Q20, RQ20, C145, ATFEX, RCC panel, voltmeters,
+      ammeters and their resistances, the AM shunts and traction motors for any
+      abnormality.
+    gate: null
+    abnormality_key: traction_abnormality_found
+    on_abnormality: "Use fire extinguishers; try to isolate the abnormal equipment."   # §6.1.2(b)
+    isolation:
+      needs_history: isolation_successful
+      on_isolated: "Reset the relay targets and resume traction."                      # §6.1.2(b)
+      on_not_isolated: "Contact TLC for further instructions."                          # §6.1.2(b)
+      source: "§6.1.2(b), p84"
+    source: "§6.1.2(b), p84"
+
+  - id: reset_decision
+    text: "If there is no abnormality, reset the QLM and the other relay targets and resume traction."
+    gate:
+      type: reset_limit
+      rule: >-
+        If QLM acts a second time along with other relays or alone, DO NOT reset
+        the relay targets — even though there is no abnormality.
+      needs_history: "was_QLM_reset_earlier_this_trip"
+      on_first_reset: >-
+        Reset the QLM and the other relay targets and resume traction (reset each
+        relay target clockwise or as per the arrow mark on the resetting knob).
+        Per §6.1.1 as applied by §6.1.2(a): check feeding-power-circuit items every
+        10 minutes, make a remark in the loco log book and inform TLC.
+      on_already_reset: >-
+        DO NOT reset the relay targets. Ask for a relief loco even though there is
+        no abnormality.
+      source: "§6.1.2(c) reset; §6.1.2(d) second time forbidden; §6.1.2 note (reset direction); §6.1.2(a)→§6.1.1(d)(e), p84–85"
+
+terminal_actions:
+  no_abnormality:    "reset QLM and the other relay targets; resume traction"       # §6.1.2(c)
+  # feeding-power-circuit abnormality: §6.1.2(a) → §6.1.1(f). (Traction-circuit abnormality
+  # is the isolate-then-reset branch on check_traction_power_circuit, §6.1.2(b).)
+  abnormality_found: "do not reset the relay targets; make a clear remark in the loco log book; inform TLC; ask for a relief loco"
+  second_time:       "do not reset the relay targets; ask for a relief loco even though there is no abnormality"   # §6.1.2(d)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.1.2 (with §6.1.1 as referenced), pp.84–85"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

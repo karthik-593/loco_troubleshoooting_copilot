@@ -20,8 +20,12 @@ Rules
   compartment; "oil ok" → the oil-level step). Put a claim in unmapped_claims only when
   no listed step inspects that equipment at all.
 - abnormality_found: "yes" if they report smoke, smell, fire, heat, red-hot parts, oil
-  leak/splash, or abnormal oil level. "no" only if they say things were normal / OK /
-  nothing found. Otherwise "unknown".
+  leak/splash, or abnormal oil level IN THE FEEDING POWER CIRCUIT (HT-2 compartment,
+  transformer, GR, arc chutes, TFR terminals, bushings, HT cable). "no" only if they say
+  those were normal / OK / nothing found. Otherwise "unknown". An abnormality in
+  traction-circuit equipment (RSI, line contactors, SLs, traction motors, J1/J2, CTFs…)
+  or auxiliary equipment (ARNO, aux motors, CHBA, cab heaters…) is reported ONLY under
+  the matching fault-specific fact in `facts` and leaves abnormality_found unchanged.
 - was_reset_earlier_this_trip: from statements like "reset once already", "first time",
   "not reset before". Otherwise "unknown".
 - other_relays_acted: relay names they say ALSO dropped, uppercased as written (QOP-1,

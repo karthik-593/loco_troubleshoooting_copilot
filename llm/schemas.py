@@ -28,8 +28,12 @@ class ParseOutput(BaseModel):
         description="step ids from the provided checklist the pilot says they have DONE.")
     abnormality_found: YesNoUnknown = Field(
         default="unknown",
-        description="Did the pilot report an abnormality (smoke/smell/fire/red-hot/oil "
-                    "leak/abnormal oil level) from the checks? 'no' only if they say normal/OK.")
+        description="Abnormality (smoke/smell/fire/heat/red-hot/oil leak/abnormal oil level) "
+                    "reported from the FEEDING-POWER-CIRCUIT checks only: HT-2 compartment, "
+                    "transformer vent/oil, TFP/GR oil levels, CGR arc chutes, RGR/RPGR, TFR "
+                    "terminals, bushings, HT cable. 'no' only if they say those were normal/OK. "
+                    "Abnormality in OTHER circuits (traction / auxiliary equipment) goes in "
+                    "'facts' under the fault-specific key, NOT here.")
     was_reset_earlier_this_trip: YesNoUnknown = Field(
         default="unknown",
         description="Did the pilot state whether this relay was reset earlier this trip?")
@@ -44,6 +48,14 @@ class ParseOutput(BaseModel):
         default_factory=list,
         description="Things the pilot says they did that do not map to any checklist step "
                     "(short phrases, verbatim-ish).")
+    fault_resolved: YesNoUnknown = Field(
+        default="unknown",
+        description="'yes' only if the pilot says the fault is now cleared / equipment working "
+                    "again (e.g. 'sanders working now', 'resumed traction').")
+    facts: dict[str, YesNoUnknown] = Field(
+        default_factory=dict,
+        description="Additional yes/no facts listed under 'Fault-specific facts' in the "
+                    "instructions, keyed exactly by the fact name. Omit facts not stated.")
 
 
 class DecideOutput(BaseModel):

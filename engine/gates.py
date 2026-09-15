@@ -10,10 +10,17 @@ Reset-limit gate — precedence, each rule grounded in TSD §6.1.1 (Rev-2 2019, 
 Reviewed and agreed 2026-09-14 (fixes A–D to the HANDOFF proposal):
 
   1. history[was_QLM_reset_earlier_this_trip] == yes  → REFUSE  §6.1.1(f) "QLM acts second time"
-  2. history[abnormality_found] == yes               → REFUSE  §6.1.1(c)(f) "any abnormality"
+  2. abnormality == yes on any ordinary step         → REFUSE  §6.1.1(c)(f) "any abnormality"
      Rules 1–2 fire on the fact alone — regardless of stated intent or check completion
      (fix A; BUILD_PLAN §12.1 gold scenario states no intent). If both hold, the REFUSE
      carries BOTH reasons so the fire-precaution guidance is never dropped (fix B).
+     2b. (M4) a step may carry its own ``abnormality_key`` and an ``isolation`` block —
+     the TSD's "try to isolate; if successful, reset and resume; otherwise contact TLC"
+     (§6.1.2(b), §6.1.3(b)). For such a step, abnormality == yes means:
+        isolation_successful == yes → NOT a refusal; the reset proceeds under rules 3–5
+                                       with the isolation's own on_isolated text;
+        isolation_successful == no  → REFUSE (reason abnormality_not_isolated, TLC text);
+        not stated                  → ASK the one isolation question.
   3. reset not "in play" (ordinary checks incomplete)  → NO_FIRE — reset stays
      behind the checks; the diff asks the next unmet one. §6.1.1(d) "if no abnormality".
      A stated reset intent with checks incomplete is also NO_FIRE (TSD order a→d), but
@@ -41,7 +48,7 @@ from engine.state import (
     DiagnosisState,
     checks_complete,
 )
-from engine.terminals import REASON_ABNORMALITY, REASON_SECOND_RESET
+from engine.terminals import REASON_ABNORMALITY, REASON_NOT_ISOLATED, REASON_SECOND_RESET
 from kb.schema import GATE_TYPES, Fault, Step
 
 
@@ -83,6 +90,13 @@ def _history_question(gate_key: str) -> str:
     return f"Please state: {gate_key.replace('_', ' ')}?"
 
 
+def _render_action(text: str) -> str:
+    """KB ``terminal_actions`` values are compact notation ("do_not_reset; log; relief loco").
+    Render mechanically into sentences — a transform of KB text, never new content."""
+    parts = [p.strip().replace("_", " ") for p in text.split(";") if p.strip()]
+    return " ".join(p[0].upper() + p[1:] + ("" if p.endswith(".") else ".") for p in parts)
+
+
 def _reset_in_play(state: DiagnosisState, fault: Fault, step: Step) -> bool:
     return step.id in state.steps_claimed_done or checks_complete(state, fault)
 
@@ -91,21 +105,44 @@ def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> Gat
     gate = step.gate
     assert gate is not None and gate.type == "reset_limit"
     reset_earlier = state.history(gate.needs_history)      # 'yes' | 'no' | None
-    abnormality = state.history(HF_ABNORMALITY)             # 'yes' | 'no' | None
 
-    # Rules 1–2: REFUSE on fact, regardless of intent / check completion. Collect all.
+    # Per-step abnormality verdicts. Steps without their own key share HF_ABNORMALITY.
     reasons: list[str] = []
+    parts: list[str] = []
+    isolation_pending: Optional[Step] = None      # abnormality found, isolation not yet stated
+    isolated_step: Optional[Step] = None          # abnormality found and isolated → reset allowed
+    any_unknown = False
+    for s in fault.ordinary_steps:
+        key = s.abnormality_key or HF_ABNORMALITY
+        v = state.history(key)
+        if v is None:
+            any_unknown = True
+            continue
+        if v != "yes":
+            continue
+        if s.isolation is None:
+            if REASON_ABNORMALITY not in reasons:
+                reasons.append(REASON_ABNORMALITY)
+                parts.append(_render_action(fault.terminal_actions.get("abnormality_found", "")))
+            if s.on_abnormality:
+                parts.append(s.on_abnormality)
+            continue
+        iso = state.history(s.isolation.needs_history)
+        if iso == "yes":
+            isolated_step = s
+        elif iso == "no":
+            reasons.append(REASON_NOT_ISOLATED)
+            parts.append(s.on_abnormality or "")
+            parts.append(s.isolation.on_not_isolated)
+        else:
+            isolation_pending = s
+
     if reset_earlier == "yes":
-        reasons.append(REASON_SECOND_RESET)
-    if abnormality == "yes":
-        reasons.append(REASON_ABNORMALITY)
+        reasons.insert(0, REASON_SECOND_RESET)
+        parts.insert(0, gate.on_already_reset)
+
+    # Rules 1–2 (+2b not-isolated): REFUSE on fact, regardless of intent / check completion.
     if reasons:
-        parts = [gate.on_already_reset] if REASON_SECOND_RESET in reasons else []
-        if REASON_ABNORMALITY in reasons:
-            parts.append(fault.terminal_actions.get("abnormality_found", ""))
-            for s in fault.ordinary_steps:
-                if s.on_abnormality:
-                    parts.append(s.on_abnormality)
         return GateVerdict(
             outcome=Outcome.REFUSE,
             gate_type=gate.type,
@@ -114,6 +151,19 @@ def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> Gat
             reasons=tuple(reasons),
             message=" ".join(p for p in parts if p),
             source=gate.source,
+        )
+
+    # Rule 2b: abnormality found on an isolate-then-reset step, isolation not yet stated.
+    if isolation_pending is not None:
+        return GateVerdict(
+            outcome=Outcome.ASK,
+            gate_type=gate.type,
+            step_id=step.id,
+            rule="2b",
+            question=f"Were you able to isolate the abnormal equipment found in the "
+                     f"{isolation_pending.id.replace('_', ' ').replace('check ', '')} check?",
+            message=isolation_pending.on_abnormality or "",
+            source=isolation_pending.isolation.source,
         )
 
     # Rule 3: reset not yet in play → normal flow (the diff asks the next check).
@@ -138,12 +188,19 @@ def evaluate_reset_limit(state: DiagnosisState, fault: Fault, step: Step) -> Gat
         return NO_FIRE
 
     # Rule 5: the permitted first reset (checks are complete — rule 3 guaranteed it).
+    if isolated_step is not None:
+        return GateVerdict(
+            outcome=Outcome.CAUTION, gate_type=gate.type, step_id=step.id, rule="5-isolated",
+            conditional=False,
+            message=isolated_step.isolation.on_isolated,
+            source=f"{isolated_step.isolation.source}; {gate.source}",
+        )
     return GateVerdict(
         outcome=Outcome.CAUTION,
         gate_type=gate.type,
         step_id=step.id,
         rule="5",
-        conditional=(abnormality is None),
+        conditional=any_unknown,
         message=gate.on_first_reset,
         source=gate.source,
     )
