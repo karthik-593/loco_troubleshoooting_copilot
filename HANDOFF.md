@@ -7,6 +7,16 @@ Milestone 1.
 ---
 
 ## Status
+- **Milestone: M6 — demo + write-up (2026-09-15).** 182 offline tests; 18/18 live parse; suite
+  13/13 offline and live (unsafe 0, missed-gate 0, 7 paths). `scripts/demo.py` regenerates
+  `docs/walkthrough.md` (five showcase conversations, live, with per-turn engine trace) and
+  `docs/walkthrough_offline.md`; README rewritten around BUILD_PLAN §17 with the metrics
+  table, safety architecture, disclaimer and source URL. M6 fix: a confirm reached via
+  `fault_resolved` on a reset-gated fault now carries the permitted reset's follow-up
+  (10-min checks, log, TLC). **Optional / not done:** recorded video walkthrough (the
+  transcript stands in), QRSI-2 (§6.02.2, quote-first), `fire_on_loco` (Ch.1 pp43–44 / Ch.4
+  item 6, quote-first), a genuine SIV/ARNO-branching fault (none found in the TSD yet),
+  `transformer_rating` axis, DVC remote for the PDF.
 - **Milestone: M5 — evaluation (2026-09-15).** 181 offline tests; 18/18 live parse; scenario
   suite 13/13 offline AND live with unsafe = 0, missed-gate = 0, 7 distinct tool paths.
   Session loco context (loco_number/type/config, leading+trailing, swap; `type_dependency`
@@ -218,10 +228,9 @@ Per BUILD_PLAN §13 layout:
 **Built in M4a:** `QLM_with_QOP_QRSI`, `QLM_with_QLA_QOA`, `sanders_not_working` + engine above.
 **Built in M4b:** `pantograph_damaged`, `QRSI1_drops_on_run` + engine above.
 **Built in M5:** `eval/` (scenarios, harness, baseline, report), `dvc.yaml`/`dvc.lock`, CI safety gate.
-**Next (M6):** demo polish + write-up — README interview framing, recorded walkthrough leading
-with the QLM second-reset refusal and a combination-fault trace; pin the loco session bar in
-the client; optionally encode the general fire procedure (`fire_on_loco`, Ch.1 pp43–44 /
-Ch.4 item 6) and a genuine config-dependent fault if one is found in the TSD.
+**Built in M6:** `scripts/demo.py`, `docs/walkthrough.md` (+ offline), README write-up.
+**Open (all optional, all quote-first):** QRSI-2 (§6.02.2), `fire_on_loco`, a genuine
+config-dependent fault, `transformer_rating` axis, DVC remote, video walkthrough.
 
 ---
 

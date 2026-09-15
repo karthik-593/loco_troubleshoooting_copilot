@@ -251,3 +251,18 @@ def test_a_genuine_prior_reset_stated_with_the_claim_still_refuses():
     cp.turn(d, "QLM locked, checks all normal")
     t2 = cp.turn(d, "reset it, QLM dropped straight away")
     assert t2.terminal.kind == "refuse"
+
+
+def test_confirm_after_reset_keeps_monitoring_guidance_even_if_marked_resolved():
+    """'reset done, resumed' parsed with fault_resolved=yes must still carry §6.1.1(d)(e):
+    10-minute feeding-circuit checks, log book, TLC."""
+    d = DiagnosisState()
+    cp = Copilot(_prov(
+        [_blind(claimed_steps=list(ORDINARY), abnormality_found="no", was_reset_earlier_this_trip="no"),
+         _blind(claimed_steps=[RESET_STEP], fault_resolved="yes")],
+        ["diff_completed_steps"] * 2))
+    cp.turn(d, "QLM locked, first time. all checks normal")
+    t2 = cp.turn(d, "reset done, resumed traction")
+    assert t2.terminal.kind == "confirm"
+    assert any("10 minutes" in g and "TLC" in g for g in t2.terminal.guidance)
+    assert "10 minutes" in t2.reply                      # verbatim fallback carries it too

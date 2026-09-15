@@ -99,10 +99,14 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     if fault.gated_steps and not state.fault_confirmed:
         return Decision("need_pilot_input", T.confirm_fault(fault), verdict, None)
 
-    # 2c. fault cleared → confirm + the KB's 'resolved' action.
+    # 2c. fault cleared → confirm + the KB's 'resolved' action. On a reset-gated fault the
+    #     permitted reset's follow-up conditions (monitoring, log book, TLC) always ride along.
     if state.history(HF_RESOLVED) == "yes":
         state.stuck_at = None
         guidance = tuple(g for g in (fault.terminal_actions.get("resolved"),) if g)
+        guidance += tuple(s.gate.on_first_reset for s in fault.gated_steps
+                          if s.gate and s.gate.type == "reset_limit" and s.gate.on_first_reset
+                          and s.id in state.steps_claimed_done)
         return Decision("terminal", T.confirm(fault, guidance=guidance, source=fault.source), verdict, None)
 
     # 2d. "if <situation>, contact TLC" clauses.

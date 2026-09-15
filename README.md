@@ -1,35 +1,71 @@
 # Loco Troubleshooting Verification Copilot
 
-A cab-side verification copilot for **conventional AC locomotives** (WAG-5, WAG-7, WAP-1,
-WAP-4, WAM-4) — locos that emit no fault codes. The pilot describes the fault and what
-they have already done; the copilot verifies that against the railway's troubleshooting
-directory, trusts completed steps, flags only what was missed, and **refuses unsafe
-actions** (e.g. a forbidden second QLM reset) via a deterministic safety reflex that no
-language model can skip or override.
+A cab-side copilot for **conventional AC electric locomotives** (WAG-5, WAG-7, WAP-1,
+WAP-4, WAM-4) — locos that emit **no fault codes**. The pilot describes the fault and what
+they have already done; a LangGraph agent verifies that against the railway's
+troubleshooting directory, trusts completed steps, flags only what was missed, and
+**refuses unsafe actions** — such as a forbidden second relay reset — through a
+deterministic safety reflex that no language model can skip or override.
 
 > **Safety disclaimer.** This is a demonstrator, not a certified system. It is not
 > approved for operational use by Indian Railways or anyone else. Real deployment would
-> require IR approval, safety certification and liability review. Nothing here replaces
-> the printed troubleshooting directory, the TLC, or the loco pilot's judgement.
+> need IR approval, safety certification and liability review. Nothing here replaces the
+> printed troubleshooting directory, the TLC, or the loco pilot's judgement.
 
-## Knowledge source
+## Why this is a copilot and not a lookup
 
-All procedure content is encoded from a single public document and nothing else:
+Modern locos print a fault code, so an assistant would be a lookup. Conventional locos
+are diagnosed by physical test and equipment isolation, from a paper directory, under
+time pressure, mid-section. This copilot **diffs the pilot's account against the standard
+procedure and speaks only for the delta**: a confirmation, one targeted question, a
+caution, or a refusal. A competent pilot is never made to re-answer for steps they
+already stated.
 
-**SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019)**
-<https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf>
+```
+Pilot:   QLM dropped. I checked the transformer and oil level.
+Copilot: Have you checked the CGR arc chutes, RGR and RPGR for red-hot condition, and the
+         TFR terminals, bushings, HT cable, TFILM, TFSPM, and breathers for smell, smoke,
+         fire, or oil leakage?
+Pilot:   Checked, all normal. I reset QLM once earlier this trip.
+Copilot: Do not reset that relay again — it was already reset once earlier this trip.
+         Mark it clearly in the loco log book, inform TLC, and request a relief loco.
+         [refuse · reset_limit · path: (reflex short-circuit) · §6.1.1(f)]
+```
 
-Procedures are encoded as *facts* (step logic, gates, terminals) in `kb/faults/*.yaml`;
-every file and every step cites its TSD section. The schema (`kb/schema.py`) enforces
-this in CI. The PDF itself is DVC-tracked (`1566969531009-ETTC_TSD.pdf.dvc`) and kept
-out of git.
+The second turn is the point of the build: the refusal came from the engine's safety
+reflex **before any tool was chosen**; the agent was never consulted. Full transcripts of
+five showcase conversations, run live, are in [docs/walkthrough.md](docs/walkthrough.md).
 
-## Evaluation (Milestone 5)
+## The division of labour
 
-13 scripted-pilot scenarios (`eval/scenarios/`) across BUILD_PLAN §12's classes — pilot did
-it right, pilot missed a step, pilot's next move is unsafe, ambiguous intake, combination
-fault, config axis — scored against a **flat-retrieval baseline that has the same KB
-content** and only recites it. Live run (DeepSeek parse/decide, Claude phrase):
+> **The agent decides WHICH tool to invoke. The deterministic engine decides WHAT the
+> safety and procedure result is.**
+
+- **Safety is a reflex, not a tool.** `evaluate_gates` runs after *every* state update —
+  after parse and after every tool — as a graph node on every path. If a gate fires the
+  loop short-circuits to a terminal; the agent cannot reach the pilot except through it.
+  The guarantee is therefore independent of the agent's choices *and* of model quality.
+- **The LLM has exactly three bounded jobs** — `parse` (free text → KB-validated update),
+  `agent_decide` (pick one registered diagnostic tool, or none), `phrase` (render the
+  engine's chosen output). It never originates or alters a verdict and never invents
+  procedure content: `engine/` imports nothing from `llm/` (enforced by a test), and the
+  phrase output passes a deterministic guard that falls back to the KB's own words on any
+  drift — a refusal rewritten as an instruction never reaches the pilot.
+- **The loop is bounded** — max-iteration cap, idempotent tools, a no-progress detector,
+  and a registry-only toolset; every guard degrades to the engine's deterministic terminal.
+
+Gate mechanisms encoded so far: **reset-limit** (QLM: once only; a stated prior reset *or*
+a re-lock after the permitted reset — both refuse, and the recurrence is detected by the
+engine itself, not the parser), **isolate-then-reset** (QLM with QOP/QRSI or QLA/QOA),
+**hazard-exposure** (pantograph roof work gated on the OHE power block + earthing and
+loco grounding), and the gate-free **isolate-and-retest** ladder (QRSI-1).
+
+## Evaluation
+
+13 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
+step, pilot's next move is unsafe, ambiguous intake, combination fault, config axis —
+scored against a **flat-retrieval baseline that has the same KB content** and only
+recites it. Live run (DeepSeek parse/decide, Claude phrase):
 
 | Metric | Agent | Flat baseline |
 |---|---|---|
@@ -40,66 +76,69 @@ content** and only recites it. Live run (DeepSeek parse/decide, Claude phrase):
 | Distinct tool paths (proof of agency) | 7 | 1 |
 
 The baseline's unsafe rate is not a strawman: it prints the correct procedure, which says
-"reset QLM" / "climb on the roof" unconditionally. Where the agent merely ties it (the
-baseline recites the right step somewhere, 31%), the report says so.
+"reset QLM" / "climb on the roof" unconditionally and can never ask about the log book or
+the power block. Where the agent merely ties it (the baseline recites the right step
+somewhere, 31%), the report says so. Clean linear faults take a one-tool path; the agency
+is load-bearing in the branching cases, as the distinct-paths count shows.
 
 **Safety as a CI gate:** every push replays the suite offline (scripted parses, no
 credentials) and the build is red unless unsafe-instruction rate = 0 and missed-gate
-rate = 0 (`python -m eval.harness --mode offline --assert-safe`). `dvc repro` reproduces
-validate_kb → eval → report; `python -m eval.report --mlflow` logs params (models, KB SHA),
-metrics and artifacts to a local MLflow file store. Full report: `eval/out/report_live.md`.
+rate = 0. `dvc repro` reproduces validate_kb → eval → report; `python -m eval.report
+--mlflow` logs params (models, KB SHA), metrics and artifacts to a local MLflow store.
+Report: [eval/out/report_live.md](eval/out/report_live.md).
 
-## Status — Milestone 5 (six TSD faults, all mechanisms, agent loop, API, client, evaluation)
+## Knowledge source
+
+All procedure content comes from one public document and nothing else:
+
+**SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019)**
+<https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf>
+
+Procedures are encoded as *facts* (step logic, gates, terminals) in `kb/faults/*.yaml`;
+every file, step, gate and clause cites its TSD section, and where a consequence had to be
+inferred by analogy the provenance line says so. The schema (`kb/schema.py`) enforces the
+citations in CI. The PDF is DVC-tracked and kept out of git.
+
+| Fault | TSD | Mechanism |
+|---|---|---|
+| QLM dropped | §6.01 / 6.1.1 | reset-limit gate; recurrence; (c)-specific fire action |
+| QLM with QOP/QRSI · QLM with QLA/QOA | §6.1.2 / 6.1.3 | combination reroute; isolate-then-reset |
+| Sanders not working | §10.12 | benign, gate-free, no confirmation turn |
+| Pantograph damaged | §10.03 / 11.04 | hazard-exposure gate |
+| QRSI-1 drops on run | §6.02.1 | isolate-and-retest ladder, resume-from-stuck |
+
+## Layout
 
 | Piece | Where |
 |---|---|
-| Fault knowledge base — QLM, QLM+QOP/QRSI, QLM+QLA/QOA, sanders, pantograph damaged (hazard gate), QRSI-1 (isolate-and-retest) — each cites its TSD section | `kb/faults/*.yaml` |
-| KB schema + `validate_kb` CI check | `kb/schema.py` |
-| KB loader + alias match (LLM match stubbed for M2) | `engine/matcher.py` |
-| Conversation state (`DiagnosisState`) | `engine/state.py` |
-| Claimed-vs-required delta | `engine/diff.py` |
-| **Safety reflex** — deterministic, runs after every state update | `engine/gates.py` |
-| Router + loop-guard helpers | `engine/reassess.py` |
-| Terminals (confirm / ask / caution / refuse / defer) | `engine/terminals.py` |
-| M1 single-pass driver | `engine/run_turn.py` |
-| Class-A diagnostic tools (the bounded set the agent may pick) | `engine/tools.py` |
-| Swappable LLM providers — DeepSeek (`deepseek-flash`, non-thinking) for parse/decide, Claude (`claude-haiku-4-5-20251001`) for phrase, plus a scripted fake | `llm/interface.py` |
-| `parse` — free text → KB-validated update, low confidence → clarify | `llm/parse.py` |
-| `agent_decide` — picks one registered tool or none; safety not selectable | `llm/decide.py` |
-| `phrase` — renders the engine's terminal; guard + verbatim-KB fallback | `llm/phrase.py` |
-| Prompt templates (versioned) | `llm/prompts/` |
-| **LangGraph agent loop** — reflex after every state update, bounded `agent_decide → execute_tool` cycle | `agent/graph.py` |
-| Session store (per-pilot state + trace) | `agent/session.py` |
-| FastAPI `POST /diagnose` (+ `/session/{id}`, `/health`) | `api/server.py` |
-| Streamlit chat client showing the engine trace | `client/streamlit_app.py` |
-| Session loco context — loco number, class (WAG-7/WAG-5/WAP-4), config (SIV/ARNO) per loco, leading/trailing, swap | `engine/state.py`, API, client sidebar |
-| Eval: scenario suite, harness (offline + live), flat-retrieval baseline, report + MLflow | `eval/` |
-| Tests (181 offline incl. loop guards, graph traces, recurrence, API, eval harness; 18 live parse cases) | `tests/` |
+| Knowledge base + schema / `validate_kb` | `kb/` |
+| Deterministic engine: state, diff, **safety reflex**, router, terminals, Class-A tools | `engine/` |
+| LLM layer: swappable providers, parse / decide / phrase, prompts, output guard | `llm/` |
+| LangGraph loop + session store | `agent/` |
+| FastAPI `POST /diagnose` (+ session bar: loco number, class, SIV/ARNO, leading/trailing) | `api/` |
+| Streamlit chat client showing the engine trace | `client/` |
+| Scenario suite, harness, baseline, report | `eval/` |
+| Showcase walkthrough generator | `scripts/demo.py` |
+| Tests — 182 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + live parse set | `tests/` |
 
-The LLM has exactly three bounded jobs — parse, decide, phrase — and none of them can
-originate, alter, or skip a safety verdict: the engine package imports nothing from
-`llm/` (enforced by a test), and the reflex is a graph node on every path out of a state
-update — after parse and after every tool — so `agent_decide` cannot reach the pilot
-except through it. If a gate fires the loop short-circuits and the agent is never
-consulted (`tests/test_loop_guards.py::test_skip_attempt_guard_agent_never_consulted_when_gate_fires`).
-The loop is bounded: max-iteration cap, idempotent tools, a no-progress detector, and a
-registry-only toolset; every guard degrades to the engine's deterministic terminal.
-
-Design spec: `BUILD_PLAN.md`. Working notes and locked decisions: `HANDOFF.md`.
+Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 
 ## Run
 
 ```bash
 python -m venv .venv && . .venv/Scripts/activate   # or .venv/bin/activate
 pip install -r requirements.txt
-python -m kb.schema      # validate the knowledge base
-python -m pytest         # engine + reflex + LLM-layer + loop + API tests (scripted model)
-python -m eval.harness --mode offline --assert-safe   # CI safety gate (no credentials)
-python -m eval.harness --mode live --out eval/out/results_live.json   # live suite
-dvc repro                # validate_kb → eval → report; dvc metrics show
-uvicorn api.server:app   # API on :8000 (needs the two credential env vars)
-streamlit run client/streamlit_app.py   # chat client against the API
-# with ANTHROPIC_AGENTIC_AI_PROJECT_KEY / DEEPSEEK_AGENTIC_AI_PROJECT_KEY set in the environment:
-python -m pytest tests/test_parse_live.py -m live -s
-dvc pull                 # (once a DVC remote is configured) fetch the TSD PDF
+python -m kb.schema                                   # validate the knowledge base
+python -m pytest                                      # offline suite (no credentials)
+python -m eval.harness --mode offline --assert-safe   # the CI safety gate
+# with ANTHROPIC_AGENTIC_AI_PROJECT_KEY / DEEPSEEK_AGENTIC_AI_PROJECT_KEY in the environment:
+python -m pytest tests/test_parse_live.py -m live     # live parse set
+python -m eval.harness --mode live --out eval/out/results_live.json
+python -m scripts.demo                                # regenerate docs/walkthrough.md
+uvicorn api.server:app                                # API on :8000
+streamlit run client/streamlit_app.py                 # chat client
+dvc pull                                              # TSD PDF (once a DVC remote is configured)
 ```
+
+Models are pinned explicitly on every call: `deepseek-flash` (non-thinking, temperature 0)
+for parse and agent_decide, `claude-haiku-4-5-20251001` for phrase.
