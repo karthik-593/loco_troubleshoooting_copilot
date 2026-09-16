@@ -9,7 +9,7 @@
 # ensure all EM contactors are opened" (precaution a), with precautions b–e as the working
 # conditions after the wedge.
 # Reached from the ICDJ hub (q118_energised == no), or directly.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ_Q118_branch
 aliases:

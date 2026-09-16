@@ -9,7 +9,7 @@
 # the ONE question is whether the loco is a VCB type 5-branch DJ loco. Yes → §7.11 (TLC);
 # no, or the pilot does not know → §7.06 (the signs indicate Operation 'B' part II). The
 # answers are deterministic route phrases; the parser is the fallback.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Reglows_on_release
 aliases:

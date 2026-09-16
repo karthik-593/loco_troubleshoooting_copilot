@@ -10,7 +10,7 @@
 # routes to that relay's procedure (combination rules; §5.01 "If any safety relay target is
 # found dropped, trouble shoot for DJ tripping through safety relays").
 # precedence -2: a relay or fire named in the same message wins the alias match.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: DJ_tripped_on_line
 aliases:

@@ -4,7 +4,7 @@
 #         Chapter 6 "DJ Tripping through Safety Relays", §6.1.3, printed pp.85–86.
 # This is the reroute target of qlm_dropped.yaml's second combination rule.
 # §6.1.3: "Troubleshoot for both QLM and QLA/QOA." (a) follows §6.1.1 for QLM.
-# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# STATUS: encoded 2026-09-15 — confirmed by the user 2026-09-16 (see HANDOFF).
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QLM_with_QLA_QOA
 aliases:

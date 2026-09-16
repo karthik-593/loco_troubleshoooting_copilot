@@ -526,7 +526,7 @@ safety measures — awaiting the user's answers.
 
 ## Batch 1 — Ch.6 remainder (§6.03–6.05), encoded 2026-09-16 (approved: route rules, rb axis lazy, Ch.11/13 read)
 
-Seven fault files, all quote-first from the TSD text (pdftotext), pending human confirmation:
+Seven fault files, all quote-first from the TSD text (pdftotext), confirmed by the user 2026-09-16 ("approve all"):
 
 | Fault | TSD | Shape |
 |---|---|---|
@@ -563,7 +563,7 @@ Engine/schema added for the batch:
 - Eval: 4 scenarios (HT entry caution / refusal, QLA second reset, QOP-1 reroute + lazy rb); 7 held-out
   parse cases. Live: 17/17, unsafe 0, missed-gate 0, 9 paths.
 
-Judgement calls to confirm: (1) §6.03.1(b)/§6.03.2(b)/§6.04.2(a)/§6.05(b) state no "otherwise TLC"
+Judgement calls (confirmed 2026-09-16): (1) §6.03.1(b)/§6.03.2(b)/§6.04.2(a)/§6.05(b) state no "otherwise TLC"
 branch — `on_not_isolated` is INFERRED from the analogous sections (marked in each isolation.source);
 (2) §6.03.3(b) negative-side TM isolation is by reverser bit (§11.02) — no separate gate on (b);
 GI 7 applies through the ordered diff only from (e) onwards; (3) QOA (e) i–iii focus hints and Note 2
@@ -619,7 +619,7 @@ Engine / schema added:
 Confirmed by the user 2026-09-16: (1) §7.08(d) stays verbatim (HVSI is the RSI-block switch);
 (2) the ICDJ hub's Q118 / Q45 / Q44 steps ASK whether the relay energises and, as an
 instruction, tell the pilot to check for energisation (step texts reworded accordingly).
-Judgement calls still open: (3) the Q118→Q45→Q44
+Judgement calls (3)–(6) confirmed 2026-09-16: (3) the Q118→Q45→Q44
 chain follows each section's "if DJ does not close, check … branches"; a Q45 manual close
 that trips routes back to the intake hub ("pick up the correct abnormal sign") and re-asks
 the precheck; (4) the contactor wedge gate's precondition (switch on 3) is a companion
@@ -659,7 +659,7 @@ Engine / schema added:
   refused without TLC; slipped pinion → TLC). 24/24 offline and live, 12–13 paths. 10 new
   held-out parse cases (65 live); "no traction suddenly…" is now the TE intake, not a clarify.
 
-Judgement calls to confirm: (1) the TE intake hub (8th file) — the three §8.01–8.03 sections
+Judgement calls (confirmed 2026-09-16): (1) the TE intake hub (8th file) — the three §8.01–8.03 sections
 are told apart only by the LSB / LSGR / NR / ammeter sign; (2) §8.02 items 8a–8d encoded as
 stated-only steps under "Q51 energised", 8d completes; (3) §8.05 items 5/6 (ZSMS non-modified /
 modified) as alternatives, 8–12 under "notches not from rear cab" (item 7's header), 13–14

@@ -10,7 +10,7 @@
 # reflex on the prior-reset fact OR the engine's recurrence backstop. Note: the TSD does
 # NOT say "relief loco" here — the on_already_reset text says TLC only.
 # QLA with QLM acting → the QLM combination procedure (§6.1.3), by combination rule.
-# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 1) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QLA_dropped
 aliases:

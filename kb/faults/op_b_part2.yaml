@@ -9,7 +9,7 @@
 # loco is having B-II trouble" are the working conditions after the wedge.
 # Reached from the Reglows_on_release question hub (not a VCB 5-branch loco, or not known),
 # or directly by name.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_B_part2
 aliases:

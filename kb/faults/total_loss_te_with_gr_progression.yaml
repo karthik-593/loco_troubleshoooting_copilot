@@ -3,7 +3,7 @@
 # SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
 #         Chapter 8, §8.03, p.133 (abnormal sign, reasons 1–3, trouble shooting 1–9).
 # Mechanism: a 9-step ladder ending in TLC. No gate.
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Total_loss_TE_with_GR_progression
 aliases:

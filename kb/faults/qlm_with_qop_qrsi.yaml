@@ -5,7 +5,7 @@
 # This is the reroute target of qlm_dropped.yaml's first combination rule.
 # All step logic, gates and terminals below are facts taken from §6.1.2 (and, where
 # §6.1.2(a) says "for QLM above said 6.1.1 procedure to be followed", from §6.1.1).
-# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# STATUS: encoded 2026-09-15 — confirmed by the user 2026-09-16 (see HANDOFF).
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QLM_with_QOP_QRSI
 aliases:

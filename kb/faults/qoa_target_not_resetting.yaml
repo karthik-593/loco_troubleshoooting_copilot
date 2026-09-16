@@ -8,7 +8,7 @@
 # work with the isolated equipment (truck isolation, 50% load, assisting loco) or TLC.
 # No HT-compartment entry in this section (isolating switches and the EM contactor panel).
 # Reached from QOA_dropped by its route rule (target_resets == no), or directly.
-# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 1) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QOA_target_not_resetting
 aliases:

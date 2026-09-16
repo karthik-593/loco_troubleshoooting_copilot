@@ -6,7 +6,7 @@
 #         §11.04 "Isolation of damaged/defective pantograph", printed p.178.
 # Mechanism proved: HAZARD-EXPOSURE gate — roof work on a loco under a 25 kV contact wire
 # is gated on the OHE power block + earthing by OHE/TRD staff and the loco being grounded.
-# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# STATUS: encoded 2026-09-15 — confirmed by the user 2026-09-16 (see HANDOFF).
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: pantograph_damaged
 aliases:

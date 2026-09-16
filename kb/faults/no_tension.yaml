@@ -6,7 +6,7 @@
 # Mechanism: BP-drop branch (a) vs no-BP-drop branch (b), then the roof / panto checks (c–e),
 # then the DJ / panto retries (f–k). (d), (i) heavy flash, (k) are ways the procedure ends.
 # (e) "trouble shoot for panto not rising" is a Ch.9 procedure (later batch).
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: No_tension
 aliases:

@@ -8,7 +8,7 @@
 # No reset-once rule in this section ((d) permits a further reset after a long interval).
 # The SAME relay has a different procedure when the target CANNOT be reset (§6.03.4):
 # reached by the fact-keyed route rule below (approved 2026-09-16).
-# STATUS: encoded 2026-09-16 (batch 1, Ch.6 remainder) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 1, Ch.6 remainder) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QOP2_dropped
 aliases:

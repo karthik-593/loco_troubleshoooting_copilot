@@ -7,7 +7,7 @@
 # reset → branch on recurrence (long interval: recheck / very frequently: HQOA on 0 + TLC).
 # The SAME relay has a different procedure when the target CANNOT be reset (§6.04.2):
 # reached by the route rule below.
-# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 1) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QOA_dropped
 aliases:

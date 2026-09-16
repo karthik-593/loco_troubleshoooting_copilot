@@ -5,7 +5,7 @@
 # Mechanism: HUB. The three causes are three procedures (§7.09.1–§7.09.3), chosen by what the
 # contactors C105, C106, C107 do when BLVMT is closed: none closed / one or more not closed /
 # all closed (their interlocks defective). Routed on the fact `contactors_closed`.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_II
 aliases:

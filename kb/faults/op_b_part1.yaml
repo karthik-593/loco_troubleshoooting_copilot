@@ -8,7 +8,7 @@
 # ONE switch at a time with a 15-second wait; the switch on which DJ trips names the defective
 # relay/motor. Each conclusion is a `completes` step. Notes 2–3 (MPH equalising pipe leaking
 # / broken) are stated-only branches.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_B_part1
 aliases:

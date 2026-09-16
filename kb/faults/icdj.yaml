@@ -8,7 +8,7 @@
 # C118 closing or not and then check one by one branch" — and routes on the finding.
 # Causes 9–11 (VCB unit pressure, conk slack, ammeter shunt) have no procedure of their own
 # in §7.01; VCB pressure is item (j) of the EFDJ/MTDJ branch.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ
 aliases:

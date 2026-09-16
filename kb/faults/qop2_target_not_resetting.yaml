@@ -8,7 +8,7 @@
 # "WAP4 locos without RB" differs from the FIRST bit (J2-6 → HMCS-2 in 2), so the rb axis
 # is asked when the first packing step is reached.
 # Reached from QOP2_dropped by its route rule (target_resets == no), or directly.
-# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 1) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QOP2_target_not_resetting
 aliases:

@@ -8,7 +8,7 @@
 # preconditions; in TSD order they sit inside the ladder, so the ordered diff stops at each
 # until it is done. A dropped relay target found at step 6 routes to that relay (combination
 # rules; the intake hub's list).
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: TWAC
 aliases:

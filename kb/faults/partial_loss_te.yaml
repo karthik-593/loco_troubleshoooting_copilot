@@ -5,7 +5,7 @@
 # Mechanism: HMCS positions → air leakage at the line-contactor electro valves → by which
 # traction voltmeter does not deviate, isolate TM-1 (HMCS-1 on 2) or TM-6 (HMCS-2 on 4) and
 # work with 5/6 load; (c) rear-cab meters / HVSI positions as a stated-only note.
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Partial_loss_TE
 aliases:

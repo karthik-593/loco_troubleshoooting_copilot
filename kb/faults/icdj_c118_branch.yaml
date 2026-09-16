@@ -5,7 +5,7 @@
 # Reached from the ICDJ hub (Q44 energised, C118 not closing), or directly.
 # Note 1: "C118 should not be operated manually for closing DJ." — kept in the step text
 # (there is no manual-operation step to gate).
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ_C118_branch
 aliases:

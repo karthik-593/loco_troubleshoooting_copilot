@@ -5,7 +5,7 @@
 # Mechanism: HVMT-1 & HVMT-2 in 3, close DJ → still trips: C107 N/O interlock defective, work
 # by WEDGING Q118 (hazard_exposure gate, §7.01.3 precautions) / holds: clear the section,
 # normalise the switches one by one to find the trouble, keep that switch in 3.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_II_interlock
 aliases:

@@ -7,7 +7,7 @@
 # 3, 30-second waits). A blower not working → isolate and work on (completes); MVRH not
 # working also offers "clear the block section within 5 notches OR wedge Q118" — the wedge
 # is a hazard_exposure gate (§7.01.3 precautions), stated-only.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_O
 aliases:

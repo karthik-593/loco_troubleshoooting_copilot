@@ -5,7 +5,7 @@
 # Mechanism: switch on 3 → QTD105/QTD106 → coil wires / flexibility → WEDGE the contactor —
 # a hazard_exposure gate on Note 1 "When C107/C105/C106 wedged, keep concerned switch on '3'
 # position to give initial path to Q118". Note 2 (AC MVRF locos, C107) is a stated-only step.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_II_one_not_closed
 aliases:

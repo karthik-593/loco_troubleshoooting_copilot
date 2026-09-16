@@ -7,7 +7,7 @@
 # by one → isolate the traction motor of the bad position (5/6 load) → isolate truck 1
 # (50% load) → TLC. There is NO reset-once rule for QRSI ((b) permits a further reset after
 # a long interval), so this fault has no reset_limit gate.
-# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# STATUS: encoded 2026-09-15 — confirmed by the user 2026-09-16 (see HANDOFF).
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QRSI1_drops_on_run
 aliases:

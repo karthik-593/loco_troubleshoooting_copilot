@@ -8,7 +8,7 @@
 # section and test HVSI-1 on 1 to name QVSI-1 or QVSI-2 (f).
 # §7.08(d) "keeping HVSI-2, HVSL-1 and HVMT-2 on '0'" is encoded verbatim (confirmed by the
 # user 2026-09-16: HVSI is the RSI-block switch, HVSI-2 for the RSI-2 block).
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_I
 aliases:

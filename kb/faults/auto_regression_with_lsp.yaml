@@ -8,7 +8,7 @@
 # sibling branches, each an HMCS position) → C / D / E as stated-only branches (MPS, slipped
 # pinion, locked axle), with §8.04.1's banding-failure action and symptom lists folded in.
 # Detaching the loco / ALP beside the loco stay verbatim, ungated.
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Auto_regression_with_LSP
 aliases:

@@ -8,7 +8,7 @@
 # still not closing (next branches: Q44 → …). No wedging in this section (Q45 wedging is
 # §7.06 only, with its own gate).
 # Reached from the ICDJ hub (q45_energised == no) or from the Q118 branch (e), or directly.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ_Q45_branch
 aliases:

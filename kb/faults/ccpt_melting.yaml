@@ -8,7 +8,7 @@
 # Wedge Q118 (A) and Q44 (C) keep their §7.01.3 / §7.01.5 hazard gates; wedge Q50 (D), Q46 (A)
 # and QWC (L) are ordinary (no stated precondition; §8.01 after-precautions ride in the text).
 # "Remove '+'ve wire / disconnect cable" steps verbatim, ungated (decision 5).
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: CCPT_melting
 aliases:

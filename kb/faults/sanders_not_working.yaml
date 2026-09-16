@@ -4,7 +4,7 @@
 #         Chapter 10 "Miscellaneous Failures", §10.12, printed pp.172–173.
 # Benign, gate-free, config-independent. Linear trouble-shooting (a)→(g); the pilot
 # resumes traction at whichever step clears the fault.
-# STATUS: encoded 2026-09-15 — pending human confirmation (see HANDOFF).
+# STATUS: encoded 2026-09-15 — confirmed by the user 2026-09-16 (see HANDOFF).
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: sanders_not_working
 aliases:

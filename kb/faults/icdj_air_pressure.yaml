@@ -4,7 +4,7 @@
 #         Chapter 7, §7.01.2 "Less air pressure", p.104 (a–c).
 # Reached from the ICDJ hub (air_pressure_low == yes), or directly. (c) hands over to
 # §9.1 (MCPA not building up air pressure in RS) — a later batch.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ_air_pressure
 aliases:

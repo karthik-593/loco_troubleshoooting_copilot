@@ -5,7 +5,7 @@
 # Mechanism: HUB (the batch-2 intake pattern). The three sections differ only by what LSB,
 # LSGR, NR and the ammeters do when MP is moved 'O' → 'N' → '+'; the pilot's report of those
 # lamps / needles (`te_sign`) routes to the section. Targets are confirmed in one line first.
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Total_loss_TE
 aliases:

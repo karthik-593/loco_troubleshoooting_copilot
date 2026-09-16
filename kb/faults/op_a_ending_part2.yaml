@@ -5,7 +5,7 @@
 # Mechanism: the TSD gives no ladder — "Problem with DJ N/O I/L on MTDJ branch, contact TLC
 # for advice." Reached from the Reglows_on_release question hub (vcb_5_branch_loco == yes),
 # or directly by name.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_A_ending_part2
 aliases:

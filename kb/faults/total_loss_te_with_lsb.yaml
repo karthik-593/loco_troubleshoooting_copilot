@@ -7,7 +7,7 @@
 # (approved 2026-09-16, batch 3 decision 1: the TSD states only AFTER-precautions, which ride in
 # the step text and the resolved terminal). Steps 5–8 (reversers / CTFs / C145) precede it in
 # TSD order.
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Total_loss_TE_with_LSB
 aliases:

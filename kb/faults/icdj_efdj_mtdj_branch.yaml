@@ -7,7 +7,7 @@
 # Mechanism: ONE file for both DJ types (approved 2026-09-16, decision 3): the TSD gives the
 # same ladder for both. Reached from the ICDJ hub when C118 IS closing (§7.01.6 Note 2), or
 # directly.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ_EFDJ_MTDJ_branch
 aliases:

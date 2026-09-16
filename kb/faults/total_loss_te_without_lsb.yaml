@@ -6,7 +6,7 @@
 # wedge Q52 de-energised, and under Q51 energised: QRS (CCLS fuse / BP / RGEB COC asked as
 # checks, then wedge QRS energised — ordinary steps, approved batch 3 decision 2), Q48 I/Ls,
 # PR2 / AFL, manual GR + TLC; then 9–10.
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Total_loss_TE_without_LSB
 aliases:

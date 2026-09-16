@@ -9,7 +9,7 @@
 # "Take the permission from TLC for wedging Q44" and "Conduct GR efficiency test" are the
 # stated preconditions; the after-wedging precautions are the working conditions.
 # Reached from the ICDJ hub (q44_energised == no) or the Q45 branch (d), or directly.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ_Q44_branch
 aliases:

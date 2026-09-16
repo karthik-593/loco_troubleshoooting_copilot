@@ -8,7 +8,7 @@
 # (e) and the Note ("Relay Q-45 should not be wedged if the loco is having Operation 'A'
 # Ending trouble") are the running conditions — the Note is also the precondition of the Q45
 # wedge gate in §7.06.
-# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_A_ending
 aliases:

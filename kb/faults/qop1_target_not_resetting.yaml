@@ -8,7 +8,7 @@
 # pp.198–199] → reset with J1 neutral to localise the fault to the TMs → find the defective
 # TM by packing reverser bits (table differs for WAP4 without RB → rb axis, asked lazily).
 # Reached from QOP1_dropped by its route rule (target_resets == no), or directly.
-# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 1) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: QOP1_target_not_resetting
 aliases:

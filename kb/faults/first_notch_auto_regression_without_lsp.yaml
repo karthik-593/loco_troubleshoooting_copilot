@@ -7,7 +7,7 @@
 # coming from the rear cab (item 7 is their header) → 13–14. Wedging Q46 / QVCD de-energised
 # and HVCD on 0 are ORDINARY steps: the TSD states no precondition (approved batch 3 decision 2;
 # flagged: HVCD on 0 / VCD cables removed disables the vigilance device).
-# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: First_notch_auto_regression_without_LSP
 aliases:
