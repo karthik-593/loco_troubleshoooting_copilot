@@ -37,6 +37,7 @@ LOCO_TYPES = ("wag7", "wag5", "wap4")
 # if the fault declares the matching dependency.
 AXIS_FACT_CONFIG = "loco_config"
 AXIS_FACT_TYPE = "loco_type"
+AXIS_FACT_RB = "loco_rb"          # rheostatic-braking equipment fitted: "fitted" | "not_fitted"
 
 
 class _Strict(BaseModel):
@@ -104,6 +105,11 @@ class Step(_Strict):
     # step's own "If …" text asks the question. Lets alternative clauses ((b) long interval
     # vs (c) frequent) coexist in one ordered checklist without asking the wrong branch.
     applies_when: dict[str, str] = Field(default_factory=dict)
+    # Batch 1 (Ch.6 remainder): a side-note / consequence step ("If not resetting even with
+    # HQOP-1 in OFF, place HOBA OFF"; "if the target resets after isolating, resume") is due
+    # ONLY when every applies_when fact is STATED with the given value — never asked on its
+    # own. Route alternatives ((d) long interval vs (e) frequently) keep the default.
+    requires_stated: bool = False
     # Facts that CLAIMING this step establishes, when the TSD reaches the step only through a
     # branch (e.g. the HMCS ladder is reached only in the "dropping frequently" branch). Set by
     # the engine on the claim if the fact is not already stated — declarative, cited, and
@@ -143,10 +149,29 @@ class CombinationRule(_Strict):
     source: str = Field(min_length=1)
 
 
+class RouteRule(_Strict):
+    """Fact-keyed reroute (approved 2026-09-16): the SAME relay has a different TSD procedure
+    depending on a fact the pilot reports ("target cannot be reset" → §6.03.3). Applied
+    deterministically before the reflex, like combination_rules; claimed steps carry over
+    where the step ids match."""
+    if_fact: str = Field(min_length=1)
+    equals: str = Field(min_length=1)
+    route_to: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    # Deterministic triggers: if one of these phrases appears in the pilot's message (whole
+    # phrase, case-insensitive) the fact is set to `equals` without the model. Declared in
+    # the KB, like aliases; the parser is only the fallback.
+    phrases: list[str] = Field(default_factory=list)
+
+
 class DeferCondition(_Strict):
     """A TSD clause of the form "if <situation>, contact TLC" — a terminal, not a step.
     When the fact is 'yes' the engine defers with the clause's own text."""
     fact: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    equals: str = "yes"                 # the value that triggers the deferral ("no" for "if it does not reset")
+    # The deferral applies only once one of these steps is claimed done (§6.03.3(j) 4: "if
+    # unsuccessful, contact TLC" comes after ALL prescribed bits, not after the first two).
+    after_any: list[str] = Field(default_factory=list)
     text: str = Field(min_length=1)
     source: str = Field(min_length=1)
 
@@ -158,12 +183,17 @@ class Fault(_Strict):
     # "none" | one class | a list of classes the procedure branches on. Parallel to
     # config_dependency; both default to none unless the TSD text branches on the axis.
     type_dependency: Union[Literal["none"], LocoType, list[LocoType]] = "none"
+    # Third axis (approved 2026-09-16): rheostatic-braking equipment fitted. Never asked up
+    # front — the diff asks "Is this an RB-fitted loco?" only when a reached step branches
+    # on loco_rb (§6.03.3/6.03.4 reverser-bit tables: "WAP4 locos without RB" differ).
+    rb_dependency: bool = False
     # Alias-match precedence when ONE message matches several faults: the higher wins; a tie
     # is ambiguous (no deterministic match). General procedures (fire_on_loco) declare -1 so
     # a specific fault named in the same message ("QLM locked, arc chute burning") wins.
     precedence: int = 0
     presenting_signs: list[str] = Field(default_factory=list)
     combination_rules: list[CombinationRule] = Field(default_factory=list)
+    route_rules: list[RouteRule] = Field(default_factory=list)
     defer_conditions: list[DeferCondition] = Field(default_factory=list)
     steps: list[Step] = Field(min_length=1)
     terminal_actions: dict[str, str] = Field(default_factory=dict)
@@ -188,6 +218,8 @@ class Fault(_Strict):
                 raise ValueError(f"step '{s.id}' branches on {AXIS_FACT_CONFIG} but config_dependency is none")
             if AXIS_FACT_TYPE in s.applies_when and self.type_axes == ():
                 raise ValueError(f"step '{s.id}' branches on {AXIS_FACT_TYPE} but type_dependency is none")
+            if AXIS_FACT_RB in s.applies_when and not self.rb_dependency:
+                raise ValueError(f"step '{s.id}' branches on {AXIS_FACT_RB} but rb_dependency is false")
         return self
 
     @property
@@ -205,6 +237,10 @@ class Fault(_Strict):
     @property
     def depends_on_type(self) -> bool:
         return self.type_axes != ()
+
+    @property
+    def depends_on_rb(self) -> bool:
+        return self.rb_dependency
 
     # Convenience views used by the engine -------------------------------------
     @property
@@ -240,6 +276,7 @@ class Fault(_Strict):
             if s.gate:
                 keys.extend(s.gate.preconditions)
         keys.extend(d.fact for d in self.defer_conditions)
+        keys.extend(r.if_fact for r in self.route_rules)
         return list(dict.fromkeys(keys))
 
     def step(self, step_id: str) -> Step:

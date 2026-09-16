@@ -45,6 +45,7 @@ than the pilot's intent, and it does not depend on the parser extracting intent 
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Optional
@@ -98,11 +99,13 @@ NO_FIRE = GateVerdict(Outcome.NO_FIRE)
 
 def _history_question(gate_key: str, reset_done: bool = False) -> str:
     # Derived from the gate's needs_history key, endorsed by BUILD_PLAN §2.3 wording.
-    if gate_key == HF_RESET_EARLIER:
+    m = re.fullmatch(r"was_([A-Za-z0-9-]+)_reset_earlier_this_trip", gate_key)
+    if m:
+        relay = m.group(1)
         if reset_done:      # the pilot has just reset it: ask about BEFORE that, unambiguously
-            return ("Before the reset you just did, had QLM been reset earlier this trip? "
+            return (f"Before the reset you just did, had {relay} been reset earlier this trip? "
                     "Check the loco log book.")
-        return "Was QLM reset earlier this trip? Check the loco log book."
+        return f"Was {relay} reset earlier this trip? Check the loco log book."
     return f"Please state: {gate_key.replace('_', ' ')}?"
 
 
@@ -123,13 +126,19 @@ def _reset_in_play(state: DiagnosisState, fault: Fault, step: Step) -> bool:
 
 
 def prior_ordinary_complete(state: DiagnosisState, fault: Fault, step: Step) -> bool:
-    """Every ordinary step BEFORE ``step`` (in TSD order) is claimed done."""
+    """Every ordinary step BEFORE ``step`` (in TSD order) that is DUE is claimed done. A
+    conditional step that is contradicted, a side-note (requires_stated) whose condition is
+    not stated, or an unchosen route alternative is not pending (engine.diff decides)."""
+    from engine.diff import diff_steps          # local import: diff imports state, not gates
+    delta = diff_steps(state, fault)
+    if delta.completed:
+        return False                            # the procedure ended on a completing step: not reached
+    before = []
     for s in fault.steps:
         if s.id == step.id:
-            return True
-        if s.gate is None and s.id not in state.steps_claimed_done:
-            return False
-    return True
+            break
+        before.append(s.id)
+    return not (set(delta.missing) & set(before))
 
 
 def isolation_status(state: DiagnosisState, fault: Fault):

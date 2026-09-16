@@ -13,6 +13,7 @@ from kb.schema import Fault
 
 Config = Literal["siv", "arno", "unknown"]
 LocoTypeOrUnknown = Literal["wag7", "wag5", "wap4", "unknown"]
+RbOrUnknown = Literal["fitted", "not_fitted", "unknown"]
 YesNo = Literal["yes", "no"]
 
 
@@ -23,9 +24,10 @@ class LocoInfo:
     loco_number: str = ""
     type: LocoTypeOrUnknown = "unknown"          # class axis: layout / equipment set
     config: Config = "unknown"                   # auxiliary-build axis: SIV / ARNO
+    rb: RbOrUnknown = "unknown"                  # rheostatic braking fitted: asked lazily, never up front
 
     def as_dict(self) -> dict[str, str]:
-        return {"loco_number": self.loco_number, "type": self.type, "config": self.config}
+        return {"loco_number": self.loco_number, "type": self.type, "config": self.config, "rb": self.rb}
 
 # History-fact keys used by the QLM procedure. ``was_QLM_reset_earlier_this_trip`` is
 # the reset_limit gate's ``needs_history`` key in kb/faults/qlm_dropped.yaml;
@@ -42,8 +44,10 @@ HF_RESET_INSTRUCTED = "reset_instructed_this_session" # engine emitted the first
 
 # Intended-action vocabulary (structured; the M2 parser maps free text onto these).
 ACTION_RESET_QLM = "reset_QLM"
+ACTION_RESET_QLA = "reset_QLA"                # QLA standalone reset_limit gate (§6.05)
 ACTION_WORK_ON_ROOF = "work_on_roof"          # pantograph_damaged hazard gate (§10.03 / §11.04)
-ACTIONS = (ACTION_RESET_QLM, ACTION_WORK_ON_ROOF)
+ACTION_ENTER_HT = "enter_HT_compartment"      # HT-compartment entry hazard gate (GI 7 p.77 / §13.05)
+ACTIONS = (ACTION_RESET_QLM, ACTION_RESET_QLA, ACTION_WORK_ON_ROOF, ACTION_ENTER_HT)
 
 
 @dataclass
@@ -92,6 +96,8 @@ class DiagnosisState:
         dependency; otherwise None ("not consulted"), even if the value is known."""
         if axis_fact == "loco_config" and fault.depends_on_config:
             return None if self.loco.config == "unknown" else self.loco.config
+        if axis_fact == "loco_rb" and fault.depends_on_rb:
+            return None if self.loco.rb == "unknown" else self.loco.rb
         if axis_fact == "loco_type" and fault.depends_on_type:
             return None if self.loco.type == "unknown" else self.loco.type
         return None
@@ -127,6 +133,7 @@ class StateUpdate:
     fault_confirmed: Optional[bool] = None
     config: Optional[Config] = None
     loco_type: Optional[LocoTypeOrUnknown] = None
+    loco_rb: Optional[RbOrUnknown] = None
     claimed_steps: tuple[str, ...] = ()
     history: dict[str, Any] = field(default_factory=dict)
     intended_action: Optional[str] = None
@@ -148,7 +155,7 @@ class StateUpdate:
         return bool(
             (self.fault_id and self.fault_id != state.matched_fault)
             or (self.fault_confirmed is not None and self.fault_confirmed != state.fault_confirmed)
-            or self.config or self.loco_type or self.claimed_steps or self.history
+            or self.config or self.loco_type or self.loco_rb or self.claimed_steps or self.history
             or self.intended_action or self.clear_intended_action or self.fault_presenting
             or self.denies_asked_step)
 
@@ -187,6 +194,8 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
             state.loco.config = update.config
     if update.loco_type is not None and state.locos:
         state.loco.type = update.loco_type
+    if update.loco_rb is not None and state.locos:
+        state.loco.rb = update.loco_rb
 
     known = set(state.steps_required)
     unrecognised = [s for s in update.claimed_steps if s not in known]
@@ -214,11 +223,12 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
     # again, a same-turn 'yes' on the prior-reset fact is taken as the instructed reset.
     claims_reset = fault is not None and any(
         s.gate and s.gate.type == "reset_limit" and s.id in update.claimed_steps for s in fault.steps)
+    reset_key = reset_history_key(fault)
     if (str(state.history_facts.get(HF_RESET_INSTRUCTED, "")).lower() == "yes"
             and not update.fault_presenting
-            and str(state.history_facts.get(HF_RESET_EARLIER, "")).lower() != "yes"):
+            and str(state.history_facts.get(reset_key, "")).lower() != "yes"):
         for key in [k for k, v in incoming.items()
-                    if k == HF_RESET_EARLIER or (fault and any(s.gate and s.gate.needs_history == k for s in fault.steps))]:
+                    if k == reset_key or (fault and any(s.gate and s.gate.needs_history == k for s in fault.steps))]:
             if str(incoming[key]).lower() == "yes":
                 incoming.pop(key)
                 state.history_facts[HF_RESET_PERFORMED] = "yes"
@@ -233,10 +243,10 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
     # reflex refuses ("QLM locked. yes, reset it once already" — the relay is live NOW and
     # the reset was before: bias to over-refuse); fault_recurred always refuses.
     if (claims_reset and not prior_reset
-            and str(incoming.get(HF_RESET_EARLIER, "")).lower() == "yes"
+            and str(incoming.get(reset_key, "")).lower() == "yes"
             and str(incoming.get(HF_RESOLVED, "")).lower() == "yes"
             and str(incoming.get(HF_RECURRED, state.history_facts.get(HF_RECURRED, ""))).lower() != "yes"):
-        incoming.pop(HF_RESET_EARLIER)
+        incoming.pop(reset_key)
         state.history_facts[HF_RESET_PERFORMED] = "yes"
     state.history_facts.update(incoming)
 
@@ -253,7 +263,22 @@ def update_state(state: DiagnosisState, update: StateUpdate, fault: Optional[Fau
         state.intended_action = None
     elif update.intended_action is not None:
         state.intended_action = update.intended_action
+    # an intent whose gated step is now claimed done is spent
+    if fault is not None and state.intended_action and any(
+            s.gate and s.gate.action == state.intended_action and s.id in state.steps_claimed_done
+            for s in fault.steps):
+        state.intended_action = None
     return state
+
+
+def reset_history_key(fault: Optional[Fault]) -> str:
+    """The prior-reset history key of ``fault``'s reset_limit gate (its ``needs_history``);
+    QLM's key when the fault has none — the parser's generic field lands there."""
+    if fault is not None:
+        for s in fault.steps:
+            if s.gate and s.gate.type == "reset_limit" and s.gate.needs_history:
+                return s.gate.needs_history
+    return HF_RESET_EARLIER
 
 
 def resolve_combination(state: DiagnosisState, fault: Optional[Fault], lookup) -> Optional[str]:
@@ -269,6 +294,13 @@ def resolve_combination(state: DiagnosisState, fault: Optional[Fault], lookup) -
     ``lookup(fault_id) -> Fault | None`` is the KB accessor. Returns the new fault_id or None."""
     if fault is None or state.matched_fault != fault.fault_id:
         return None
+    # Fact-keyed reroute (RouteRule): the same relay's other procedure, chosen by a stated fact.
+    for rr in fault.route_rules:
+        if str(state.history_facts.get(rr.if_fact, "")).lower() == rr.equals.lower():
+            target = lookup(rr.route_to)
+            if target is None:
+                return None
+            return _switch_to(state, target)
     reported = {str(r).upper() for r in (state.history_facts.get(HF_OTHER_RELAYS) or [])}
     if not reported:
         return None
@@ -277,11 +309,27 @@ def resolve_combination(state: DiagnosisState, fault: Optional[Fault], lookup) -
             target = lookup(rule.route_to)
             if target is None:
                 return None                              # not encoded → stays; reassess defers to TLC
-            state.matched_fault = target.fault_id
-            state.steps_required = list(target.step_ids)
-            state.steps_claimed_done &= set(target.step_ids)
-            return target.fault_id
+            return _switch_to(state, target)
     return None
+
+
+def _switch_to(state: DiagnosisState, target: Fault) -> str:
+    """Switch the matched fault. Claimed steps carry over where ids match; claims the SOURCE
+    did not recognise but the target does (the pilot named the target procedure's steps in
+    the same message as the routing fact) are adopted; the rest stay unrecognised."""
+    state.matched_fault = target.fault_id
+    state.steps_required = list(target.step_ids)
+    state.steps_claimed_done &= set(target.step_ids)
+    unrec = list(state.tool_results.get("unrecognised_claims", []))
+    adopted = [c for c in unrec if c in target.step_ids]
+    state.steps_claimed_done.update(adopted)
+    state.steps_declined.difference_update(adopted)
+    remaining = [c for c in unrec if c not in adopted]
+    if remaining:
+        state.tool_results["unrecognised_claims"] = remaining
+    else:
+        state.tool_results.pop("unrecognised_claims", None)
+    return target.fault_id
 
 
 def checks_complete(state: DiagnosisState, fault: Fault) -> bool:

@@ -45,6 +45,8 @@ Rules
   QRSI-2, QLA, QOA). null if none mentioned.
 - intended_action: only if they state what they are about to do next and it is in the
   action list.
+- loco_rb: "fitted" / "not_fitted" only if the pilot says whether the loco has RB
+  (rheostatic braking) equipment; otherwise null.
 - unmapped_claims: anything they say they did that fits no listed step.
 - asks_for_detail: "yes" when the assistant offered the exact component list and the pilot
   asks for it ("yes", "give me the list", "which ones?"). A bare "yes" after such an offer

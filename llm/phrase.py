@@ -204,6 +204,11 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         for key, needle in (("once", "once"), ("interval", "10 min"), ("TLC", "tlc"), ("log", "log")):
             if needle in t.message.lower() and needle not in low:
                 v.append(f"caution_missing_{key}")
+        # ...and must not ADD conditions from another procedure (seen live: QLM's 10-minute
+        # checks and log-book remark rendered on to the QLA caution, which has neither)
+        for key, needle in (("interval", "10 min"), ("log", "log"), ("relief", "relief")):
+            if needle in low and needle not in t.message.lower():
+                v.append(f"caution_added_{key}")
         if t.conditional and "abnormal" not in low:
             v.append("caution_dropped_condition")
     if t.kind == "ask_step":
@@ -235,7 +240,11 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         if not t.hold_action and re.search(r"\b(hold|wait|do not (move|resume|proceed))\b", low):
             v.append("added_hold_instruction")
     elif t.kind in ("ask_step", "ask_history", "confirm_fault", "clarify", "ask_config"):
-        if "?" not in s:
+        # an ask_step (a due, ungated step) may also be put as the action with a report-back
+        # closer — the model does this for mid-ladder actions and it is not a safety matter;
+        # questions of the other kinds must stay questions
+        report_back = t.kind == "ask_step" and re.search(r"\b(report|tell me|let me know)\b", low)
+        if "?" not in s and not report_back:
             v.append("question_not_asked")
         if t.kind == "ask_history" and t.message.startswith("Which applies now"):
             # the branch question must keep every alternative the KB names

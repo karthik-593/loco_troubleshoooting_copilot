@@ -14,6 +14,7 @@ accepted"). The model's output never enters state unvalidated.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -25,6 +26,7 @@ from engine.state import (
     HF_RESET_EARLIER,
     HF_RESET_INSTRUCTED,
     HF_RESET_PERFORMED,
+    reset_history_key,
     HF_RESOLVED,
     DiagnosisState,
     StateUpdate,
@@ -103,7 +105,9 @@ def kb_vocabulary(kb: KnowledgeBase) -> str:
             lines.append(f"- {k} [{', '.join(owners[k])}]: " + _FACT_HINTS.get(k, "yes/no as stated by the pilot"))
         lines.append("")
     lines.append("Actions (intended_action): reset_QLM = about to reset the QLM relay target; "
-                 "work_on_roof = about to climb on to the loco roof (pantograph work)")
+                 "reset_QLA = about to reset the QLA relay target; "
+                 "work_on_roof = about to climb on to the loco roof (pantograph work); "
+                 "enter_HT_compartment = about to open or enter the HT compartment")
     return "\n".join(lines)
 
 
@@ -154,9 +158,21 @@ _FACT_HINTS = {
     "drops_frequently": "the relay (QRSI-1/2) is dropping frequently / repeatedly / soon after each reset ('no' if only after a long interval)",
     "drops_in_particular_hmcs1_position": "with HMCS-1 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
     "drops_in_all_hmcs1_positions": "with HMCS-1 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
+    "target_resets": "'no' if the pilot says the relay target does NOT reset / cannot be reset / is not resetting; 'yes' if it reset",
+    "banding_failure_seen": "poly-glass material projecting out through a traction motor vent mesh (banding failure)",
+    "target_resets_after_isolation": "after isolating the defective equipment, the relay target reset ('yes') or still did not ('no')",
+    "target_resets_with_j1_neutral": "with HQOP-1 normalised and reverser J1 in neutral, the target reset ('yes') or did not ('no')",
+    "target_resets_with_j2_neutral": "with HQOP-2 normalised and reverser J2 in neutral, the target reset ('yes') or did not ('no')",
+    "bit_packing_unsuccessful": "'yes' ONLY when all three prescribed reverser bits have been tried and none reset the relay",
+    "not_resetting_with_hqop_off": "the relay is still not resetting even with HQOP-1/HQOP-2 in OFF",
+    "drops_with_hqop_off": "the relay is still dropping even with HQOP-1/HQOP-2 kept in OFF",
+    "stops_after_isolating_particular_tm": "'yes' if the relay stopped dropping after isolating one particular traction motor",
+    "target_resets_after_isolating": "after isolating the auxiliary equipment one switch at a time, the QOA target reset ('yes') or still did not ('no')",
+    "target_resets_after_releasing_contactor": "after releasing a welded EM contactor, the QOA target reset ('yes') or not ('no')",
+    "not_resetting_with_hqoa_0": "the QOA target is dropping or not resetting even with HQOA on 0",
+    "drops_in_all_hmcs2_positions": "with HMCS-2 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
     "traction2_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-2 equipment (RSI-2, J2, SL-2, L4-L6, TM4-6, AM4 shunt, RU5/RU6, QD-2, SJ4-6, TFR terminals)",
     "drops_in_particular_hmcs2_position": "with HMCS-2 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
-    "drops_in_all_hmcs2_positions": "with HMCS-2 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
     "fire_uncontrollable": "the pilot says the fire cannot be put out / is out of control / extinguishers exhausted and still burning",
 }
 
@@ -198,7 +214,9 @@ def _validate(out: ParseOutput, fault_id: Optional[str], kb: KnowledgeBase
     """Split the model's claimed steps into (accepted, rejected) against the KB."""
     if not fault_id or fault_id not in kb.fault_ids:
         return (), tuple(out.claimed_steps)
-    known = set(kb.get(fault_id).step_ids)
+    # the resolved fault's family: itself and its route / combination targets — the reroute
+    # happens after parse, and a claim naming the target procedure's step must not be lost
+    known = {sid for fid in kb.fault_ids if same_family(kb, fid, fault_id) for sid in kb.get(fid).step_ids}
     accepted, rejected = [], []
     for s in out.claimed_steps:
         sid = s
@@ -218,7 +236,8 @@ def same_family(kb: KnowledgeBase, a: Optional[str], b: Optional[str]) -> bool:
         return False
     if a == b:
         return True
-    routes = lambda f: {r.route_to for r in kb.get(f).combination_rules} if f in kb.fault_ids else set()
+    routes = lambda f: ({r.route_to for r in kb.get(f).combination_rules}
+                        | {r.route_to for r in kb.get(f).route_rules}) if f in kb.fault_ids else set()
     return b in routes(a) or a in routes(b)
 
 
@@ -254,10 +273,18 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
     accepted, rejected = _validate(out, fault_id, kb)
 
     history: dict = {}
+    # KB-declared route phrases ("not resetting", "cannot be reset"): deterministic, like an
+    # alias hit — the reroute to the other procedure must not depend on the model.
+    fault_obj = kb.get(fault_id) if fault_id in kb.fault_ids else None
+    if fault_obj is not None:
+        low = " ".join(text.lower().split())
+        for rr in fault_obj.route_rules:
+            if any(re.search(rf"(?<![\w-]){re.escape(ph.lower())}(?![\w-])", low) for ph in rr.phrases):
+                history[rr.if_fact] = rr.equals
     if _yn(out.abnormality_found):
         history[HF_ABNORMALITY] = out.abnormality_found
     if _yn(out.was_reset_earlier_this_trip):
-        history[HF_RESET_EARLIER] = out.was_reset_earlier_this_trip
+        history[reset_history_key(kb.get(fault_id) if fault_id in kb.fault_ids else None)] = out.was_reset_earlier_this_trip
     if out.other_relays_acted is not None:
         history[HF_OTHER_RELAYS] = [r.upper() for r in out.other_relays_acted]
     if _yn(out.fault_resolved):
@@ -284,6 +311,7 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         fault_confirmed=confirmed,
         config=out.loco_config,
         loco_type=out.loco_type,
+        loco_rb=out.loco_rb,
         claimed_steps=accepted + rejected,   # rejected ones are surfaced by update_state/diff
         history=history,
         intended_action=out.intended_action,

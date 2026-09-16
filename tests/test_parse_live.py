@@ -74,7 +74,10 @@ def test_heldout_parse(case, kb, provider):
     if "abnormality" in case:
         assert r.update.history.get("abnormality_found") == case["abnormality"]
     if "reset_earlier" in case:
-        assert r.update.history.get("was_QLM_reset_earlier_this_trip") == case["reset_earlier"]
+        from engine.state import reset_history_key
+        assert r.update.history.get(reset_history_key(kb.get(case["fault"]))) == case["reset_earlier"]
+    if "loco_rb" in case:
+        assert r.update.loco_rb == case["loco_rb"]
     if "reset_earlier_not" in case:
         assert r.update.history.get("was_QLM_reset_earlier_this_trip") != case["reset_earlier_not"]
     if "other_relays" in case:
@@ -88,6 +91,7 @@ def test_heldout_parse(case, kb, provider):
     if "unmapped_min" in case:
         assert len(r.rejected_steps) >= case["unmapped_min"]
     # never a step outside the KB
-    known = set(kb.get(case["fault"]).step_ids)
+    from llm.parse import same_family
+    known = {sid for fid in kb.fault_ids if same_family(kb, fid, case["fault"]) for sid in kb.get(fid).step_ids}
     accepted = set(r.update.claimed_steps) - set(r.rejected_steps)
-    assert accepted <= known
+    assert accepted <= known                     # the fault's family (route / combination targets)

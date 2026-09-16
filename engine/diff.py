@@ -5,12 +5,13 @@ reflex's business (engine/gates.py), never the diff's.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from engine.state import DiagnosisState
-from kb.schema import AXIS_FACT_CONFIG, AXIS_FACT_TYPE, Fault
+from kb.schema import AXIS_FACT_CONFIG, AXIS_FACT_RB, AXIS_FACT_TYPE, Fault
 
-AXIS_FACTS = (AXIS_FACT_CONFIG, AXIS_FACT_TYPE)
+AXIS_FACTS = (AXIS_FACT_CONFIG, AXIS_FACT_TYPE, AXIS_FACT_RB)
 
 
 def _fact(state: DiagnosisState, fault: Fault, key: str):
@@ -28,6 +29,43 @@ class StepDelta:
     complete: bool                              # no ordinary step missing
     unrecognised: tuple[str, ...] = field(default=())  # claims that are not in the checklist
     needs_axis: str | None = None               # a reached branch depends on an UNKNOWN loco axis
+    completed: bool = False                     # a `completes` step is claimed: the procedure ended there
+
+
+def _route_groups(fault: Fault) -> list[list[str]]:
+    """Consecutive gate-free steps that each carry an applies_when with an "If ..." head and
+    pairwise-disjoint condition keys: the alternative routes of one decision point."""
+    groups: list[list[str]] = []
+    cur: list[str] = []
+    keys: set[str] = set()
+    for s in fault.steps:
+        alt = (s.gate is None and bool(s.applies_when) and not s.requires_stated
+               and re.match(r"^\s*If\s", s.text, re.IGNORECASE) is not None)
+        if alt and not (keys & set(s.applies_when)):
+            cur.append(s.id); keys |= set(s.applies_when)
+        else:
+            if len(cur) > 1:
+                groups.append(cur)
+            cur, keys = ([s.id], set(s.applies_when)) if alt else ([], set())
+    if len(cur) > 1:
+        groups.append(cur)
+    return groups
+
+
+def _is_route_alternative(fault: Fault, step) -> bool:
+    return any(step.id in g for g in _route_groups(fault))
+
+
+def _chosen_route_keys(state: DiagnosisState, fault: Fault) -> set[str]:
+    """Condition keys of route alternatives whose condition the pilot has STATED true: choosing
+    one route excludes its unstated siblings ("dropping frequently" → not "after a long interval")."""
+    chosen: set[str] = set()
+    for g in _route_groups(fault):
+        for sid in g:
+            s = fault.step(sid)
+            if all(_fact(state, fault, k) == v for k, v in s.applies_when.items()):
+                chosen |= set(s.applies_when)
+    return chosen
 
 
 def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
@@ -38,21 +76,33 @@ def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
     needs_axis: str | None = None
     if any(s.completes and s.id in claimed for s in fault.steps):
         # a completing step is done: the procedure ended on it (its alternatives are not due)
-        return StepDelta(next_unmet=None, missing=(), complete=True,
+        return StepDelta(next_unmet=None, missing=(), complete=True, completed=True,
                          unrecognised=tuple(state.tool_results.get("unrecognised_claims", ())))
+    chosen_keys = _chosen_route_keys(state, fault)
     for s in fault.steps:
         if s.gate is not None and s.id not in claimed:
             break
         if s.id in claimed:
             continue
-        # a conditional branch is skipped only when a STATED fact contradicts it
+        # a conditional branch is skipped only when a STATED fact contradicts it — or, for a
+        # side-note step (requires_stated), unless every fact is stated as required
         contradicted = False
+        unstated = False
         for k, v in s.applies_when.items():
             val = _fact(state, fault, k)
             if val is None and k in AXIS_FACTS and not due and needs_axis is None:
                 needs_axis = k          # the NEXT step branches on a loco axis we don't know (§2.4)
-            if val is not None and val != v:
+            if val is None:
+                unstated = True
+            elif val != v:
                 contradicted = True
+        if s.requires_stated and (unstated or contradicted):
+            continue
+        # a sibling route was chosen (its condition stated true) and this one's is unstated
+        if (not contradicted and unstated and s.applies_when and not s.requires_stated
+                and chosen_keys and not (set(s.applies_when) & chosen_keys)
+                and _is_route_alternative(fault, s)):
+            continue
         if s.gate is None and not contradicted:
             due.append(s.id)
     missing = tuple(due)

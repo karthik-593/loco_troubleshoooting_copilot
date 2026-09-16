@@ -27,6 +27,7 @@ class LocoModel(BaseModel):
     loco_number: str = Field(default="", max_length=32)
     type: Literal["wag7", "wag5", "wap4", "unknown"] = "unknown"
     config: Literal["siv", "arno", "unknown"] = "unknown"
+    rb: Literal["fitted", "not_fitted", "unknown"] = "unknown"    # optional; asked lazily by the engine
 
 
 class LocosRequest(BaseModel):
@@ -87,7 +88,7 @@ def create_app(copilot: Optional[Copilot] = None) -> FastAPI:
         return {"ok": True, "faults": app.state.store.copilot.kb.fault_ids, "disclaimer": DISCLAIMER}
 
     def _apply_locos(sess, body: LocosRequest):
-        sess.diag.set_locos([LocoInfo(l.loco_number, l.type, l.config) for l in body.locos], body.active)
+        sess.diag.set_locos([LocoInfo(l.loco_number, l.type, l.config, l.rb) for l in body.locos], body.active)
 
     @app.put("/session/{session_id}/locos")
     def set_locos(session_id: str, body: LocosRequest):

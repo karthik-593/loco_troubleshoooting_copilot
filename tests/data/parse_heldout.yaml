@@ -136,3 +136,35 @@
   fault: QLM_dropped
   claimed: []
   asks_for_detail: true
+# --- batch 1 (Ch.6 remainder): QOP-1/2, QOA, QLA ---
+- text: "QOP-2 dropped, target is not resetting"
+  fault: QOP2_dropped
+  facts: {target_resets: "no"}          # deterministic route phrase; reroute happens in the engine
+- text: "QOP-1 dropped. checked RSI-1, TMs, line contactors, all normal. reset it, resumed. dropped again after 3 minutes"
+  fault: QOP1_dropped
+  claimed: [check_traction_circuit_1, reset_target_and_resume]
+  facts: {traction1_abnormality_found: "no", drops_frequently: "yes"}
+- text: "stopped, checked circuit 2, no smoke, no banding failure"
+  state_fault: QOP2_target_not_resetting
+  last_assistant: "Stop at a safe spot and check traction power circuit 2 for smoke, burning smell, fire, or anything out of place — and look for poly-glass material poking through the traction motor vent mesh."
+  fault: QOP2_target_not_resetting
+  claimed: [stop_and_check_traction_circuit_2_and_banding]
+  facts: {traction2_abnormality_found: "no", banding_failure_seen: "no"}
+- text: "HQOP-2 off, cleared section. going to enter HT compartment now"
+  state_fault: QOP2_target_not_resetting
+  fault: QOP2_target_not_resetting
+  claimed: [hqop2_off_and_clear_section]
+  intended_action: enter_HT_compartment
+- text: "it is a WAP4 without RB"
+  state_fault: QOP2_target_not_resetting
+  last_assistant: "Is this an RB-fitted loco?"
+  fault: QOP2_target_not_resetting
+  loco_rb: not_fitted
+- text: "QLA dropped. checked aux circuit, all ok, first time this trip"
+  fault: QLA_dropped
+  claimed: [check_aux_circuit_for_smoke_smell_fire]
+  reset_earlier: "no"
+- text: "QOA dropped, cannot be reset. aux circuit checked no smoke"
+  fault: QOA_dropped
+  claimed: [check_aux_circuit_equipment]
+  facts: {target_resets: "no", aux_abnormality_found: "no"}

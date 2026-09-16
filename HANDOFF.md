@@ -523,3 +523,50 @@ Model slips seen, not caught by a generic guard (recorded): "L-series reactors" 
 Open from the encoding plan (batch 1, Ch.6 remainder): fact-keyed reroute (`route_rules`),
 `rb` axis on the session bar, and reading Ch.11/13 for the HT-compartment / reverser-bit
 safety measures — awaiting the user's answers.
+
+## Batch 1 — Ch.6 remainder (§6.03–6.05), encoded 2026-09-16 (approved: route rules, rb axis lazy, Ch.11/13 read)
+
+Seven fault files, all quote-first from the TSD text (pdftotext), pending human confirmation:
+
+| Fault | TSD | Shape |
+|---|---|---|
+| `QOP1_dropped` / `QOP2_dropped` | §6.03.1 / §6.03.2 pp.89–90 | isolate-and-retest ladder (long interval / frequent → TM-by-TM isolation 5/6 load → HQOP OFF + TLC); Note 1 HOBA; Note 2 "no RB" in the resolved terminal |
+| `QOP1_target_not_resetting` / `QOP2_target_not_resetting` | §6.03.3 / §6.03.4 pp.91–96 | banding-failure check (15 km/h) → isolate → HQOP OFF, clear section → **HT-compartment hazard gate** → J neutral reset localises to TMs → reverser-bit packing (rb-dependent table, §11.02) → TLC |
+| `QOA_dropped` / `QOA_target_not_resetting` | §6.04.1 / §6.04.2 pp.97–99 | aux-circuit ladder; EM contactors; HQOA on 0; isolate aux equipment one switch at a time; truck isolation / 50% load / assisting loco |
+| `QLA_dropped` | §6.05 pp.100–101 | **reset_limit gate** on `was_QLA_reset_earlier_this_trip`; (d) second act → TLC (NO relief loco in this section); Note 1 → QLM combination reroute |
+
+Engine/schema added for the batch:
+- `Fault.route_rules` (RouteRule: if_fact / equals / route_to / phrases): fact-keyed reroute applied
+  deterministically before the reflex (`engine.state.resolve_combination` → `_switch_to`). `phrases`
+  are KB-declared deterministic triggers ("not resetting", "cannot be reset"...) set in `parse` like an
+  alias hit; the parser vocabulary also lists route facts. Claims naming the target's steps in the
+  same message are adopted on the switch (`unrecognised_claims` → target step ids).
+- rb axis: `LocoInfo.rb` (fitted / not_fitted / unknown), `Fault.rb_dependency`, `AXIS_FACT_RB=loco_rb`,
+  `ask_config` "Is this an RB-fitted loco?" — asked by the diff only when a reached step branches on it
+  (QOP-2 at the first bit, QOP-1 at the third). API `LocoModel.rb` optional; not on the Streamlit bar.
+- HT-compartment `hazard_exposure` gate, precondition `loco_grounded`, texts from GI 7 p.77 and
+  §13.05 items 5–9 pp.198–199; `ACTION_ENTER_HT`. Reverser-bit packing sits after the gated step in
+  TSD order, so the ordered diff keeps it behind the gate (no second gate).
+- `Step.requires_stated`: side-note / consequence steps due only when their condition is STATED
+  (never asked on their own). Route alternatives keep the default; choosing one route (condition
+  stated true) excludes its unstated siblings (`engine.diff._chosen_route_keys`).
+- `DeferCondition.equals` ("no" for "if it does not reset") and `after_any` (§6.03.3(j) 4 applies only
+  after the LAST prescribed bit — seen live: "packed 8th and 10th, no reset" was read as unsuccessful).
+- Hazard-gate in-play and reassess 3b now use the diff's DUE steps (non-due conditionals are skipped;
+  a claimed `completes` step means the gate is not reached).
+- reset_limit generalised to the gate's own `needs_history` key (`reset_history_key`); intended
+  actions `reset_QLA`, `enter_HT_compartment`; a spent intent (gated step claimed) is cleared.
+- Locked-file touch (flagged): `qlm_dropped.yaml` gets `precedence: 2` (with the two QLM combination
+  files) so "QLM locked, QOP-1 dropped" resolves to the QLM procedure (§6.1.2/6.1.3), not QOP-1.
+- Phrase: caution guard now rejects ADDED conditions (the model rendered QLM's 10-minute checks and
+  log-book remark on to the QLA caution); an ask_step may be an imperative with a report-back closer.
+- Eval: 4 scenarios (HT entry caution / refusal, QLA second reset, QOP-1 reroute + lazy rb); 7 held-out
+  parse cases. Live: 17/17, unsafe 0, missed-gate 0, 9 paths.
+
+Judgement calls to confirm: (1) §6.03.1(b)/§6.03.2(b)/§6.04.2(a)/§6.05(b) state no "otherwise TLC"
+branch — `on_not_isolated` is INFERRED from the analogous sections (marked in each isolation.source);
+(2) §6.03.3(b) negative-side TM isolation is by reverser bit (§11.02) — no separate gate on (b);
+GI 7 applies through the ordered diff only from (e) onwards; (3) QOA (e) i–iii focus hints and Note 2
+folded into step (a)'s text rather than steps; (4) QOA "very frequently" mapped to `drops_frequently`.
+
+Next: batch 2 (Ch.7 ICDJ + tripping failures, 5.01 intake precheck).

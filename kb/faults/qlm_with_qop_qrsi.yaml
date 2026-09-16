@@ -16,6 +16,7 @@ aliases:
   - "QLM and QOP"
   - "QLM and QRSI"
   - "QLM acted along with QOP-1/QOP-2/QRSI-1/QRSI-2"
+precedence: 2                      # QLM family outranks the standalone QOP/QOA/QLA aliases
 config_dependency: none            # §6.1.2 does not branch on loco type
 type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
 presenting_signs:                  # §6.1.2 heading; §6.01 / §6.02 mechanism

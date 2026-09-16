@@ -1,0 +1,205 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: QOP-2 drops, target cannot be reset
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 6, §6.03.4 "QOP-2 drops, target cannot be reset", printed pp.94–96;
+#         Notes 1–3 p.96; reverser-bit table also §11.02 p.177.
+# Mechanism: mirror of §6.03.3 for traction power circuit 2 (J2, TMs 4–6, HQOP-2, HMCS-2),
+# with the HT-compartment hazard gate (GI 7 p.77, §13.05). The reverser-bit table for
+# "WAP4 locos without RB" differs from the FIRST bit (J2-6 → HMCS-2 in 2), so the rb axis
+# is asked when the first packing step is reached.
+# Reached from QOP2_dropped by its route rule (target_resets == no), or directly.
+# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: QOP2_target_not_resetting
+aliases:
+  - "QOP-2 target not resetting"
+  - "QOP-2 not resetting"
+  - "QOP-2 cannot be reset"
+  - "QOP-2 target cannot be reset"
+  - "QOP-2 target does not reset"
+  - "QOP-2 will not reset"
+  - "QOP2 not resetting"
+precedence: 1
+config_dependency: none
+type_dependency: none
+rb_dependency: true                # §6.03.4(i): bit table "For WAP4 Locos without RB" differs
+presenting_signs:
+  - "QOP-2 red target dropped and the target does not reset"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: target_resets_with_j2_neutral           # (g)
+    equals: "no"
+    text: >-
+      The target does not reset with reverser J2 in neutral: the fault is not with the
+      traction motors. Contact TLC for advice.
+    source: "§6.03.4(g), p94"
+  - fact: bit_packing_unsuccessful                # (i) 4.
+    after_any: [pack_j2_bit_12_rb_fitted, pack_j2_bit_8_no_rb]      # only after the LAST prescribed bit
+    text: "Reverser-bit packing was unsuccessful in localising the defective traction motor. Contact TLC for advice."
+    source: "§6.03.4(i) item 4, p95"
+
+steps:
+  # (a)
+  - id: stop_and_check_traction_circuit_2_and_banding
+    text: >-
+      Stop the train at a convenient place and check traction power circuit no. 2 for
+      any smoke, burning smell, fire or any abnormality, and check for any poly-glass
+      material projecting out through the traction motor vent mesh (banding failure).
+    gate: null
+    abnormality_key: traction2_abnormality_found
+    source: "§6.03.4(a), p94"
+
+  # (b)
+  - id: isolate_tm_with_banding_failure
+    text: >-
+      If any poly-glass material is projecting out through the traction motor vent
+      mesh, isolate that traction motor on both the positive and the negative side.
+      Then clear the block section at a speed not exceeding 15 km/h and contact TLC
+      for advice.
+    gate: null
+    applies_when: {banding_failure_seen: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§6.03.4(b), p94"
+
+  # (c)
+  - id: isolate_abnormal_equipment_and_try_reset
+    text: >-
+      If there is any abnormality in the traction power circuit, isolate the defective
+      equipment and try to reset the relay. If the target resets, close DJ and resume
+      traction.
+    gate: null
+    applies_when: {traction2_abnormality_found: "yes"}
+    requires_stated: true
+    source: "§6.03.4(c), p94"
+
+  - id: resume_if_target_resets_after_isolation
+    text: "If the target is reset after isolating the defective equipment, close DJ and resume traction."
+    gate: null
+    applies_when: {traction2_abnormality_found: "yes", target_resets_after_isolation: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§6.03.4(c), p94"
+
+  # (d) first sentence + Note 1
+  - id: hqop2_off_and_clear_section
+    text: >-
+      If the relay target does not reset, keep HQOP-2 in the OFF position and clear the
+      section with precautions.
+    gate: null
+    source: "§6.03.4(d), p94"
+
+  - id: hoba_off_if_not_resetting_with_hqop2_off
+    text: >-
+      If QOP-2 is not resetting even with HQOP-2 in OFF, place HOBA in OFF along with
+      HQOP-2 in OFF and try.
+    gate: null
+    applies_when: {not_resetting_with_hqop_off: "yes"}
+    requires_stated: true
+    source: "§6.03.4 Note 1, p96"
+
+  # (d) second sentence — HAZARD-EXPOSURE gate: entering the HT compartment (GI 7 p.77; §13.05)
+  - id: ground_loco_and_enter_ht_compartment
+    text: >-
+      After clearing the section, trip DJ and keep MPJ in neutral. Take the safety
+      measures — ground the loco — and enter the HT compartment.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not enter the HT compartment unless the loco is grounded: DJ open, both
+        pantographs lowered, ZPT key transferred to the BV box and HOM operated, fitchet
+        keys removed.
+      action: enter_HT_compartment
+      preconditions:
+        - loco_grounded                          # GI 7 p77; §13.05 steps 5–9 pp198–199
+      on_precondition_unmet: >-
+        Do not enter the HT compartment until the loco is grounded: open DJ, lower both
+        pantographs and confirm LSDJ glowing, put the ZPT key in the BV box (HOM) and
+        turn it, operate the HOM handle upwards, then remove the fitchet keys and open the
+        HT compartment door.
+      source: "General Instructions item 7, p77; §13.05 'Grounding the loco for entering into HT compartment' items 5–9, pp198–199"
+    source: "§6.03.4(d) second sentence, p94"
+
+  # (e) (f)
+  - id: normalise_hqop2_and_j2_neutral
+    text: "Normalise HQOP-2 to ON and keep reverser J2 in the neutral position."
+    gate: null
+    source: "§6.03.4(e), p94"
+
+  - id: try_reset_with_j2_neutral
+    text: >-
+      Try to reset the relay target (ensure HBA is in the ON position before resetting).
+      If it does not reset, the fault is not with the traction motors; if it resets, the
+      fault is with traction motors 4, 5 or 6.
+    gate: null
+    source: "§6.03.4(f)(g)(h), p94; Note 3 p96"
+
+  # (h) (i) — bit table:
+  #   WAG5, WAG7, WAP4 with RB, WAM4:  J2-8 → HMCS-2 in 2;  J2-10 → in 3;  J2-12 → in 4
+  #   WAP4 without RB:                 J2-6 → HMCS-2 in 2;  J2-10 → in 3;  J2-8  → in 4
+  - id: pack_j2_bit_8_rb_fitted
+    text: >-
+      The target reset with J2 in neutral, so the fault is with traction motors 4, 5 or 6:
+      keep reverser J2 in the appropriate direction and find the defective motor by
+      packing the reverser bits one at a time, taking precautions whenever operating the
+      reverser or packing a bit (in a CAM-type reverser the bit numbers are the same; the
+      insulating sheet or packing cap goes between the prescribed bit and the moving bit it
+      contacts, according to cab direction).
+      Pack J2 8th bit and try to reset QOP-2. If QOP-2 resets, place HMCS-2 in position 2
+      and work with 5/6th of the maximum permissible load. If QOP-2 does not reset, remove
+      the bit packing.
+    gate: null
+    applies_when: {target_resets_with_j2_neutral: "yes", loco_rb: "fitted"}
+    source: "§6.03.4(i) item 1 'For WAG5, WAG7, WAP4 WITH RB & WAM4 Locos', p95"
+
+  - id: pack_j2_bit_6_no_rb
+    text: >-
+      The target reset with J2 in neutral, so the fault is with traction motors 4, 5 or 6:
+      keep reverser J2 in the appropriate direction and find the defective motor by
+      packing the reverser bits one at a time, taking precautions whenever operating the
+      reverser or packing a bit (in a CAM-type reverser the bit numbers are the same; the
+      insulating sheet or packing cap goes between the prescribed bit and the moving bit it
+      contacts, according to cab direction).
+      Pack J2 6th bit and try to reset QOP-2. If QOP-2 resets, place HMCS-2 in position 2
+      and work with 5/6th of the maximum permissible load. If QOP-2 does not reset, remove
+      the bit packing.
+    gate: null
+    applies_when: {target_resets_with_j2_neutral: "yes", loco_rb: "not_fitted"}
+    source: "§6.03.4(i) item 1 'For WAP4 Locos without RB', p95"
+
+  - id: pack_j2_bit_10
+    text: >-
+      Pack J2 10th bit and try to reset QOP-2. If QOP-2 resets, place HMCS-2 in position 3
+      and work with 5/6th of the maximum permissible load. If QOP-2 does not reset, remove
+      the bit packing.
+    gate: null
+    applies_when: {target_resets_with_j2_neutral: "yes"}
+    source: "§6.03.4(i) item 2 (both tables), p95"
+
+  - id: pack_j2_bit_12_rb_fitted
+    text: >-
+      Pack J2 12th bit and try to reset QOP-2. If QOP-2 resets, place HMCS-2 in position 4
+      and work with 5/6th of the maximum permissible load.
+    gate: null
+    applies_when: {target_resets_with_j2_neutral: "yes", loco_rb: "fitted"}
+    source: "§6.03.4(i) item 3 'For WAG5, WAG7, WAP4 WITH RB & WAM4 Locos', p95"
+
+  - id: pack_j2_bit_8_no_rb
+    text: >-
+      Pack J2 8th bit and try to reset QOP-2. If QOP-2 resets, place HMCS-2 in position 4
+      and work with 5/6th of the maximum permissible load.
+    gate: null
+    applies_when: {target_resets_with_j2_neutral: "yes", loco_rb: "not_fitted"}
+    source: "§6.03.4(i) item 3 'For WAP4 Locos without RB', p95"
+
+terminal_actions:
+  resolved: >-
+    place HMCS-2 in the position that corresponds to the packed bit and work with 5/6th
+    of the maximum permissible load; inform TLC
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.03.4, pp.94–96; GI 7 p.77; §13.05 pp.198–199; §11.02 p.177"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

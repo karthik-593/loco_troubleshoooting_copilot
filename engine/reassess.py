@@ -108,7 +108,8 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
 
     # 2d. "if <situation>, contact TLC" clauses.
     for dc in fault.defer_conditions:
-        if state.history(dc.fact) == "yes":
+        if state.history(dc.fact) == dc.equals and (
+                not dc.after_any or any(s in state.steps_claimed_done for s in dc.after_any)):
             state.stuck_at = None
             t = T.defer_to_TLC(dc.text, fault_id=fault.fault_id)
             return Decision("terminal", T.Terminal(**{**t.__dict__, "message": dc.text, "source": dc.source}),
@@ -133,8 +134,9 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     if delta.needs_axis:                      # §2.4: the NEXT branch depends on an unknown loco axis
         return Decision("need_pilot_input", T.ask_config(fault, delta.needs_axis), verdict, delta)
     hold = state.intended_action if state.intended_action and any(
-        s.gate and (s.gate.action == state.intended_action or
-                    (s.gate.type == "reset_limit" and state.intended_action == "reset_QLM"))
+        s.gate and s.id not in state.steps_claimed_done and
+        (s.gate.action == state.intended_action or
+         (s.gate.type == "reset_limit" and (state.intended_action or "").startswith("reset_")))
         for s in fault.gated_steps) else None
     if not delta.complete:
         assert delta.next_unmet is not None
@@ -161,13 +163,16 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
 
     # 3b. the next step in order is a GATED step the reflex let through (NO_FIRE): its
     #     preconditions are met — ask the step itself.
-    for s in fault.steps:
-        if s.id in state.steps_claimed_done:
-            continue
-        if s.gate is not None:
-            state.stuck_at = s.id
-            return Decision("need_pilot_input", T.ask_step(fault, s, unrecognised=delta.unrecognised), verdict, delta)
-        break
+    if not delta.completed:
+        for s in fault.steps:
+            if s.id in state.steps_claimed_done:
+                continue
+            if s.gate is not None:
+                state.stuck_at = s.id
+                return Decision("need_pilot_input", T.ask_step(fault, s, unrecognised=delta.unrecognised), verdict, delta)
+            if s.id in delta.missing:
+                break                           # a due ordinary step precedes the gate (unreachable here)
+            # else: a conditional step that is not due — skip it, the gate may be next
 
     # 4. checks complete and the reflex did not fire. With the QLM gate that means the
     #    reset is already claimed done with history == no (rule 6) → confirm, adding the
@@ -197,7 +202,7 @@ def _unstated_branches(state: DiagnosisState, fault: Fault, first: Step) -> list
             started = True
         if not started:
             continue
-        if s.id in state.steps_claimed_done or s.gate is not None or not s.applies_when:
+        if s.id in state.steps_claimed_done or s.gate is not None or not s.applies_when or s.requires_stated:
             break
         if any(state.history_facts.get(k) is not None for k in s.applies_when):
             break

@@ -1,0 +1,35 @@
+scenario_id: qop1_not_resetting_reroute_and_rb_asked_lazily
+klass: config_axis
+pilot_script:
+- QOP-1 dropped. checked RSI-1, TMs, contactors all normal. tried to reset, target does not reset
+- stopped, circuit 1 rechecked, no banding. HQOP-1 off, cleared section, grounded the loco with HOM, in the HT compartment. HQOP-1 normalised, J1 neutral, target reset. packed 8th and 10th bits, no reset either time
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_traction_circuit_1
+  fault_presenting: 'yes'
+  facts: {traction1_abnormality_found: 'no'}
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - stop_and_check_traction_circuit_1_and_banding
+  - hqop1_off_and_clear_section
+  - ground_loco_and_enter_ht_compartment
+  - normalise_hqop1_and_j1_neutral
+  - try_reset_with_j1_neutral
+  - pack_j1_bit_8
+  - pack_j1_bit_10
+  facts: {banding_failure_seen: 'no', loco_grounded: 'yes', target_resets_with_j1_neutral: 'yes'}
+gold:
+  correct_terminal: ask_config
+  must_fire_gates: []
+  must_not_do:
+  - confirm
+  max_turns: 2
+  expected_tool_path:
+  - (reroute→QOP1_target_not_resetting)
+  - diff_completed_steps
+  expected_turn_terminals:
+  - ask_step
+  - ask_config

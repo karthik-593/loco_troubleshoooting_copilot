@@ -166,8 +166,9 @@ def confirm_fault(fault: Fault) -> Terminal:
 
 def ask_config(fault: Fault, axis: str) -> Terminal:
     """§2.4: ask for loco type / config ONLY when the reached branch depends on it."""
-    q = ("Is this loco SIV or ARNO fitted?" if axis == "loco_config"
-         else "Which class is this loco — WAG-7, WAG-5 or WAP-4?")
+    q = {"loco_config": "Is this loco SIV or ARNO fitted?",
+         "loco_rb": "Is this an RB-fitted loco?",
+         }.get(axis, "Which class is this loco — WAG-7, WAG-5 or WAP-4?")
     return Terminal(kind="ask_config", fault_id=fault.fault_id, message=q,
                     source=f"BUILD_PLAN §2.4 (branch of {fault.fault_id} depends on {axis})",
                     step_id=None, gate_type=None, reasons=(axis,))

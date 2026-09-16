@@ -63,10 +63,15 @@ class ParseOutput(BaseModel):
         default=None, description="Loco class if the pilot states it (WAG-7 / WAG-5 / WAP-4).")
     loco_config: Optional[Literal["siv", "arno"]] = Field(
         default=None, description="Auxiliary configuration if the pilot states it (SIV or ARNO fitted).")
-    intended_action: Optional[Literal["reset_QLM", "work_on_roof"]] = Field(
+    intended_action: Optional[Literal["reset_QLM", "reset_QLA", "work_on_roof", "enter_HT_compartment"]] = Field(
         default=None,
         description="The pilot's stated NEXT move, from the provided action list, or null. "
-                    "'work_on_roof' = about to climb on to the loco roof (pantograph work).")
+                    "'work_on_roof' = about to climb on to the loco roof (pantograph work); "
+                    "'enter_HT_compartment' = about to open / go into the HT compartment.")
+    loco_rb: Optional[Literal["fitted", "not_fitted"]] = Field(
+        default=None,
+        description="Only if the pilot states whether the loco has rheostatic braking (RB) "
+                    "equipment: 'fitted' / 'not_fitted'. Otherwise null.")
     unmapped_claims: list[str] = Field(
         default_factory=list,
         description="Things the pilot says they did that do not map to any checklist step "

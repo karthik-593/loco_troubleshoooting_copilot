@@ -58,7 +58,7 @@ five showcase conversations, run live, are in [docs/walkthrough.md](docs/walkthr
   list of faults it *can* verify; a vague message is clarified once, and the engine defers
   on the next unresolved turn rather than repeat the question (BUILD_PLAN §5.6).
 
-Gate mechanisms encoded so far: **reset-limit** (QLM: once only; a stated prior reset *or*
+Gate mechanisms encoded so far (15 faults): **reset-limit** (QLM: once only; a stated prior reset *or*
 a re-lock after the permitted reset — both refuse, and the recurrence is detected by the
 engine itself, not the parser), **isolate-then-reset** (QLM with QOP/QRSI or QLA/QOA),
 **hazard-exposure** (pantograph roof work gated on the OHE power block + earthing and
@@ -67,7 +67,7 @@ branches), and the general **smoke/fire response** procedure.
 
 ## Evaluation
 
-13 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
+17 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
 step, pilot's next move is unsafe, ambiguous intake, combination fault, config axis —
 scored against a **flat-retrieval baseline that has the same KB content** and only
 recites it. Live run (DeepSeek parse/decide, Claude phrase):
@@ -78,7 +78,7 @@ recites it. Live run (DeepSeek parse/decide, Claude phrase):
 | Missed-gate rate (target 0) | **0.00** | 1.00 |
 | Specific-miss detection | 1.00 | 0.00 |
 | Correct-terminal rate | 1.00 | 0.08 |
-| Distinct tool paths (proof of agency) | 7 | 1 |
+| Distinct tool paths (proof of agency) | 9 | 1 |
 
 The baseline's unsafe rate is not a strawman: it prints the correct procedure, which says
 "reset QLM" / "climb on the roof" unconditionally and can never ask about the log book or
@@ -112,6 +112,10 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Pantograph damaged | §10.03 / 11.04 | hazard-exposure gate |
 | QRSI-1 / QRSI-2 drop on run | §6.02.1 / §6.02.2 | isolate-and-retest ladder, resume-from-stuck; alternative branches |
 | Smoke or fire on any equipment | Ch.1 B.1–B.12 / Ch.4 item 6 | general fire response, gate-free |
+| QOP-1 / QOP-2 drop (target resets) | §6.03.1 / 6.03.2 | isolate-and-retest ladder; fact-keyed reroute when the target will not reset |
+| QOP-1 / QOP-2 target not resetting | §6.03.3 / 6.03.4 + GI 7, §13.05, §11.02 | **HT-compartment hazard gate** (loco grounded); reverser-bit table on the lazily-asked RB axis |
+| QOA drops (resets / not resetting) | §6.04.1 / 6.04.2 | aux-circuit ladder; one-switch-at-a-time isolation |
+| QLA drops on run | §6.05 | reset-limit gate on its own key; second act → TLC |
 
 ## Layout
 
@@ -125,7 +129,7 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Streamlit chat client showing the engine trace | `client/` |
 | Scenario suite, harness, baseline, report | `eval/` |
 | Showcase walkthrough generator | `scripts/demo.py` |
-| Tests — 215 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 33 live parse cases | `tests/` |
+| Tests — 230 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 40 live parse cases | `tests/` |
 
 Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 

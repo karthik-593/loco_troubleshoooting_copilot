@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: QOA drops, target can be reset  (earth-fault relay, auxiliary power circuit)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 6, §6.04 (relay description, p.96) and §6.04.1 "QOA drops, target can be
+#         reset", printed pp.97–98; Notes 1–2 p.98.
+# Mechanism: ISOLATE-AND-RETEST ladder on the auxiliary circuit: check → EM contactors →
+# reset → branch on recurrence (long interval: recheck / very frequently: HQOA on 0 + TLC).
+# The SAME relay has a different procedure when the target CANNOT be reset (§6.04.2):
+# reached by the route rule below.
+# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: QOA_dropped
+aliases:
+  - "QOA dropped"
+  - "QOA acted"
+  - "QOA target dropped"
+  - "QOA tripped"
+  - "QOA drops"
+  - "QOA locked"
+config_dependency: none            # §6.04.1 lists the ARNO-build equipment (ARNO, its capacitor bank,
+                                   # QCVAR…); SIV locos are not distinguished in this section
+type_dependency: none
+presenting_signs:                  # §6.04, p.96
+  - "DJ tripped"
+  - "QOA red target dropped (earth fault in the auxiliary power circuit)"
+
+combination_rules:
+  - if_also: ["QLM"]                 # §6.05 Note 1 / §6.1.3: QLM acting with QLA/QOA is the QLM combination procedure
+    route_to: QLM_with_QLA_QOA
+    source: "§6.1.3 'QLM acted along with QLA/QOA', p85"
+route_rules:
+  - if_fact: target_resets
+    equals: "no"
+    route_to: QOA_target_not_resetting
+    source: "§6.04.2 heading 'QOA drops target cannot be reset', p98"
+    phrases: ["not resetting", "is not resetting", "cannot be reset", "can't be reset", "cannot reset",
+              "can't reset", "does not reset", "doesn't reset", "won't reset", "will not reset",
+              "not able to reset", "unable to reset", "target not reset"]
+
+steps:
+  # (a) + Note 2 + the (e) sub-items i–iii (where to focus, by when QOA dropped)
+  - id: check_aux_circuit_equipment
+    text: >-
+      Check the auxiliary power circuit equipment — a0, a1 terminals, ARNO and its
+      capacitor bank, RCC panel, QCVAR, C118, R118, Q30, RQ30, UA1, UA2, CHBA, cab
+      heaters, cab fans, TFVT, MVSI-1, MVSI-2, MVSL-1, MVSL-2, MPH, HVSI-1, HVSI-2, HPH,
+      HVSL-1, HVSL-2, MVMT-1, MVMT-2, MVRH, MCP-1, MCP-2, MCP-3, AC MVRF, C101, C102,
+      C103, C105, C106, C107, C108 (AC MVRF) and the MCP capacitor banks — for any smoke,
+      burning smell, fire, high temperature or any abnormality. If QOA dropped while
+      closing DJ, look at ARNO, MVSI-1/2, MVSL-1/2, MPH, CHBA, a0/a1, cab heaters, cab
+      fans, the ARNO and MCP capacitor banks, TFVT, C118, R118, Q30, RQ30, UA1, UA2,
+      HVSI-1/2, HPH, HVSL-1/2; if while closing BLCP, at MCP1, 2, 3 and C101, C102, C103;
+      if while closing BLVMT, at MVRH, MVMT-1, MVMT-2 and C105, C106, C107; if during RB,
+      at AC MVRF and C108.
+    gate: null
+    abnormality_key: aux_abnormality_found
+    on_abnormality: "Use fire extinguishers; try to isolate that equipment."             # §6.04.1(a)
+    isolation:
+      needs_history: isolation_successful
+      on_isolated: "Resume traction."                                                     # §6.04.1(a); Note 1
+      on_not_isolated: "Contact TLC for advice."                                          # §6.04.1 Note 1
+      source: "§6.04.1(a), p97; Note 1, p98 'try to isolate the defective equipment and resume traction. Otherwise contact TLC for advice'"
+    source: "§6.04.1(a), p97; (e) i–iii, p98; Note 2, p98"
+
+  # (b)
+  - id: ensure_em_contactors_open
+    text: >-
+      Ensure all EM contactors are open. If any EM contactor is welded, take safety
+      precautions to remove the welding, isolate the concerned equipment and work
+      accordingly.
+    gate: null
+    source: "§6.04.1(b), p97"
+
+  # (c)
+  - id: reset_qoa_and_resume
+    text: >-
+      If everything is normal, reset the relay target and resume traction. Ensure HBA
+      is in the ON position before resetting the relay.
+    gate: null
+    source: "§6.04.1(c), p97; §6.03.4 Note 3 p96 'Ensure HBA in ON position before resetting the relays QOP-1, QOP-2 & QOA'"
+
+  # (d) vs (e)
+  - id: recheck_and_reset_if_drops_after_long_interval
+    text: >-
+      If QOA drops further after a long interval, check the auxiliary power circuit
+      every time for any abnormality; if everything is normal, reset the relay target
+      and resume traction.
+    gate: null
+    applies_when: {drops_after_long_interval: "yes"}
+    source: "§6.04.1(d), p97"
+
+  - id: hqoa_0_and_tlc_if_drops_very_frequently
+    text: >-
+      If QOA drops very frequently, place HQOA on '0', clear the section with
+      precautions and contact TLC.
+    gate: null
+    applies_when: {drops_frequently: "yes"}
+    implies: {drops_frequently: "yes", drops_after_long_interval: "no"}
+    completes: true
+    source: "§6.04.1(e), p97"
+
+terminal_actions:
+  resolved: "resume traction"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.04 / §6.04.1, pp.96–98"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

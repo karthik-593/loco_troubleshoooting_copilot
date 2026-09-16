@@ -1,0 +1,140 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: QOP-1 drops, target can be reset  (earth-fault relay, traction power circuit 1)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 6 "DJ Tripping through Safety Relays", §6.03 (relay description, p.88)
+#         and §6.03.1 "QOP-1 drops, target can be reset", printed pp.89–90; Notes p.90.
+# Mechanism: ISOLATE-AND-RETEST ladder (same family as QRSI-1): check → reset → branch on
+# recurrence (long interval / frequent) → TM-by-TM isolation (5/6 load) → HQOP-1 OFF + TLC.
+# No reset-once rule in this section ((d) permits a further reset after a long interval).
+# The SAME relay has a different procedure when the target CANNOT be reset (§6.03.3):
+# reached by the fact-keyed route rule below (approved 2026-09-16).
+# STATUS: encoded 2026-09-16 (batch 1, Ch.6 remainder) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: QOP1_dropped
+aliases:
+  - "QOP-1 dropped"
+  - "QOP-1 acted"
+  - "QOP-1 target dropped"
+  - "QOP-1 tripped"
+  - "QOP1 dropped"
+  - "QOP 1 dropped"
+  - "QOP-1 drops"
+config_dependency: none            # §6.03.1: TFR terminal designations differ by class (a5/a6 on
+                                   # WAG5A & WAM4; a3/a4 on WAG7 & WAP4) — both given in the text
+type_dependency: none
+presenting_signs:                  # §6.03, p.88
+  - "DJ tripped"
+  - "QOP-1 red target dropped (earth fault in traction power circuit 1)"
+
+# §6.03 (background, not a step): earth-fault relays in traction power circuits 1 & 2
+# (RSI blocks, traction motors, line contactors, reversers, ATFEX, CTFs, cables). When
+# QOP-1/2 acts its N/C interlock opens on the MTDJ branch, DJ trips, a red target drops.
+
+combination_rules: []
+# Fact-keyed reroute: "target cannot be reset" is §6.03.3, a different ladder.
+route_rules:
+  - if_fact: target_resets
+    equals: "no"
+    route_to: QOP1_target_not_resetting
+    source: "§6.03.3 heading 'QOP-1 drops, target cannot be reset', p91"
+    phrases: ["not resetting", "is not resetting", "cannot be reset", "can't be reset", "cannot reset",
+              "can't reset", "does not reset", "doesn't reset", "won't reset", "will not reset",
+              "not able to reset", "unable to reset", "target not reset"]
+
+steps:
+  # (a) — the full traction-circuit-1 check. (b) is its inline consequence (isolation block).
+  - id: check_traction_circuit_1
+    text: >-
+      Check for any abnormality in the TFR terminals (a5, a6 on WAG5A and WAM4; a3, a4
+      on WAG7 and WAP4), RSI-1, SL-1, L1, L2, L3, traction motors 1, 2 and 3, J1, Q20,
+      RQ20, QD-1, the RC damping panel, CTF-1, 2, 3, ATFEX, C145, the shunting
+      contactors and their resistances, RU1, RU2 and the AM3 shunt, SJ 1, 2, 3, the RB
+      equipment and MVRF.
+    gate: null
+    abnormality_key: traction1_abnormality_found
+    on_abnormality: "Use fire extinguishers; isolate the concerned equipment or circuit."   # §6.03.1(b)
+    isolation:
+      needs_history: isolation_successful
+      on_isolated: "Resume traction if possible."                                         # §6.03.1(b)
+      on_not_isolated: "Contact TLC for further instructions."
+      source: >-
+        §6.03.1(b), p89 — states "use fire extinguishers, isolate the concerned equipment
+        or circuit and resume traction if possible". The not-isolated branch (on_not_isolated)
+        is NOT stated here; INFERRED from the analogous §6.02.1(a) p86 / §6.1.2(b) p84
+        ("Otherwise contact TLC for further instructions").
+    source: "§6.03.1(a)(b), p89"
+
+  # (c)
+  - id: reset_target_and_resume
+    text: >-
+      If everything is normal, try to reset the relay target and resume traction.
+      Ensure HBA is in the ON position before resetting the relay.
+    gate: null
+    source: "§6.03.1(c), p89; Note (c) p93 'Ensure HBA in ON position before resetting the relays QOP1, QOP2 and QOA'"
+
+  # (d) vs (e): alternative branches on how the relay recurs.
+  - id: recheck_and_reset_if_drops_after_long_interval
+    text: >-
+      If QOP-1 drops further after a long interval, every time check the traction
+      circuit-1 equipment again; if there is no abnormality, reset the target and
+      resume traction.
+    gate: null
+    applies_when: {drops_after_long_interval: "yes"}
+    source: "§6.03.1(d), p89"
+
+  - id: isolate_tms_one_by_one_if_frequent
+    text: >-
+      If QOP-1 drops frequently, isolate the traction motors one by one, positive side
+      and negative side, and try.
+    gate: null
+    applies_when: {drops_frequently: "yes"}
+    implies: {drops_frequently: "yes", drops_after_long_interval: "no"}
+    source: "§6.03.1(e), p90"
+
+  - id: work_with_5_6_load_if_particular_tm_isolated
+    text: >-
+      If QOP-1 does not drop after isolating a particular traction motor, work if the
+      load is less than 5/6th of the maximum permissible load.
+    gate: null
+    applies_when: {drops_frequently: "yes", stops_after_isolating_particular_tm: "yes"}
+    requires_stated: true
+    implies: {drops_frequently: "yes", drops_after_long_interval: "no", stops_after_isolating_particular_tm: "yes"}
+    completes: true
+    source: "§6.03.1(e) second sentence, p90"
+
+  - id: hqop1_off_if_drops_in_all_hmcs1_positions
+    text: >-
+      If QOP-1 drops in all the positions of HMCS-1, check the traction circuit-1
+      equipment thoroughly; if no abnormality is noticed, and after confirming that
+      there is no banding failure, place HQOP-1 in the OFF position. Reset the relay
+      target and clear the section, watching the traction power circuit-1 equipment for
+      any abnormality, and contact TLC.
+    gate: null
+    applies_when: {drops_frequently: "yes", drops_in_all_hmcs1_positions: "yes"}
+    requires_stated: true
+    implies: {drops_frequently: "yes", drops_after_long_interval: "no", drops_in_all_hmcs1_positions: "yes"}
+    completes: true
+    source: "§6.03.1(f), p90"
+
+  # Note 1, p.90
+  - id: hoba_off_if_still_dropping_with_hqop1_off
+    text: >-
+      If QOP-1 is dropping even after keeping HQOP-1 in OFF, place HOBA in the OFF
+      position along with HQOP-1.
+    gate: null
+    applies_when: {drops_with_hqop_off: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§6.03 Note 1, p90"
+
+terminal_actions:
+  resolved: >-
+    resume traction (with the load restriction that applies: full, or 5/6th with a
+    traction motor isolated); do not use RB if QOP-1 acted during RB
+  unresolved: "contact TLC"
+
+# Notes p.90 not encoded as steps: 2. "Do not use RB if QOP-1/QOP-2 acting during RB"
+# (carried in the resolved terminal); 3. "In some WAP-4 locos and WAP-1 locos RB
+# equipments are not provided" (the rb axis, consulted only by §6.03.3/6.03.4).
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.03 / §6.03.1, pp.88–90"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

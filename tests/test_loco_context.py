@@ -25,11 +25,11 @@ from tests.conftest import ORDINARY, QLM
 
 def test_every_loco_carries_all_three_fields_single_and_multi():
     d = DiagnosisState()
-    assert d.loco.as_dict() == {"loco_number": "", "type": "unknown", "config": "unknown"}
+    assert d.loco.as_dict() == {"loco_number": "", "type": "unknown", "config": "unknown", "rb": "unknown"}
     d.set_locos([LocoInfo("27312", "wag7", "siv"), LocoInfo("22451", "wag5", "arno")], active=1)
     assert [l.as_dict() for l in d.locos] == [
-        {"loco_number": "27312", "type": "wag7", "config": "siv"},
-        {"loco_number": "22451", "type": "wag5", "config": "arno"}]
+        {"loco_number": "27312", "type": "wag7", "config": "siv", "rb": "unknown"},
+        {"loco_number": "22451", "type": "wag5", "config": "arno", "rb": "unknown"}]   # rb: lazy, never asked up front
     assert d.loco.loco_number == "22451" and d.config == "arno"     # §10.1 config mirrors the active loco
 
 
@@ -153,7 +153,7 @@ def test_api_session_bar_single_multi_swap_and_persistence():
     # locos survive a diagnose turn and are visible in the state
     c.post("/diagnose", json={"session_id": "s", "pilot_turn": "QLM locked, checked transformer and oil"})
     s = c.get("/session/s").json()
-    assert s["locos"][0] == {"loco_number": "22451", "type": "wag5", "config": "arno"} and s["active_loco"] == 0
+    assert s["locos"][0] == {"loco_number": "22451", "type": "wag5", "config": "arno", "rb": "unknown"} and s["active_loco"] == 0
     assert s["matched_fault"] == QLM
     assert c.put("/session/s/locos", json={"locos": []}).status_code == 422
     assert c.put("/session/s/locos", json={"locos": [{"type": "wdg4"}]}).status_code == 422

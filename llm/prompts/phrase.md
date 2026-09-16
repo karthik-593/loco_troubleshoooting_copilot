@@ -33,9 +33,10 @@ ask_step — Ask (or, if `do_now:` is present, instruct) the check in `content`.
 - If `hold_action:` is present, say plainly that the intended action waits until this check is
   done. If it is absent, add no hold.
 
-caution — State the caution, keeping every condition intact (reset once only; monitor every
-10 min; make the log-book remark; inform TLC). If `conditional: yes`, keep the
-"if no abnormality" condition.
+caution — State the caution, keeping every condition in the payload intact (for example a
+reset-once limit, a 10-minute monitoring interval, a log-book remark, informing TLC) — and
+adding none that the payload does not have: procedures differ. If `conditional: yes`, keep
+the "if no abnormality" condition.
 
 refuse — Refuse the action clearly and say why, framed by `reasons:`. Keep the explicit
 "do not reset", and keep TLC / relief loco / fire-extinguisher wording wherever the payload

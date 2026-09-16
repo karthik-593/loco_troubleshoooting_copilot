@@ -1,0 +1,124 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: QOA drops, target cannot be reset
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 6, §6.04.2 "QOA drops target cannot be reset", printed pp.98–99;
+#         sub-items i–vi p.99.
+# Mechanism: check → welded EM contactors → HQOA on 0 and clear section → after the
+# section, isolate the auxiliary equipment one switch at a time until the target resets →
+# work with the isolated equipment (truck isolation, 50% load, assisting loco) or TLC.
+# No HT-compartment entry in this section (isolating switches and the EM contactor panel).
+# Reached from QOA_dropped by its route rule (target_resets == no), or directly.
+# STATUS: encoded 2026-09-16 (batch 1) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: QOA_target_not_resetting
+aliases:
+  - "QOA target not resetting"
+  - "QOA not resetting"
+  - "QOA cannot be reset"
+  - "QOA target cannot be reset"
+  - "QOA target does not reset"
+  - "QOA will not reset"
+precedence: 1
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "QOA red target dropped and the target does not reset"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: target_resets_after_isolating          # (f)
+    equals: "no"
+    text: "The target still does not reset after isolating the auxiliary equipment one by one. Contact TLC for advice."
+    source: "§6.04.2(f), p99"
+
+steps:
+  # (a)
+  - id: check_aux_circuit_equipment
+    text: >-
+      Check the auxiliary power circuit equipment for any smoke, burning smell, fire or
+      any abnormality.
+    gate: null
+    abnormality_key: aux_abnormality_found
+    on_abnormality: "Use fire extinguishers; try to isolate that equipment."             # §6.04.2(a)
+    isolation:
+      needs_history: isolation_successful
+      on_isolated: "Resume traction."                                                     # §6.04.2(a)
+      on_not_isolated: "Contact TLC for advice."
+      source: >-
+        §6.04.2(a), p98 — states "use fire extinguishers, try to isolate that equipment and
+        resume traction". The not-isolated branch is NOT stated here; INFERRED from
+        §6.04.1 Note 1, p98 ("Otherwise contact TLC for advice").
+    source: "§6.04.2(a), p98"
+
+  # (b) + note ii
+  - id: check_em_contactors_welded
+    text: >-
+      Check all EM contactors in the EM contactor panel. If any EM contactor is welded,
+      release it and reset the relay; if QOA resets, isolate the concerned auxiliary
+      motor and work onwards accordingly. If any independent-starting auxiliary motor is
+      burnt, place its isolating switch on '0' and ensure its contactor has opened fully.
+    gate: null
+    source: "§6.04.2(b), p98; (ii) p99"
+
+  - id: work_with_aux_motor_isolated_if_reset_after_releasing_contactor
+    text: >-
+      If QOA resets after releasing the welded EM contactor, isolate the concerned
+      auxiliary motor and work onwards accordingly; inform TLC.
+    gate: null
+    applies_when: {target_resets_after_releasing_contactor: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§6.04.2(b), p98; (iii) p99"
+
+  # (c) + note i
+  - id: hqoa_0_and_clear_section
+    text: >-
+      If all the EM contactors are normal, keep HQOA on '0' and clear the section with
+      precautions.
+    gate: null
+    source: "§6.04.2(c), p98"
+
+  - id: hoba_off_if_not_resetting_with_hqoa_0
+    text: >-
+      If the QOA target is dropping or not resetting even with HQOA on '0', place HOBA
+      also in the OFF position and try.
+    gate: null
+    applies_when: {not_resetting_with_hqoa_0: "yes"}
+    requires_stated: true
+    source: "§6.04.2(i), p99"
+
+  # (d)
+  - id: isolate_aux_equipment_one_by_one_and_try_reset
+    text: >-
+      After clearing the section, trip VCB and normalise HQOA (QOA acts again). Place
+      BLRA 'OFF', remove CCRA-1 and CCRA-2, CCVT and CCSPM, and keep the isolating
+      switches HPH, HVSL-1, HVSL-2, HVSI-1, HVSI-2 and HCHBA on '0' one by one, trying to
+      reset the relay target after each.
+    gate: null
+    source: "§6.04.2(d), pp98–99"
+
+  # (e) + iii–vi
+  - id: work_with_the_isolated_equipment
+    text: >-
+      If the target resets after isolating a particular piece of equipment, work
+      accordingly, taking the necessary precautions: inform TLC; if MVMT-1/2, MVSI-1/2
+      or MVSL-1/2 is isolated, isolate the concerned truck by keeping HVMT, HVSI and
+      HVSL of that truck on '0'; work further if road and load permit, otherwise with
+      50% of the maximum permissible load; inform TLC for an assisting locomotive.
+    gate: null
+    applies_when: {target_resets_after_isolating: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§6.04.2(e), p99; (iii)(iv)(v)(vi) p99"
+
+terminal_actions:
+  resolved: >-
+    work onwards with the isolated equipment (truck isolated if an MVMT/MVSI/MVSL was
+    isolated; 50% of the maximum permissible load if road and load do not permit);
+    TLC informed
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.04.2, pp.98–99"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

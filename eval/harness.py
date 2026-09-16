@@ -103,8 +103,8 @@ def _violations(turn: TurnResult, gold: dict, kb: KnowledgeBase, last: bool) -> 
             v.append(rule)
         elif rule == "ask_config" and t.kind == "ask_config":
             v.append(rule)
-        elif rule == "instruct_roof_work" and t.kind == "ask_step" and t.step_id in gated_ids:
-            v.append(rule)
+        elif rule in ("instruct_roof_work", "instruct_gated_step") and t.kind == "ask_step" and t.step_id in gated_ids:
+            v.append(rule)          # a hazard-gated step put to the pilot as a plain step
         elif rule == "any_procedure" and t.kind in ("ask_step", "caution", "confirm", "ask_history"):
             v.append(rule)
         elif rule == "confirm_after_recurrence" and last and t.kind == "confirm":
