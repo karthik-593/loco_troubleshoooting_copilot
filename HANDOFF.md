@@ -632,4 +632,40 @@ Known phrase slips not caught by guards (recorded): "motor contactors" for the M
 blowers; "wedging while energised causes chatter" paraphrase of precaution 7. A per-step
 equipment vocabulary guard remains the candidate fix.
 
-Next: batch 3 (Ch.8 traction failures 8.01–8.07; Q50 wedging gate per §8.01 precautions).
+## Batch 3 — Ch.8 traction failures, encoded 2026-09-16
+
+Approved decisions: (1) Q50 wedge is an ORDINARY step — the TSD states only after-precautions
+(in the step text and the resolved terminal); (2) QRS wedge: its before-checks (CCLS fuse, BP,
+RGEB COC) are asked as ladder steps, no gate; Q52 / Q46 / QVCD / QWC wedges ordinary (no stated
+precondition — QVCD / HVCD on 0 flagged: it disables the vigilance device); (3) §8.07 as ONE
+file keyed on `ccpt_melts_when` (15 values); (4) §8.04 as one file; (5) "remove '+'ve wire"
+steps verbatim, ungated; (6) manual GR control verbatim; (7) reverser photographs as text.
+
+8 fault files: `total_loss_te` (intake hub on `te_sign`, the batch-2 pattern — added so "no
+traction" has an entry), `total_loss_te_with_lsb`, `total_loss_te_without_lsb`,
+`total_loss_te_with_gr_progression`, `auto_regression_with_lsp`,
+`first_notch_auto_regression_without_lsp`, `partial_loss_te`, `ccpt_melting`.
+
+Engine / schema added:
+- `Fault.fact_phrases` (FactPhrase: fact / equals / phrases / source): deterministic fact
+  triggers without a reroute (the CCPT occasion), applied in `parse` like route phrases.
+- `Step.elicits`: an observation step counts as done once the fact it asks for is stated
+  (the CCPT occasion, the DJ-trip / TE signs, the Op-II contactor state, the VCB question).
+- §8.04: the stated-only reason branches (MPS / slipped pinion / locked axle) are placed
+  BEFORE the meter question so a stated reason is served first.
+- Phrase substance guard: generic instruction words added to the stop list; word-loss
+  threshold 0.6 (identifier loss unchanged at 0.34).
+- Eval: 3 scenarios (TE intake → Q50 wedge as a plain step; CCPT on closing DJ → Q44 gate
+  refused without TLC; slipped pinion → TLC). 24/24 offline and live, 12–13 paths. 10 new
+  held-out parse cases (65 live); "no traction suddenly…" is now the TE intake, not a clarify.
+
+Judgement calls to confirm: (1) the TE intake hub (8th file) — the three §8.01–8.03 sections
+are told apart only by the LSB / LSGR / NR / ammeter sign; (2) §8.02 items 8a–8d encoded as
+stated-only steps under "Q51 energised", 8d completes; (3) §8.05 items 5/6 (ZSMS non-modified /
+modified) as alternatives, 8–12 under "notches not from rear cab" (item 7's header), 13–14
+unconditional; (4) §8.06 3(c) (rear-cab meters / HVSI) as a stated-only note; (5) §8.07
+preamble: "melts again?" and "still melts with HOBA off?" asked as questions, the occasion
+branches stated-only.
+
+Next: batch 4 (Ch.9 pneumatic failures 9.01–9.10; §7.01.2(c) and §7.02(e) cross-references
+land here).

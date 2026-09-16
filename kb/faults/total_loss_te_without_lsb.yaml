@@ -1,0 +1,155 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Total loss of tractive effort without LSB glowing  (VE1 progression coil not energised)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.02, pp.131–133 (abnormal sign, reason, trouble shooting 1–10 with 8a–8d).
+# Mechanism: ladder 1–6; Q52 (7) and Q51 (8) relay checks with their stated-only branches —
+# wedge Q52 de-energised, and under Q51 energised: QRS (CCLS fuse / BP / RGEB COC asked as
+# checks, then wedge QRS energised — ordinary steps, approved batch 3 decision 2), Q48 I/Ls,
+# PR2 / AFL, manual GR + TLC; then 9–10.
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Total_loss_TE_without_LSB
+aliases:
+  - "total loss of tractive effort without LSB glowing"
+  - "loss of tractive effort without LSB"
+  - "VE1 not energising"
+  - "VE1 progression coil not energised"
+  - "GR not progressing"
+  - "GR not taking notches"
+  - "notches not coming"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "Total loss of tractive effort (LSB glowing / without LSB / with GR progression)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "When MP is moved from 'O' to 'N' then to '+': LSGR not extinguished, ammeters & NR not deviated, loco not moving and LSB extinguished (VE1 progression coil not energised)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: try_eec_operation
+    text: "Try by EEC operation."
+    gate: null
+    source: "§8.02 item 1, p132"
+
+  - id: ensure_zsmgr_6_oclock_pacco_lifted
+    text: "Ensure the ZSMGR handle is in the 6 o'clock position and the Pacco switch is in the lifted condition."
+    gate: null
+    source: "§8.02 item 2, p132"
+
+  - id: ensure_smgr_pressure_and_no_leakage
+    text: "Ensure the SMGR pressure is between 2.5 and 3.5 kg/cm2 and there is no leakage in the SMGR pipe line."
+    gate: null
+    source: "§8.02 item 3, p132"
+
+  - id: operate_zsms_2_3_times
+    text: "Operate ZSMS 2 or 3 times and try."
+    gate: null
+    source: "§8.02 item 4, p132"
+
+  - id: operate_gr_0_5_0
+    text: "Operate GR 0-5 and back to '0'."
+    gate: null
+    source: "§8.02 item 5, p132"
+
+  - id: clear_section_with_manual_gr_if_unsuccessful
+    text: "If not successful, clear the section with manual operation of GR."
+    gate: null
+    source: "§8.02 item 6, p132"
+
+  # 7
+  - id: check_q52_deenergised
+    text: >-
+      Check Q52: it should be in the de-energised position. If Q52 is in the energised
+      position, tap and try. Report whether Q52 is energised.
+    gate: null
+    source: "§8.02 item 7, p132"
+
+  - id: wedge_q52_deenergised_if_still_energised
+    text: >-
+      Q52 is still energised after tapping: wedge Q52 in the de-energised position. Do not
+      keep MP in '+' for a longer period, otherwise quick progression of GR will take place.
+    gate: null
+    applies_when: {q52_energised: "yes"}
+    requires_stated: true
+    source: "§8.02 item 7, p132"
+
+  # 8
+  - id: check_q51_deenergised
+    text: "Check Q51: it should be in the de-energised position. Report whether Q51 is energised."
+    gate: null
+    source: "§8.02 item 8, p132"
+
+  # 8a
+  - id: check_qrs_ccls_bp_rgeb_if_q51_energised
+    text: >-
+      Q51 is energised: check QRS. If QRS is de-energised, check the CCLS fuse — if it is
+      fused, renew it; observe the BP level and rectify it if reduced; if the BP pressure is
+      found normal, ensure the RGEB COC is in the open position. (In some locos CCQRS is
+      provided for QRS; ensure it is in good condition.) Report whether QRS is energised now.
+    gate: null
+    applies_when: {q51_energised: "yes"}
+    requires_stated: true
+    source: "§8.02 item 8(a), p132"
+
+  - id: wedge_qrs_energised_if_still_not
+    text: >-
+      QRS is still not energised after the CCLS fuse, BP level and RGEB COC checks: wedge
+      QRS in the energised position and work the train with precautions.
+    gate: null
+    applies_when: {q51_energised: "yes", qrs_energised: "no"}
+    requires_stated: true
+    source: "§8.02 item 8(a), p132"
+
+  - id: clean_qrs_interlocks_if_energised
+    text: "QRS is already energised: clean its interlocks."
+    gate: null
+    applies_when: {q51_energised: "yes", qrs_energised: "yes"}
+    requires_stated: true
+    source: "§8.02 item 8(a), p132"
+
+  # 8b 8c
+  - id: clean_q48_interlocks
+    text: "Clean the interlocks of Q48."
+    gate: null
+    applies_when: {q51_energised: "yes"}
+    requires_stated: true
+    source: "§8.02 item 8(b), p132"
+
+  - id: check_pr2_and_afl_action
+    text: "Check PR2. If it is energised, check for AFL action, if any."
+    gate: null
+    applies_when: {q51_energised: "yes"}
+    requires_stated: true
+    source: "§8.02 item 8(c), p132"
+
+  # 8d
+  - id: manual_gr_and_tlc_if_q51_still_energised
+    text: >-
+      If Q51 is still not de-energised, work the train with manual operation of GR and
+      contact TLC at the next station.
+    gate: null
+    applies_when: {q51_energised: "yes", q51_still_energised_after_checks: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§8.02 item 8(d), p132"
+
+  # 9 10
+  - id: clean_q50_q51_q52_interlocks
+    text: "Clean the interlocks of Q50, Q51 & Q52."
+    gate: null
+    source: "§8.02 item 9, p132"
+
+  - id: log_book_remarks_and_contact_tlc
+    text: "Write remarks in the loco log-book and contact TLC."
+    gate: null
+    source: "§8.02 item 10, p133"
+
+terminal_actions:
+  resolved: "resume traction; if Q52 is wedged de-energised do not keep MP in '+' for long; write remarks in the loco log-book and contact TLC"
+  unresolved: "work the train with manual operation of GR; write remarks in the loco log-book and contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.02, pp.131–133"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

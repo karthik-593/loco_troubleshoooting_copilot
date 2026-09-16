@@ -1,0 +1,127 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: 1st notch auto regression without LSP glowing
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.05, pp.141–142 (abnormal sign, reasons 1–5, trouble shooting 1–14).
+# Mechanism: ladder 1–4 → item 5 (non-modified ZSMS: wedge Q46 de-energised, EEC) / item 6
+# (modified ZSMS: rear cab or manual GR) as alternatives → items 8–12 when notches are not
+# coming from the rear cab (item 7 is their header) → 13–14. Wedging Q46 / QVCD de-energised
+# and HVCD on 0 are ORDINARY steps: the TSD states no precondition (approved batch 3 decision 2;
+# flagged: HVCD on 0 / VCD cables removed disables the vigilance device).
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: First_notch_auto_regression_without_LSP
+aliases:
+  - "1st notch auto regression without LSP"
+  - "first notch auto regression without LSP"
+  - "first notch auto regression"
+  - "1st notch auto regression"
+  - "auto regression without LSP"
+  - "GR comes to 0 on first notch"
+  - "GR regresses on first notch"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "Auto regression (with LSP / 1st notch without LSP)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "When MP is moved from '0' to 'N' then to '+': LSGR extinguishes, NR deviates to '1', GR comes back to 'O' without LSP glowing (rear cab BL not locked, defective QVCD / QVCD interlock, Q50 N/C or Q51 N/O interlock on the VE2 branch, defective BPR push button)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: press_bpt_ensure_lsp_glowing_rear_cab
+    text: "Press BPT and ensure LSP is glowing in the rear cab."
+    gate: null
+    source: "§8.05 item 1, p142"
+
+  - id: ensure_qvcd_deenergised_manual_gr_if_station_near
+    text: >-
+      Ensure QVCD is in the de-energised condition; clear the section with manual
+      operation of GR if a station is nearby. Report whether QVCD is energised.
+    gate: null
+    source: "§8.05 item 2, p142"
+
+  - id: try_from_rear_cab
+    text: "Try from the rear cab and report whether notches are coming."
+    gate: null
+    source: "§8.05 item 3, p142"
+
+  - id: operate_rear_cab_bl_2_3_times
+    text: "Operate the rear cab BL 2 or 3 times and try."
+    gate: null
+    source: "§8.05 item 4, p142"
+
+  # 5 / 6 — by ZSMS modification
+  - id: wedge_q46_deenergised_and_eec_non_modified_zsms
+    text: >-
+      If still unsuccessful and the loco has a non-modified ZSMS, wedge Q46 in the
+      de-energised position and work with EEC operation.
+    gate: null
+    applies_when: {zsms_modified: "no"}
+    source: "§8.05 item 5, p142"
+
+  - id: rear_cab_or_manual_gr_if_zsms_modified
+    text: "If ZSMS is modified, work from the rear cab or by manual operation of GR."
+    gate: null
+    applies_when: {zsms_modified: "yes"}
+    source: "§8.05 item 6, p142"
+
+  # 7 header → 8–12
+  - id: clean_q50_q51_interlocks_if_no_notches_from_rear_cab
+    text: "If notches are not coming from the rear cab, clean the interlocks of Q50 & Q51 and try."
+    gate: null
+    applies_when: {notches_from_rear_cab: "no"}
+    requires_stated: true
+    source: "§8.05 items 7–8, p142"
+
+  - id: reset_or_wedge_qvcd_deenergised
+    text: >-
+      If QVCD is in the energised condition, reset it; if QVCD still does not de-energise,
+      wedge it in the de-energised condition and try.
+    gate: null
+    applies_when: {notches_from_rear_cab: "no", qvcd_energised: "yes"}
+    requires_stated: true
+    source: "§8.05 item 9, p142"
+
+  - id: hvcd_on_0_and_try
+    text: "Keep HVCD on the 0 position and try."
+    gate: null
+    applies_when: {notches_from_rear_cab: "no"}
+    requires_stated: true
+    source: "§8.05 item 10, p142"
+
+  - id: hba_off_on_then_remove_vcd_cables
+    text: >-
+      If not successful, keep HBA OFF & ON and try; if still not successful, remove the
+      cables connected to the VCD main unit.
+    gate: null
+    applies_when: {notches_from_rear_cab: "no"}
+    requires_stated: true
+    source: "§8.05 item 11, p142"
+
+  - id: operate_bpr_then_zsms_to_1
+    text: >-
+      Operate BPR 2 or 3 times and try. If unsuccessful, change the ZSMS switch to the '1'
+      position and try.
+    gate: null
+    applies_when: {notches_from_rear_cab: "no"}
+    requires_stated: true
+    source: "§8.05 item 12, p142"
+
+  - id: log_book_remarks
+    text: "Write remarks in the loco log-book."
+    gate: null
+    source: "§8.05 item 13, p142"
+
+  - id: inform_tlc_at_first_opportunity
+    text: "Inform TLC at the first opportunity."
+    gate: null
+    source: "§8.05 item 14, p142"
+
+terminal_actions:
+  resolved: "work onwards as achieved (EEC with Q46 wedged, rear cab, or manual GR); write remarks in the loco log-book and inform TLC at the first opportunity"
+  unresolved: "write remarks in the loco log-book and inform TLC at the first opportunity"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.05, pp.141–142"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

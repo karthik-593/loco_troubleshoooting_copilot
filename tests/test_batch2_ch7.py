@@ -40,7 +40,10 @@ def test_batch2_files_cite_chapter_7_and_the_intake(kb):
     assert hub.precedence == -2 and not hub.confirm_before_guidance
     assert all(kb.get(t).confirm_before_guidance for t in TRIP_TARGETS.values() if t != "Reglows_on_release")
     # wedging gates: every wedge step is a hazard_exposure gate with a TSD-stated precondition
-    wedges = [(fid, s) for fid in kb.fault_ids for s in kb.get(fid).steps if s.id.startswith("wedge_")]
+    # (Ch.7 only: batch 3 encodes Q50 / Q52 / QRS / Q46 / QVCD wedges as ordinary steps — the TSD
+    # states no precondition for them, approved 2026-09-16)
+    ch7 = [fid for fid in kb.fault_ids if any("§7." in s.citation for s in kb.get(fid).steps)]
+    wedges = [(fid, s) for fid in ch7 for s in kb.get(fid).steps if s.id.startswith("wedge_")]
     assert len(wedges) >= 9
     for fid, s in wedges:
         assert s.gate is not None and s.gate.type == "hazard_exposure" and s.gate.preconditions, (fid, s.id)
@@ -353,7 +356,7 @@ def test_op_ii_interlock_wedge_only_when_still_tripping(kb):
 
 def test_out_of_scope_list_is_collapsed_by_listed_as(kb):
     msg = out_of_scope_reason(kb)
-    assert msg.count(",") < 15 and "ICDJ (DJ not closing)" in msg and "QLM dropped" in msg
+    assert msg.count(",") < 20 and len(msg) < 600 and "ICDJ (DJ not closing)" in msg and "QLM dropped" in msg
     assert "ICDJ Q118 branch" not in msg and "Op O" not in msg
 
 

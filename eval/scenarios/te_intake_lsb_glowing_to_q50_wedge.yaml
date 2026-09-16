@@ -1,0 +1,42 @@
+scenario_id: te_intake_lsb_glowing_to_q50_wedge
+klass: config_axis
+# Batch 3: "no traction" → the TE intake hub → LSB glowing routes to §8.01 with a confirm line →
+# the ladder → the Q50 wedge is an ORDINARY step (decision 1) carrying its after-precautions.
+pilot_script:
+- no traction. LSB still glowing when I take a notch
+- "yes"
+- operated BL and MPJ a few times, tapped Q50, EP cocs open, J1 J2 set for cab 1, CTFs traction side, C145 open, LS-C145 off, cleaned Q50 interlocks. still nothing
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  facts: {te_sign: lsb_glowing}
+- fault_guess: null
+  fault_confidence: 0.0
+  confirms_fault: 'yes'
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - operate_bl_2_3_times
+  - operate_mpj_forward_reverse
+  - tap_or_operate_q50_manually
+  - ensure_ep1_ep2_ep3_cocs_open
+  - check_j1_j2_setting_for_cab
+  - ensure_ctf_handles_traction_side
+  - ensure_c145_fully_open
+  - ensure_ls_c145_extinguished
+  - clean_q50_interlocks_and_try
+gold:
+  correct_terminal: ask_step:wedge_q50_energised
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 3
+  expected_tool_path:
+  - (reroute→Total_loss_TE_with_LSB)
+  - diff_completed_steps
+  - diff_completed_steps
+  expected_turn_terminals:
+  - confirm_fault
+  - ask_step
+  - ask_step

@@ -1,0 +1,162 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Auto regression with LSP glowing (QD action)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.04, pp.133–135 (reasons 1–5, trouble shooting A–E, Notes 1–2) and
+#         §8.04.1 "Locked axle", pp.135–141 (probable reasons and symptoms a–e).
+# Mechanism (approved batch 3 decision 4): ONE file — A (train / brakes / sand / ZQWC) → B
+# (take one or two notches, observe both ammeters and voltmeters; the four meter findings are
+# sibling branches, each an HMCS position) → C / D / E as stated-only branches (MPS, slipped
+# pinion, locked axle), with §8.04.1's banding-failure action and symptom lists folded in.
+# Detaching the loco / ALP beside the loco stay verbatim, ungated.
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Auto_regression_with_LSP
+aliases:
+  - "auto regression with LSP"
+  - "auto regression with LSP glowing"
+  - "auto regression LSP glowing"
+  - "QD action"
+  - "QD acting"
+  - "wheel slip auto regression"
+  - "GR regressing with LSP"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "Auto regression (with LSP / 1st notch without LSP)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "At various notches the GR auto-regresses with LSP glowing (QD action: brakes not released / wet rail, slipped pinion or locked axle, a line contactor open or a cut in a QD-connected TM pair, a shunting contactor welded or not closing, brake binding / heavy load / up gradient / track defect)"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: tm_pinion_rotating
+    equals: "no"
+    after_any: [check_for_slipped_pinion]
+    text: "No traction motor pinion rotates and no spinning noise is heard: contact TLC."
+    source: "§8.04 D item 4, p135"
+  - fact: wheel_not_rotating
+    equals: "yes"
+    after_any: [check_for_locked_axle]
+    text: "A loco wheel is not rotating / dragging: request assistance from TLC."
+    source: "§8.04 E item 4, p135"
+
+steps:
+  # A
+  - id: check_bp_brake_binding_sand_and_zqwc
+    text: >-
+      Check that the BP pressure is 5.0 kg/cm2 on the gauge and check for any brake binding
+      or any abnormality on the train. If everything is normal, apply sand and try to resume
+      traction; press ZQWC while starting the train. (Lower-notch auto regression with LSP
+      indicates QD action due to defective track, bad weather, defective formation, welded
+      shunting contactors, slipped pinion or locked axle; higher-notch auto regression after
+      operating MPS indicates shunting contactors not closing.)
+    gate: null
+    source: "§8.04 A, p134; Notes 1–2, p135"
+
+  # §8.04.1 (a) — banding failure seen
+  - id: isolate_tm_with_banding_failure
+    text: >-
+      If poly-glass material is projecting from a traction motor vent mesh (banding
+      failure), isolate that traction motor on both the positive and negative sides, clear
+      the section with a speed restriction of 15 km/h and contact TLC. Ignoring a banding
+      failure leads to a locked axle.
+    gate: null
+    applies_when: {banding_failure_seen: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§8.04.1(a), pp135–136"
+
+  # C
+  - id: avoid_mps_if_regression_while_operating_mps
+    text: "If auto regression takes place while operating MPS, avoid MPS operation."
+    gate: null
+    applies_when: {regression_while_operating_mps: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§8.04 C, p134"
+
+  # D
+  - id: check_for_slipped_pinion
+    text: >-
+      If auto regression is due to a slipped pinion: stop the train and apply the brakes;
+      depute the ALP to stand near the truck and take one notch; observe for any spinning
+      noise or rotation of a traction motor pinion. Report whether any TM pinion rotates or
+      a spinning noise is heard.
+    gate: null
+    applies_when: {slipped_pinion_suspected: "yes"}
+    requires_stated: true
+    source: "§8.04 D items 1–3, pp134–135"
+
+  - id: isolate_tm_with_slipped_pinion
+    text: >-
+      A TM pinion rotates or a spinning noise is heard: isolate the corresponding traction
+      motor and clear the block section with the permissible load.
+    gate: null
+    applies_when: {slipped_pinion_suspected: "yes", tm_pinion_rotating: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§8.04 D item 4, p135"
+
+  # E + §8.04.1 symptoms
+  - id: check_for_locked_axle
+    text: >-
+      If auto regression is due to a locked axle: detach the loco from the formation after
+      taking the necessary permissions and precautions; depute the Assistant Loco Pilot by
+      the side of the loco to observe the moving of the wheels; move the loco and observe
+      whether all loco wheels are rotating freely. (Locked-axle symptoms: banding failure —
+      poly-glass material at the TM vent mesh; TM bearing seizure — smoke, smell or fire
+      from the TM, grease leaking from the bearing covers; pinion / bull gear jamming —
+      smoke from the gear case, gear-case compound or oil flashing; journal bearing seizure
+      — smoke or oil leakage from the suspension bearing, white metal dropped (TAO TMs) or
+      an over-temperature axle (HITACHI TMs); axle-box bearing seizure — high axle-box
+      temperature, flashing grease, discoloration, smoke or fire.) Report whether any wheel
+      is not rotating or dragging.
+    gate: null
+    applies_when: {locked_axle_suspected: "yes"}
+    requires_stated: true
+    source: "§8.04 E items 1–3, p135; §8.04.1 reasons 1–5 and symptoms (a)–(e), pp135–141"
+
+  # B
+  - id: take_notches_and_observe_ammeters_voltmeters
+    text: >-
+      If unsuccessful, take one or two notches and observe both ammeters and voltmeters.
+      Report which of A3, A4, U2 and U5 are not deviating.
+    gate: null
+    source: "§8.04 B, p134"
+
+  - id: hmcs1_on_4_if_a3_not_deviating
+    text: "If A3 is not deviating, place HMCS-1 on 4 and resume traction."
+    gate: null
+    applies_when: {a3_deviating: "no"}
+    completes: true
+    source: "§8.04 B item 1, p134"
+
+  - id: hmcs2_on_2_if_a4_not_deviating
+    text: "If A4 is not deviating, place HMCS-2 on 2 and resume traction."
+    gate: null
+    applies_when: {a4_deviating: "no"}
+    completes: true
+    source: "§8.04 B item 2, p134"
+
+  - id: hmcs1_on_3_if_u2_not_deviating
+    text: "If both ammeters are deviating but U2 is not deviating, place HMCS-1 on 3 and try."
+    gate: null
+    applies_when: {u2_deviating: "no"}
+    completes: true
+    source: "§8.04 B item 3, p134"
+
+  - id: hmcs2_on_3_if_u5_not_deviating
+    text: "If U5 is not deviating, place HMCS-2 on the 3 position."
+    gate: null
+    applies_when: {u5_deviating: "no"}
+    completes: true
+    source: "§8.04 B item 4, p134"
+
+terminal_actions:
+  resolved: "resume traction with the identified HMCS position / isolated traction motor and the permissible load"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.04 pp.133–135; §8.04.1 pp.135–141"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

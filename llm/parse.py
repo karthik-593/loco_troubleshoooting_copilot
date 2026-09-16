@@ -244,6 +244,34 @@ _FACT_HINTS = {
     "load_permits_5_notches": "the load permits clearing the block section within 5 notches ('no' if the load does not permit)",
     "concerned_switch_on_3": "for the wedged contactor(s) the concerned switch (HVRH for C107, HVMT-1 for C105, HVMT-2 for C106) is kept on the '3' position",
     "c107_not_closed_ac_mvrf_loco": "this is an AC MVRF loco and C107 is the contactor not closing",
+    # ── batch 3 (Ch.8 traction failures) ──
+    "te_sign": "with MP moved 'O' → 'N' → '+' and the loco not moving: 'lsb_glowing' = LSB stays glowing (LSGR not extinguished, NR and ammeters not deviating); "
+               "'lsgr_not_extinguished_no_lsb' = LSB is off but LSGR does not extinguish, NR and ammeters not deviating; "
+               "'gr_progressing' = LSGR extinguishes and NR deviates (notches coming) but the ammeters do not deviate. Leave unknown if not described",
+    "q52_energised": "relay Q52 is found in the energised position ('no' if de-energised, as it should be)",
+    "q51_energised": "relay Q51 is found in the energised position ('no' if de-energised, as it should be)",
+    "qrs_energised": "relay QRS is energised ('no' if de-energised, also after the CCLS fuse / BP / RGEB COC checks)",
+    "q51_still_energised_after_checks": "Q51 is still not de-energised after the QRS, Q48 interlock and PR2 checks",
+    "a3_deviating": "on taking a notch, ammeter A3 deviates ('no' if A3 is not deviating)",
+    "a4_deviating": "on taking a notch, ammeter A4 deviates ('no' if A4 is not deviating)",
+    "u2_deviating": "voltmeter U2 deviates ('no' if U2 is not deviating while both ammeters deviate)",
+    "u5_deviating": "voltmeter U5 deviates ('no' if U5 is not deviating)",
+    "u1_deviating": "traction voltmeter U1 deviates ('no' if U1 does not deviate)",
+    "u6_deviating": "traction voltmeter U6 deviates ('no' if U6 does not deviate)",
+    "regression_while_operating_mps": "the auto regression happens while operating MPS (shunting / weak field)",
+    "slipped_pinion_suspected": "the pilot suspects or reports a slipped pinion (spinning noise, a traction motor pinion rotating)",
+    "tm_pinion_rotating": "with the ALP near the truck and one notch taken: a TM pinion rotates or a spinning noise is heard ('no' if none)",
+    "locked_axle_suspected": "the pilot suspects or reports a locked axle (wheel dragging / not rotating, axle-box heat or smoke, TM bearing seizure, gear-case smoke)",
+    "wheel_not_rotating": "with the loco moved and the ALP watching: a loco wheel is not rotating / dragging ('no' if all wheels rotate freely)",
+    "zsms_modified": "the loco has the modified ZSMS ('no' for a non-modified ZSMS loco)",
+    "notches_from_rear_cab": "notches come when trying from the rear cab ('no' if notches are not coming from the rear cab either)",
+    "qvcd_energised": "QVCD is found in the energised condition ('no' if de-energised)",
+    "rear_cab_meters_not_deviating": "the traction voltmeters / ammeters are not deviating in the rear cab with poor hauling",
+    "ccpt_melts_again": "after renewing CCPT it melted again ('no' if it held)",
+    "ccpt_melts_with_hoba_off": "CCPT melts even with HOBA in OFF ('no' if it held with HOBA off)",
+    "ccpt_melts_when": "the occasion on which CCPT melts: 'hba_on' (keeping HBA on), 'raising_panto', 'closing_dj', 'operating_mpj' (MPJ to forward / reverse), "
+                       "'mp_0_to_n', 'mp_n_to_plus' (taking a notch), 'sixth_notch', 'operating_mps', 'mp_n_to_minus', 'quick_regression' (MP thrown from N to 0), "
+                       "'mp_0_to_p' (RB), 'operating_zqwc', 'pressing_bpsw', 'pressing_pvef', 'auto_regression'. Leave unknown if not stated",
     "still_trips_with_hvmt_in_3": "with HVMT-1 & HVMT-2 in '3' and DJ closed: the trouble still exists / DJ still trips on the sixth notch ('yes') or DJ holds ('no')",
 }
 
@@ -366,6 +394,9 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         for rr in fault_obj.route_rules:
             if any(re.search(rf"(?<![\w-]){re.escape(ph.lower())}(?![\w-])", low) for ph in rr.phrases):
                 history[rr.if_fact] = rr.equals
+        for fp in fault_obj.fact_phrases:
+            if any(re.search(rf"(?<![\w-]){re.escape(ph.lower())}(?![\w-])", low) for ph in fp.phrases):
+                history[fp.fact] = fp.equals
     if _yn(out.abnormality_found):
         history[HF_ABNORMALITY] = out.abnormality_found
     if _yn(out.was_reset_earlier_this_trip):

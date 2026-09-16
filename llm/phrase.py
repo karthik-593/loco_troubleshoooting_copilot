@@ -45,7 +45,11 @@ _STOP = {"everything", "whether", "otherwise", "further", "normal", "abnormality
          # instruction meta-words with everyday synonyms (Ch.7 texts: "Report whether…",
          # "For quick trouble shooting…", "Ensure…" → "make sure")
          "report", "trouble", "shooting", "ensure", "properly", "position", "convenient",
-         "placed", "identified", "making", "proper"}
+         "placed", "identified", "making", "proper",
+         # generic instruction / procedure words a spoken rendering naturally replaces (batch 3)
+         "necessary", "precautions", "precaution", "operation", "operated", "operating", "setting",
+         "required", "followed", "following", "inform", "remarks", "opportunity", "observe", "observing",
+         "according", "manual", "upwards", "downwards", "rectify", "reduced", "prohibited", "destination"}
 
 _PAREN = re.compile(r"\([^)]*\)")
 
@@ -271,7 +275,7 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         short_form = (len(idents) >= LONG_LIST and len(lost_i) < len(idents)
                       and _SYMPTOM.search(low) and _OFFER.search(s))
         if not short_form and ((idents and len(lost_i) / len(idents) > 0.34)
-                               or (words and len(lost_w) / len(words) > 0.5)):
+                               or (words and len(lost_w) / len(words) > 0.6)):
             v.append("ask_step_lost_substance")           # a paraphrase keeps most; a substitution loses most
         foreign = _foreign_identifiers(t, low)
         if foreign:

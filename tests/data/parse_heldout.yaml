@@ -81,7 +81,7 @@
 - text: "my headlight is not working. i am going at normal speed. is there any issue?"
   out_of_scope: true
 - text: "no traction suddenly. no relays dropped, loco just stopped"
-  never_acts: true            # borderline: clarify once or defer; never a procedure
+  fault: Total_loss_TE        # batch 3: the total-loss-of-TE intake hub (alias "no traction")
 - text: "qop dropped"
   never_acts: true            # QOP alone is not encoded (only QLM with QOP/QRSI); the relay IS in the vocabulary
 # --- one reset reported in the first message is the gated step, NOT a prior reset ---
@@ -246,3 +246,48 @@
   fault: Op_II
   claimed: [check_c105_c106_c107_closing_on_blvmt]
   facts: {contactors_closed: some}
+# --- batch 3 (Ch.8 traction failures) ---
+- text: "MP to + but loco not moving. LSB still glowing, LSGR on, ammeters dead"
+  fault_any_of: [Total_loss_TE, Total_loss_TE_with_LSB]     # the hub alias yields when the model names the section
+  facts: {te_sign: lsb_glowing}
+- text: "took a notch, LSGR went off and NR came to 1 but ammeters nothing, loco not moving"
+  state_fault: Total_loss_TE
+  last_assistant: "Move MP from O to N and then to + and watch LSB, LSGR, NR and the ammeters. Tell me whether LSB is glowing, whether LSGR goes off, whether NR deviates and whether the ammeters deviate."
+  fault: Total_loss_TE
+  facts: {te_sign: gr_progressing}
+- text: "operated BL and MPJ a few times, tapped Q50, EP cocs open, J1 J2 set for cab 1, CTFs on traction side, C145 open and LS-C145 off, cleaned Q50 interlocks. still nothing"
+  state_fault: Total_loss_TE_with_LSB
+  fault: Total_loss_TE_with_LSB
+  claimed: [operate_bl_2_3_times, operate_mpj_forward_reverse, tap_or_operate_q50_manually, ensure_ep1_ep2_ep3_cocs_open, check_j1_j2_setting_for_cab, ensure_ctf_handles_traction_side, ensure_c145_fully_open, ensure_ls_c145_extinguished, clean_q50_interlocks_and_try]
+- text: "Q52 is de-energised but Q51 is energised"
+  state_fault: Total_loss_TE_without_LSB
+  last_assistant: "Check Q51 — it should be de-energised. Is Q51 energised?"
+  fault: Total_loss_TE_without_LSB
+  facts: {q52_energised: "no", q51_energised: "yes"}
+- text: "took two notches. A3 and A4 both moving, U2 not deviating"
+  state_fault: Auto_regression_with_LSP
+  last_assistant: "Take one or two notches and watch both ammeters and voltmeters. Tell me which of A3, A4, U2 and U5 are not deviating."
+  fault: Auto_regression_with_LSP
+  claimed: [take_notches_and_observe_ammeters_voltmeters]
+  facts: {u2_deviating: "no"}
+- text: "auto regression with LSP, I think a pinion has slipped, spinning noise from the rear truck"
+  fault: Auto_regression_with_LSP
+  facts: {slipped_pinion_suspected: "yes"}
+- text: "CCPT melting. renewed it, melted again, HOBA off and renewed, melts again the moment I close DJ"
+  fault: CCPT_melting
+  claimed: [stop_zpt_0_mpj_0_hba_off_and_renew_ccpt, hoba_off_and_renew_if_melts_again]
+  facts: {ccpt_melts_again: "yes", ccpt_melts_with_hoba_off: "yes", ccpt_melts_when: closing_dj}
+- text: "it melts when I put HBA on"
+  state_fault: CCPT_melting
+  last_assistant: "CCPT still melts with HOBA off — on which occasion does it melt: keeping HBA on, raising the panto, closing DJ, operating MPJ, MP to N, taking a notch, the 6th notch, MPS, regression, quick regression, RB, ZQWC, BPSW, PVEF or during auto regression?"
+  fault: CCPT_melting
+  facts: {ccpt_melts_when: hba_on}
+- text: "HMCS both on 1, no air leak at the EVs. U6 not deviating, U1 fine"
+  state_fault: Partial_loss_TE
+  fault: Partial_loss_TE
+  claimed: [check_hmcs_positions_and_place_on_1, check_air_leakage_at_line_contactor_valves, observe_u1_u6]
+  facts: {u6_deviating: "no", u1_deviating: "yes"}
+- text: "first notch auto regression without LSP. BPT pressed, LSP glows in rear cab, QVCD de-energised. tried rear cab, notches not coming there either"
+  fault: First_notch_auto_regression_without_LSP
+  claimed: [press_bpt_ensure_lsp_glowing_rear_cab, ensure_qvcd_deenergised_manual_gr_if_station_near, try_from_rear_cab]
+  facts: {qvcd_energised: "no", notches_from_rear_cab: "no"}

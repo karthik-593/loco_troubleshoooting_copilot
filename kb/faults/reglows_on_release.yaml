@@ -52,6 +52,7 @@ steps:
       Operation 'A' ending part II; otherwise it is Operation 'B' part II. Say "don't know"
       if you cannot tell.
     gate: null
+    elicits: vcb_5_branch_loco
     source: "§7.06 Abnormal sign, p119; §7.11, p128"
 
 terminal_actions:

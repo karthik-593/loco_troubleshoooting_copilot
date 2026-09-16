@@ -121,6 +121,10 @@ class Step(_Strict):
     # the engine on the claim if the fact is not already stated — declarative, cited, and
     # independent of whether the parser extracted the branch fact.
     implies: dict[str, str] = Field(default_factory=dict)
+    # An observation step exists to elicit ONE fact ("report the occasion", "report which
+    # meter is not deviating"): it counts as done once that fact is stated, claimed or not
+    # (§8.07: the pilot who opens with "CCPT melts on the 6th notch" is not asked the occasion).
+    elicits: Optional[str] = Field(default=None, pattern=r"^[a-z][a-z0-9_]*$")
     # Completing this step ends the procedure on its 'resolved' terminal (e.g. "isolate that
     # TM and work with 5/6 load" — a sanctioned way onward, not a failure).
     completes: bool = False
@@ -173,6 +177,15 @@ class RouteRule(_Strict):
     note: Optional[str] = None
 
 
+class FactPhrase(_Strict):
+    """KB-declared phrases that set a fact deterministically (like RouteRule.phrases, without a
+    reroute): "while raising panto" → ccpt_melts_when = raising_panto. The parser is the fallback."""
+    fact: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    equals: str = Field(min_length=1)
+    phrases: list[str] = Field(min_length=1)
+    source: str = Field(min_length=1)
+
+
 class DeferCondition(_Strict):
     """A TSD clause of the form "if <situation>, contact TLC" — a terminal, not a step.
     When the fact is 'yes' the engine defers with the clause's own text."""
@@ -211,6 +224,7 @@ class Fault(_Strict):
     presenting_signs: list[str] = Field(default_factory=list)
     combination_rules: list[CombinationRule] = Field(default_factory=list)
     route_rules: list[RouteRule] = Field(default_factory=list)
+    fact_phrases: list[FactPhrase] = Field(default_factory=list)
     defer_conditions: list[DeferCondition] = Field(default_factory=list)
     steps: list[Step] = Field(min_length=1)
     terminal_actions: dict[str, str] = Field(default_factory=dict)
@@ -284,6 +298,8 @@ class Fault(_Strict):
                 keys.append(s.finding_key)
             keys.extend(s.applies_when.keys())
             keys.extend(s.implies.keys())
+            if s.elicits:
+                keys.append(s.elicits)
             if s.isolation:
                 keys.append(s.isolation.needs_history)
             if s.gate and s.gate.needs_history:
@@ -294,6 +310,7 @@ class Fault(_Strict):
                 keys.extend(s.gate.preconditions)
         keys.extend(d.fact for d in self.defer_conditions)
         keys.extend(r.if_fact for r in self.route_rules)
+        keys.extend(fp.fact for fp in self.fact_phrases)
         return list(dict.fromkeys(keys))
 
     def step(self, step_id: str) -> Step:

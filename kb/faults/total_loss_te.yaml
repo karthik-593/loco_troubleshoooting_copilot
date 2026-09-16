@@ -1,0 +1,62 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Intake: total loss of tractive effort (loco not moving) — which of §8.01 / §8.02 / §8.03?
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.01 p.128, §8.02 p.131, §8.03 p.133 — the three "Abnormal sign" lines.
+# Mechanism: HUB (the batch-2 intake pattern). The three sections differ only by what LSB,
+# LSGR, NR and the ammeters do when MP is moved 'O' → 'N' → '+'; the pilot's report of those
+# lamps / needles (`te_sign`) routes to the section. Targets are confirmed in one line first.
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Total_loss_TE
+aliases:
+  - "total loss of tractive effort"
+  - "loss of tractive effort"
+  - "no tractive effort"
+  - "no traction"
+  - "loco not moving"
+  - "loco is not moving"
+  - "loco not taking load"
+  - "loco not pulling"
+precedence: -2
+listed_as: "Total loss of tractive effort (LSB glowing / without LSB / with GR progression)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "MP moved from 'O' to 'N' then to '+' and the loco does not move — the lamps and needles (LSB, LSGR, NR, ammeters) say which procedure applies"
+
+combination_rules: []
+route_rules:
+  - if_fact: te_sign
+    equals: lsb_glowing
+    route_to: Total_loss_TE_with_LSB
+    source: "§8.01 Abnormal sign, p128: 'LSB remains in glowing, LSGR not extinguished, NR not deviated, Ammeters not deviated and loco not moving'"
+    phrases: ["LSB glowing", "LSB is glowing", "LSB remains glowing", "LSB not extinguished", "LSB does not extinguish",
+              "LSB not going off", "LSB stays on", "LSB still on", "with LSB"]
+  - if_fact: te_sign
+    equals: lsgr_not_extinguished_no_lsb
+    route_to: Total_loss_TE_without_LSB
+    source: "§8.02 Abnormal sign, p131: 'LSGR not extinguished, Ammeters & NR not deviated, loco not moving and LSB extinguished'"
+    phrases: ["LSGR not extinguished", "LSGR not going off", "LSGR still glowing", "LSGR does not extinguish",
+              "LSGR stays on", "without LSB", "LSB extinguished", "LSB off", "LSB is off", "LSB went off", "no LSB"]
+  - if_fact: te_sign
+    equals: gr_progressing
+    route_to: Total_loss_TE_with_GR_progression
+    source: "§8.03 Abnormal sign, p133: 'LSGR extinguished, NR deviated but ammeters not deviated and loco also not moving'"
+    phrases: ["NR deviated", "NR deviating", "NR moving", "notches are coming", "notches coming", "GR progressing",
+              "GR is progressing", "GR progression", "LSGR extinguished", "LSGR went off", "LSGR goes off"]
+
+steps:
+  - id: observe_lamps_and_needles_on_taking_notch
+    text: >-
+      Move MP from 'O' to 'N' and then to '+' and observe LSB, LSGR, NR and the ammeters.
+      Report whether LSB is glowing, whether LSGR extinguishes, whether NR deviates, and
+      whether the ammeters deviate.
+    gate: null
+    elicits: te_sign
+    source: "§8.01 / §8.02 / §8.03 Abnormal sign lines, pp128, 131, 133"
+
+terminal_actions:
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.01–§8.03, pp.128–133"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

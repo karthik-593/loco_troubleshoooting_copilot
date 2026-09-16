@@ -55,6 +55,7 @@ steps:
       With DJ closed, close BLVMT and check the EM contactors C105, C106 and C107. Report
       whether none of them closes, one (or more) of them does not close, or all three close.
     gate: null
+    elicits: contactors_closed
     source: "§7.09 Causes 1–3, p123"
 
 terminal_actions:

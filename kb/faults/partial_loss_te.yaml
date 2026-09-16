@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Partial loss of tractive effort
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.06, pp.142–143 (abnormal sign, causes, trouble shooting 1–3 a–c).
+# Mechanism: HMCS positions → air leakage at the line-contactor electro valves → by which
+# traction voltmeter does not deviate, isolate TM-1 (HMCS-1 on 2) or TM-6 (HMCS-2 on 4) and
+# work with 5/6 load; (c) rear-cab meters / HVSI positions as a stated-only note.
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Partial_loss_TE
+aliases:
+  - "partial loss of tractive effort"
+  - "partial loss of traction"
+  - "hauling power reduced"
+  - "reduced hauling power"
+  - "poor hauling"
+  - "loco pulling weak"
+  - "less tractive effort"
+precedence: 1
+listed_as: "Partial loss of tractive effort"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Hauling power of the loco reduces (a line contactor not closed on a traction-motor branch, or a defective TM on which no QD coil is provided)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: check_hmcs_positions_and_place_on_1
+    text: >-
+      Bring MP to '0' and check the position of HMCS-1 and HMCS-2. If either is on other
+      than the '1' position, find out the cause. If normal, place HMCS-1 and HMCS-2 on the
+      '1' position and resume traction. Report whether both were already on '1'.
+    gate: null
+    source: "§8.06 item 1, p143"
+
+  - id: check_air_leakage_at_line_contactor_valves
+    text: >-
+      With HMCS-1 and HMCS-2 on the '1' position, check for any air leakage from the line
+      contactor electro valves and in the pipe lines. If there is any air leakage, try to
+      arrest it and resume traction. Report whether a leak was found and arrested.
+    gate: null
+    source: "§8.06 item 2, p143"
+
+  - id: observe_u1_u6
+    text: >-
+      If there is no air leakage, or it cannot be arrested, observe the traction voltmeters
+      U1 and U6. Report whether U1 and U6 deviate.
+    gate: null
+    source: "§8.06 item 3, p143"
+
+  - id: isolate_tm1_if_u1_not_deviating
+    text: >-
+      If U1 does not deviate, isolate TM-1 by placing HMCS-1 on '2' and work onwards with
+      5/6th of the maximum permissible load.
+    gate: null
+    applies_when: {u1_deviating: "no"}
+    completes: true
+    source: "§8.06 item 3(a), p143"
+
+  - id: isolate_tm6_if_u6_not_deviating
+    text: >-
+      If U6 does not deviate, isolate TM-6 by placing HMCS-2 on '4' and work onwards with
+      5/6th of the maximum permissible load.
+    gate: null
+    applies_when: {u6_deviating: "no"}
+    completes: true
+    source: "§8.06 item 3(b), p143"
+
+  - id: ensure_hvsi_positions_if_rear_cab_meters_not_deviating
+    text: >-
+      If the traction voltmeters and traction ammeters are not deviating in the rear cab and
+      the engine is hauling poorly, ensure the HVSI-1 / HVSI-2 positions.
+    gate: null
+    applies_when: {rear_cab_meters_not_deviating: "yes"}
+    requires_stated: true
+    source: "§8.06 item 3(c), p143"
+
+terminal_actions:
+  resolved: "resume traction (with the isolated traction motor, 5/6th of the maximum permissible load)"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.06, pp.142–143"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

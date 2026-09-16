@@ -1,0 +1,32 @@
+scenario_id: auto_regression_slipped_pinion_tlc
+klass: missed_step
+# Batch 3: §8.04 D — a stated reason (slipped pinion) is served before the meter question; no
+# pinion rotates → "otherwise contact TLC" (defer), never an HMCS instruction.
+pilot_script:
+- auto regression with LSP. BP 5, no brake binding, sanded, ZQWC pressed. I think a pinion slipped
+- stopped, ALP at the truck, took one notch. no pinion turning, no spinning noise
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  confirms_fault: 'yes'
+  claimed_steps:
+  - check_bp_brake_binding_sand_and_zqwc
+  facts: {slipped_pinion_suspected: 'yes'}
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - check_for_slipped_pinion
+  facts: {tm_pinion_rotating: 'no'}
+gold:
+  correct_terminal: defer_to_TLC
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 2
+  expected_tool_path:
+  - diff_completed_steps
+  - diff_completed_steps
+  expected_turn_terminals:
+  - ask_step
+  - defer_to_TLC

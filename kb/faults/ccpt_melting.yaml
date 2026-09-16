@@ -1,0 +1,357 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: CCPT melting
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.07, pp.143–148 (abnormal sign, occasions 1–15, preamble, branches A–O).
+# Mechanism (approved batch 3 decision 3): ONE file keyed on the enumerated fact
+# `ccpt_melts_when` (the occasion on which CCPT melts). Preamble: stop, ZPT-0, MPJ-0, HBA-off,
+# renew → melts again: HOBA OFF, renew → still melts: the occasion's branch (stated-only steps).
+# Wedge Q118 (A) and Q44 (C) keep their §7.01.3 / §7.01.5 hazard gates; wedge Q50 (D), Q46 (A)
+# and QWC (L) are ordinary (no stated precondition; §8.01 after-precautions ride in the text).
+# "Remove '+'ve wire / disconnect cable" steps verbatim, ungated (decision 5).
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: CCPT_melting
+aliases:
+  - "CCPT melting"
+  - "CCPT melts"
+  - "CCPT melted"
+  - "CCPT fuse melting"
+  - "CCPT fuse melted"
+  - "CCPT blowing"
+  - "CCPT blown"
+  - "CCPT keeps melting"
+precedence: 1
+listed_as: "CCPT melting"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ tripping with the panto lowering (if running on notches, GR will not come to zero) — the CCPT fuse has melted"
+
+combination_rules: []
+route_rules: []
+fact_phrases:
+  - fact: ccpt_melts_when
+    equals: hba_on
+    phrases: ["keeping HBA on", "HBA on", "HBA to 1", "putting HBA on", "switching HBA on", "closing HBA"]
+    source: "§8.07 occasion 1, p143"
+  - fact: ccpt_melts_when
+    equals: raising_panto
+    phrases: ["raising panto", "raising the panto", "raising pantograph", "raising the pantograph", "panto up", "ZPT to 1", "on ZPT"]
+    source: "§8.07 occasion 2, p143"
+  - fact: ccpt_melts_when
+    equals: closing_dj
+    phrases: ["closing DJ", "closing the DJ", "on BLRDJ", "pressing BLRDJ", "when DJ closes", "while closing DJ"]
+    source: "§8.07 occasion 3, p143"
+  - fact: ccpt_melts_when
+    equals: operating_mpj
+    phrases: ["operating MPJ", "moving MPJ", "MPJ to forward", "MPJ to reverse", "MPJ forward", "MPJ reverse", "on MPJ"]
+    source: "§8.07 occasion 4, p143"
+  - fact: ccpt_melts_when
+    equals: mp_0_to_n
+    phrases: ["MP from O to N", "MP from 0 to N", "MP 0 to N", "MP O to N", "MP to N", "moving MP to N"]
+    source: "§8.07 occasion 5, p143"
+  - fact: ccpt_melts_when
+    equals: mp_n_to_plus
+    phrases: ["MP from N to +", "MP N to +", "MP to +", "MP to plus", "N to plus", "taking notch", "taking a notch", "first notch"]
+    source: "§8.07 occasion 6, p143"
+  - fact: ccpt_melts_when
+    equals: sixth_notch
+    phrases: ["6th notch", "sixth notch"]
+    source: "§8.07 occasion 7, p143"
+  - fact: ccpt_melts_when
+    equals: operating_mps
+    phrases: ["operating MPS", "on MPS", "MPS operation", "using MPS", "shunting notch", "weak field"]
+    source: "§8.07 occasion 8, p143"
+  - fact: ccpt_melts_when
+    equals: mp_n_to_minus
+    phrases: ["MP from N to -", "MP N to -", "MP to -", "MP to minus", "N to minus", "regression notch", "on regression"]
+    source: "§8.07 occasion 9, p143"
+  - fact: ccpt_melts_when
+    equals: quick_regression
+    phrases: ["quick regression", "MP from N to 0", "MP N to 0", "MP N to O", "MP to 0 from N", "throwing MP to 0"]
+    source: "§8.07 occasion 10, p144"
+  - fact: ccpt_melts_when
+    equals: mp_0_to_p
+    phrases: ["MP from O to P", "MP from 0 to P", "MP 0 to P", "MP O to P", "MP to P", "on RB", "applying RB", "rheostatic braking"]
+    source: "§8.07 occasion 11, p144"
+  - fact: ccpt_melts_when
+    equals: operating_zqwc
+    phrases: ["operating ZQWC", "pressing ZQWC", "on ZQWC", "ZQWC"]
+    source: "§8.07 occasion 12, p144"
+  - fact: ccpt_melts_when
+    equals: pressing_bpsw
+    phrases: ["pressing BPSW", "on BPSW", "BPSW"]
+    source: "§8.07 occasion 13, p144"
+  - fact: ccpt_melts_when
+    equals: pressing_pvef
+    phrases: ["pressing PVEF", "on PVEF", "PVEF"]
+    source: "§8.07 occasion 14, p144"
+  - fact: ccpt_melts_when
+    equals: auto_regression
+    phrases: ["during auto regression", "on auto regression", "auto regression", "QD action"]
+    source: "§8.07 occasion 15, p144"
+
+steps:
+  # preamble
+  - id: stop_zpt_0_mpj_0_hba_off_and_renew_ccpt
+    text: >-
+      Stop the train at a convenient place, put ZPT on 0, MPJ on 0 & HBA off, and renew the
+      CCPT fuse. Report whether it melts again.
+    gate: null
+    source: "§8.07 Trouble Shooting, p144"
+
+  - id: hoba_off_and_renew_if_melts_again
+    text: "If CCPT melts again, put HOBA in 'OFF' and renew the fuse. Report whether it still melts."
+    gate: null
+    applies_when: {ccpt_melts_again: "yes"}
+    source: "§8.07 Trouble Shooting, p144"
+
+  - id: identify_occasion_if_melts_with_hoba_off
+    text: >-
+      If CCPT melts even after HOBA is in 'OFF', note the occasion on which it melts — while
+      keeping HBA on, while raising the pantograph, while closing DJ, while operating MPJ,
+      MP from 'O' to 'N', MP from 'N' to '+', while taking the 6th notch, while operating
+      MPS, MP from 'N' to '-', during quick regression (MP from 'N' to '0'), MP from 'O' to
+      'P', while operating ZQWC, while pressing BPSW, while pressing PVEF, or during auto
+      regression. Report the occasion.
+    gate: null
+    applies_when: {ccpt_melts_again: "yes", ccpt_melts_with_hoba_off: "yes"}
+    elicits: ccpt_melts_when
+    source: "§8.07 Occasions 1–15 and Trouble Shooting, pp143–144"
+
+  # A — while keeping HBA ON: Q118 coil earth fault
+  - id: a_disconnect_q118_cable_or_wedge_q46
+    text: >-
+      CCPT melts while keeping HBA ON — the Q118 coil has an earth fault. Try to disconnect
+      the '+'ve cable (No.788) of Q118, or wedge Q46 in the energised condition. If Q46 is
+      wedged, do not keep MP on '+' for a longer time (quick progression comes).
+    gate: null
+    applies_when: {ccpt_melts_when: hba_on}
+    requires_stated: true
+    source: "§8.07 A (a)(c), p144"
+
+  - id: a_wedge_q118
+    text: >-
+      Wedge Q118 in the energised condition and work with precautions (all EM contactors
+      opened before wedging; after closing DJ ensure C118 is fully opened; check MVMT1,
+      MVMT2, MVRH, MVSL1, MVSL2 frequently; check the TFR oil level; avoid quick regression
+      of GR).
+    gate:
+      type: hazard_exposure
+      rule: "Do not wedge Q118 unless all EM contactors are opened (precautions for wedging Q118, §7.01.3)."
+      action: wedge_Q118
+      preconditions:
+        - all_em_contactors_open
+      on_precondition_unmet: >-
+        Before wedging Q118, ensure all EM contactors are opened. Then, with Q118 wedged in
+        the energised condition: after closing DJ ensure C118 is fully opened; check the
+        working of MVMT1, MVMT2, MVRH, MVSL1, MVSL2 auxiliaries frequently; check the TFR
+        oil level for any colour change or any abnormal increase of oil level; avoid quick
+        regression of GR.
+      precondition_question: "Before wedging Q118, were all EM contactors opened?"
+      source: "§7.01.3 Precautions for wedging Q118 (a)–(e), p106; §8.07 A (b), p144"
+    applies_when: {ccpt_melts_when: hba_on}
+    requires_stated: true
+    completes: true
+    source: "§8.07 A (b), p144"
+
+  # B — while raising pantograph
+  - id: b_change_zpt_position_or_cab
+    text: >-
+      CCPT melts while raising the pantograph — VEPT or the ZPT socket has an earth fault.
+      For VEPT, change the ZPT position; for the ZPT socket, change the cab.
+    gate: null
+    applies_when: {ccpt_melts_when: raising_panto}
+    requires_stated: true
+    completes: true
+    source: "§8.07 B, p144"
+
+  # C — while closing DJ
+  - id: c_q44_disconnect_cable_or_tlc
+    text: >-
+      CCPT melts while closing DJ — Q44 or the QCVAR DC coil has an earth fault. For Q44:
+      try to disconnect the '+'ve cable (No.721) of Q44 / contact TLC. For the QCVAR DC
+      coil: try to disconnect the '+'ve cable (No.700) of the QCVAR DC coil, then keep
+      HQCVAR on 'O' and work with precautions (LSCHBA shall not extinguish).
+    gate: null
+    applies_when: {ccpt_melts_when: closing_dj}
+    requires_stated: true
+    source: "§8.07 C, p145"
+
+  - id: c_wedge_q44
+    text: >-
+      For Q44: wedge Q44 in the energised condition and work with precautions (permission
+      of TLC and the GR efficiency test before wedging; after wedging check MVSI-1, MVSI-2
+      on run, watch the OHE voltage and trip DJ below 17.5 KV, take the precautions for
+      wedging Q118, no manual operation of GR).
+    gate:
+      type: hazard_exposure
+      rule: "Do not wedge Q44 without the permission of TLC and without conducting the GR efficiency test (§7.01.5)."
+      action: wedge_Q44
+      preconditions:
+        - tlc_permission_for_wedging_q44
+        - gr_efficiency_test_done
+      on_precondition_unmet: >-
+        Before wedging Q44: take the permission from TLC for wedging Q44, conduct the GR
+        efficiency test (GR travelling time from 1-32 or 32-1 is 11-13 sec, to be conducted
+        in LT), and wedge with a suitable wooden wedge. After wedging Q44: check the working
+        of all auxiliary motors MVSI-1, MVSI-2 while on run; check the OHE voltage
+        frequently and trip DJ when OHE voltage drops below 17.5 KV; take all the
+        precautions which have to be taken after wedging Q118; manual operation of GR
+        should not be done.
+      precondition_question: >-
+        Before wedging Q44, was the permission of TLC taken and the GR efficiency test
+        conducted (1-32 or 32-1 in 11-13 sec)?
+      source: "§7.01.5 Precautions before / after wedging Q44, pp108–109; §8.07 C (ii), p145"
+    applies_when: {ccpt_melts_when: closing_dj}
+    requires_stated: true
+    completes: true
+    source: "§8.07 C (ii), p145"
+
+  # D — while operating MPJ
+  - id: d_j1_j2_ctf_q50_earth_fault
+    text: >-
+      CCPT melts while operating MPJ — the J1/J2 F/R coils, the CTF1/2/3 traction coils or
+      Q50 has an earth fault. For J1/J2 F/R coils: remove the '+'ve wire and set J1/J2 as
+      per the driving cab and work with precautions. For CTF1/2/3: remove the '+'ve wire
+      and set CTF1/2/3 to the traction side and work with precautions. For Q50: remove the
+      '+'ve wire (No.020) of Q50 / disconnect the C145 N/C interlock and wedge Q50 and work
+      with precautions (MPJ not to be operated up to the destination; no shunting; RB not
+      to be used; MP on 'O' to bring GR to 'O' when DJ trips on notches; log-book remarks,
+      inform TLC).
+    gate: null
+    applies_when: {ccpt_melts_when: operating_mpj}
+    requires_stated: true
+    completes: true
+    source: "§8.07 D, p145; §8.01 Precautions after wedging Q50, p131"
+
+  # E — MP O to N
+  - id: e_isolate_line_contactor_with_hmcs
+    text: >-
+      CCPT melts while moving MP from 'O' to 'N' — an L1–L6 line contactor coil has an
+      earth fault: isolate the concerned line contactor with HMCS and work with 5/6 load.
+    gate: null
+    applies_when: {ccpt_melts_when: mp_0_to_n}
+    requires_stated: true
+    completes: true
+    source: "§8.07 E, pp145–146"
+
+  # F — MP N to +
+  - id: f_manual_gr_ve1_q52
+    text: >-
+      CCPT melts while moving MP from 'N' to '+' — the VE1 coil or Q52 has an earth fault:
+      go for manual control of GR.
+    gate: null
+    applies_when: {ccpt_melts_when: mp_n_to_plus}
+    requires_stated: true
+    completes: true
+    source: "§8.07 F, p146"
+
+  # G — 6th notch
+  - id: g_disconnect_evphgr
+    text: >-
+      CCPT melts while taking the 6th notch — the EVPHGR coil has an earth fault:
+      disconnect EVPHGR (wire No.143; the GR pump will not work) and observe the GR oil
+      frequently.
+    gate: null
+    applies_when: {ccpt_melts_when: sixth_notch}
+    requires_stated: true
+    completes: true
+    source: "§8.07 G, p146"
+
+  # H — MPS
+  - id: h_do_not_operate_mps
+    text: >-
+      CCPT melts while operating MPS — a shunting contactor coil has an earth fault: do not
+      operate MPS.
+    gate: null
+    applies_when: {ccpt_melts_when: operating_mps}
+    requires_stated: true
+    completes: true
+    source: "§8.07 H, p146"
+
+  # I — MP N to -
+  - id: i_manual_gr_ve2_q52
+    text: >-
+      CCPT melts while moving MP from 'N' to '-' — the VE2 coil or Q52 has an earth fault:
+      go for manual control of GR.
+    gate: null
+    applies_when: {ccpt_melts_when: mp_n_to_minus}
+    requires_stated: true
+    completes: true
+    source: "§8.07 I, p146"
+
+  # J — quick regression
+  - id: j_manual_gr_or_notch_by_notch_regression
+    text: >-
+      CCPT melts during quick regression (MP from 'N' to '0') — the VE2 coil or Q46 has an
+      earth fault. For the VE2 coil: go for manual control of GR. For Q46: do not do quick
+      regression; go for notch-by-notch regression till GR comes to 'O'.
+    gate: null
+    applies_when: {ccpt_melts_when: quick_regression}
+    requires_stated: true
+    completes: true
+    source: "§8.07 J, p146"
+
+  # K — MP O to P
+  - id: k_do_not_use_rb
+    text: >-
+      CCPT melts while moving MP from 'O' to 'P' — the CTF1/2/3 braking coils or the C145
+      coil has an earth fault: do not use RB.
+    gate: null
+    applies_when: {ccpt_melts_when: mp_0_to_p}
+    requires_stated: true
+    completes: true
+    source: "§8.07 K, pp146–147"
+
+  # L — ZQWC
+  - id: l_zqwc_or_shunting_contactors
+    text: >-
+      CCPT melts while pressing ZQWC — QWC or the shunting contactors have an earth fault.
+      For QWC: do not operate ZQWC; if required, wedge QWC up to the 10th notch and remove
+      it. For the shunting contactors: use the sanders and proper driving techniques.
+    gate: null
+    applies_when: {ccpt_melts_when: operating_zqwc}
+    requires_stated: true
+    completes: true
+    source: "§8.07 L, p147"
+
+  # M — BPSW
+  - id: m_do_not_press_bpsw
+    text: "CCPT melts while pressing BPSW — MV4 has an earth fault: do not press BPSW."
+    gate: null
+    applies_when: {ccpt_melts_when: pressing_bpsw}
+    requires_stated: true
+    completes: true
+    source: "§8.07 M, p147"
+
+  # N — PVEF
+  - id: n_pvef_c3w
+    text: >-
+      CCPT melts while pressing PVEF — VEF 'E' has an earth fault: do not press PVEF while
+      operating A9, do not keep MP on 'P' either, isolate the C3W valve and work further.
+    gate: null
+    applies_when: {ccpt_melts_when: pressing_pvef}
+    requires_stated: true
+    completes: true
+    source: "§8.07 N, p147"
+
+  # O — auto regression
+  - id: o_q48_or_q51_earth_fault
+    text: >-
+      CCPT melts during auto regression — the Q48 coil (during QD action) or the Q51 relay
+      coil has an earth fault. For Q48: avoid QD action / remove the '+'ve wire (No.221) of
+      Q48. For Q51: avoid auto regression and handle the loco carefully / remove the '+'ve
+      wire (No.115) and work cautiously.
+    gate: null
+    applies_when: {ccpt_melts_when: auto_regression}
+    requires_stated: true
+    completes: true
+    source: "§8.07 O, p147"
+
+terminal_actions:
+  resolved: "work onwards with the earth-faulted branch isolated as above, observing its precautions"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.07, pp.143–148"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

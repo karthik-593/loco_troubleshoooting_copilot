@@ -98,6 +98,8 @@ def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
     for s in fault.steps:
         if s.id in claimed:
             continue
+        if s.elicits and _fact(state, fault, s.elicits) is not None:
+            continue                # the fact this step asks for is already stated
         # a conditional branch is skipped only when a STATED fact contradicts it — or, for a
         # side-note step (requires_stated), unless every fact is stated as required
         contradicted = False

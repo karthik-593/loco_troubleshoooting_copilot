@@ -1,0 +1,83 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Total loss of tractive effort with GR progression
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.03, p.133 (abnormal sign, reasons 1–3, trouble shooting 1–9).
+# Mechanism: a 9-step ladder ending in TLC. No gate.
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Total_loss_TE_with_GR_progression
+aliases:
+  - "total loss of tractive effort with GR progression"
+  - "loss of tractive effort with GR progression"
+  - "notches coming but loco not moving"
+  - "GR progressing but loco not moving"
+  - "line contactors not closing"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "Total loss of tractive effort (LSB glowing / without LSB / with GR progression)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "When MP is moved from 'O' to 'N' then to '+': LSGR extinguished, NR deviated but the ammeters not deviated and the loco not moving (line contactors not closing / cut in TFP primary winding / cut in A-34 terminal)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: operate_bl_2_3_times
+    text: "Operate BL 2 / 3 times."
+    gate: null
+    source: "§8.03 item 1, p133"
+
+  - id: clean_q50_interlocks_and_try
+    text: "Clean the interlocks of Q50 and try."
+    gate: null
+    source: "§8.03 item 2, p133"
+
+  - id: ensure_ctfs_traction_side_and_tap
+    text: >-
+      Ensure CTF 1, 2 & 3 are on the traction side; tap the handles gently, duly taking the
+      necessary precautions.
+    gate: null
+    source: "§8.03 item 3, p133"
+
+  - id: ensure_hvsi_hvmt_on_1_else_3
+    text: >-
+      Ensure the HVSI-1 & 2 and HVMT-1 & 2 switches are in '1'. If unsuccessful, change them
+      to the '3' position and try.
+    gate: null
+    source: "§8.03 item 4, p133"
+
+  - id: ensure_cr_pressure_above_5
+    text: "Ensure CR pressure is above 5 kg/cm2."
+    gate: null
+    source: "§8.03 item 5, p133"
+
+  - id: ensure_ep_cocs_open_and_drain_cock_closed
+    text: >-
+      Ensure the EP 1 & 2 COCs are open with no leakage, and ensure the EP drain cock is in
+      the closed position.
+    gate: null
+    source: "§8.03 item 6, p133"
+
+  - id: arrest_ba_pipe_line_leakage
+    text: "If any air leakage is found in the BA pipe line, arrest the same."
+    gate: null
+    source: "§8.03 item 7, p133"
+
+  - id: change_cab_and_try
+    text: "Change the cab and try."
+    gate: null
+    source: "§8.03 item 8, p133"
+
+  - id: contact_tlc_if_unsuccessful
+    text: "If still unsuccessful, contact TLC for advice."
+    gate: null
+    source: "§8.03 item 9, p133"
+
+terminal_actions:
+  resolved: "resume traction"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.03, p.133"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

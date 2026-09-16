@@ -189,6 +189,7 @@ steps:
       tripped (immediately, after 5.6 sec before BLRDJ was released, on releasing BLRDJ,
       within 15 sec, after BLVMT, on the first notch, on the sixth notch, or at random).
     gate: null
+    elicits: trip_sign
     source: "Ch.7 introduction, p102; §5.01 tripping failures list 1–11, pp81–82"
 
 terminal_actions:

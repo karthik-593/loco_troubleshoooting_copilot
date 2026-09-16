@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Total loss of tractive effort with LSB glowing  (Q50 not energising)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 8, §8.01, pp.128–131 (abnormal sign, reason, trouble shooting 1–10,
+#         reverser-tapping photographs pp.129–131, "Precautions to be followed after wedging Q50" a–e).
+# Mechanism: a 10-step ladder ending in "wedge Q50 in energised position" — an ORDINARY step
+# (approved 2026-09-16, batch 3 decision 1: the TSD states only AFTER-precautions, which ride in
+# the step text and the resolved terminal). Steps 5–8 (reversers / CTFs / C145) precede it in
+# TSD order.
+# STATUS: encoded 2026-09-16 (batch 3) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Total_loss_TE_with_LSB
+aliases:
+  - "total loss of tractive effort with LSB glowing"
+  - "loss of tractive effort with LSB glowing"
+  - "loss of tractive effort with LSB"
+  - "Q50 not energising"
+  - "Q50 not energised"
+  - "Q50 not picking up"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "Total loss of tractive effort (LSB glowing / without LSB / with GR progression)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "When MPJ is moved to F or R the LSB lamp does not extinguish; with MP moved from 'O' to 'N' then to '+', LSB remains glowing, LSGR not extinguished, NR not deviated, ammeters not deviated and the loco not moving (Q50 not energising)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: operate_bl_2_3_times
+    text: "Operate BL 2 or 3 times and try."
+    gate: null
+    source: "§8.01 item 1, p128"
+
+  - id: operate_mpj_forward_reverse
+    text: >-
+      Operate the MPJ handle 2 to 3 times forward and reverse, finally keeping it in the
+      required direction.
+    gate: null
+    source: "§8.01 item 2, p128"
+
+  - id: tap_or_operate_q50_manually
+    text: "Tap / operate Q50 manually and try."
+    gate: null
+    source: "§8.01 item 3, p128"
+
+  - id: ensure_ep1_ep2_ep3_cocs_open
+    text: "Ensure the EP1, EP2 and EP3 COCs are opened."
+    gate: null
+    source: "§8.01 item 4, p128"
+
+  - id: check_j1_j2_setting_for_cab
+    text: >-
+      Take the necessary precautions and check the proper setting of J1 & J2 according to
+      the cab leading: both J1 & J2 manual operating handles should be upwards for cab 1
+      leading and downwards for cab 2. Gently tap the handles. (Tapping of the reverser for
+      drum, BKT and CAM types is shown in the photographs, pp.129–131.)
+    gate: null
+    source: "§8.01 item 5, p128; photographs pp129–131"
+
+  - id: ensure_ctf_handles_traction_side
+    text: "Ensure the CTF1, 2, 3 manual operating handles are upwards (traction side) and tap the handles."
+    gate: null
+    source: "§8.01 item 6, p128"
+
+  - id: ensure_c145_fully_open
+    text: "Ensure C145 is fully opened."
+    gate: null
+    source: "§8.01 item 7, p128"
+
+  - id: ensure_ls_c145_extinguished
+    text: >-
+      Ensure LS-C145 (provided near the Q50 relay) is in the extinguished condition — it
+      indicates that C145 is in the open position.
+    gate: null
+    source: "§8.01 item 8, p128"
+
+  - id: clean_q50_interlocks_and_try
+    text: "Clean the interlocks of Q50 and try."
+    gate: null
+    source: "§8.01 item 9, p128"
+
+  # item 10 + precautions after wedging Q50 (a)–(e)
+  - id: wedge_q50_energised
+    text: >-
+      If still unsuccessful, wedge Q50 in the energised position and work with the
+      precautions to be followed after wedging Q50: MPJ should not be operated up to the
+      destination; shunting is prohibited — if required in an emergency, personally ensure
+      the proper setting of the reversers for every operation of MPJ; RB should not be
+      used; when DJ is tripped on notches, keep MP on 'O' to bring GR to 'O'; write remarks
+      in the loco log-book and inform TLC at the first opportunity.
+    gate: null
+    completes: true
+    source: "§8.01 item 10, p128; Precautions to be followed after wedging Q50 (a)–(e), p131"
+
+terminal_actions:
+  resolved: >-
+    work onwards; if Q50 is wedged: do not operate MPJ up to the destination, no shunting
+    (in an emergency personally ensure the reverser setting for every MPJ operation), do
+    not use RB, keep MP on 'O' to bring GR to 'O' when DJ trips on notches, write remarks in
+    the loco log-book and inform TLC at the first opportunity
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.8, §8.01, pp.128–131"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"
