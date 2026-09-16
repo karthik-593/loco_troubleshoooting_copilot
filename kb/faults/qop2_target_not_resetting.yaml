@@ -20,6 +20,7 @@ aliases:
   - "QOP-2 will not reset"
   - "QOP2 not resetting"
 precedence: 1
+listed_as: "QOP-2 dropped"
 config_dependency: none
 type_dependency: none
 rb_dependency: true                # §6.03.4(i): bit table "For WAP4 Locos without RB" differs

@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation II  (hub)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.09 "Operation-II", pp.123–124 (abnormal sign, causes 1–3).
+# Mechanism: HUB. The three causes are three procedures (§7.09.1–§7.09.3), chosen by what the
+# contactors C105, C106, C107 do when BLVMT is closed: none closed / one or more not closed /
+# all closed (their interlocks defective). Routed on the fact `contactors_closed`.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_II
+aliases:
+  - "operation II"
+  - "operation 2"
+  - "operation-II"
+  - "op II"
+  - "op 2"
+  - "trips on sixth notch"
+  - "trips on the sixth notch"
+  - "trips on 6th notch"
+  - "trips at 6th notch"
+  - "DJ trips on sixth notch"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "After closing DJ, wait for 15 sec, close BLVMT, wait for 30 sec, take the sixth notch: while counting 15 sec, LSDJ re-glows (DJ trips)"
+
+combination_rules: []
+route_rules:
+  - if_fact: contactors_closed
+    equals: none
+    route_to: Op_II_none_closed
+    source: "§7.09 cause 1 'All contactors C105, C106 & C107 not closed' → §7.09.1, p123"
+    phrases: ["none closed", "none of them closed", "none are closed", "none closing", "no contactor closed",
+              "all three not closed", "all three open", "C105, C106 and C107 not closed", "all not closed"]
+  - if_fact: contactors_closed
+    equals: some
+    route_to: Op_II_one_not_closed
+    source: "§7.09 cause 2 'Any one of the contactors of C107/C105/C106 not closed' → §7.09.2, p123"
+    phrases: ["one not closed", "one of them not closed", "one is not closing", "one contactor not closed",
+              "only C105 not closed", "only C106 not closed", "only C107 not closed",
+              "only C105 not closing", "only C106 not closing", "only C107 not closing"]
+  - if_fact: contactors_closed
+    equals: all
+    route_to: Op_II_interlock
+    source: "§7.09 cause 3 'C107, C105 & C106 closed but their I/Ls defective parallel to GR 0-5' → §7.09.3, p123"
+    phrases: ["all closed", "all three closed", "all are closed", "all of them closed", "all three are closing",
+              "all three close", "all of them close"]
+
+steps:
+  - id: check_c105_c106_c107_closing_on_blvmt
+    text: >-
+      With DJ closed, close BLVMT and check the EM contactors C105, C106 and C107. Report
+      whether none of them closes, one (or more) of them does not close, or all three close.
+    gate: null
+    source: "§7.09 Causes 1–3, p123"
+
+terminal_actions:
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.09, pp.123–124"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

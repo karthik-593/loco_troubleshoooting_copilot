@@ -214,6 +214,6 @@ def test_out_of_scope_guard_checks_the_list_not_the_phrase(kb):
     from llm.parse import out_of_scope_reason
     from engine import terminals as T
     t = T.defer_to_TLC(out_of_scope_reason(kb))
-    names = ", ".join(f.replace("_", " ") for f in kb.fault_ids)
+    names = out_of_scope_reason(kb).split("verify: ")[1].split(". Refer")[0]      # the listed_as entries
     assert guard(t, f"This one's outside the procedure set. You can verify {names}. Contact TLC.") == ()
     assert "out_of_scope_dropped_coverage" in guard(t, "Outside the procedure set. I can verify QLM dropped and a few others. Contact TLC.")

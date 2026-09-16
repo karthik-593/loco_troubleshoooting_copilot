@@ -10,8 +10,7 @@ The model adds nothing the engine did not decide (§4.2). That is enforced two w
 from __future__ import annotations
 
 import re
-from dataclasses import replace
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from engine.terminals import REASON_NOT_ISOLATED, REASON_RECURRED, REASON_SECOND_RESET, RESET_DONE_NOTE, Terminal
@@ -42,7 +41,15 @@ class PhraseResult:
 # ---------------------------------------------------------------------------
 
 _STOP = {"everything", "whether", "otherwise", "further", "normal", "abnormality", "condition",
-         "anything", "before", "after", "through", "again", "should", "please", "maximum"}
+         "anything", "before", "after", "through", "again", "should", "please", "maximum",
+         # instruction meta-words with everyday synonyms (Ch.7 texts: "Report whether…",
+         # "For quick trouble shooting…", "Ensure…" → "make sure")
+         "report", "trouble", "shooting", "ensure", "properly", "position", "convenient"}
+
+
+def _stem(w: str) -> str:
+    """Crude stem so 'closing' survives as 'close', 'pressed' as 'press' (substance guard)."""
+    return re.sub(r"(ing|ed|es|s|e)$", "", w)
 
 
 _TRUCK_SWAP = {"1": "2", "2": "1"}
@@ -103,8 +110,21 @@ def _identifiers(text: str) -> list[str]:
     return list(dict.fromkeys(m for m in _IDENT.findall(action) if len(m) >= 2))
 
 
+# Ch.7 ladders chain their steps with "If unsuccessful, …" / "If still unsuccessful, …" /
+# "If not successful, …": a connector, not a condition the pilot reports. Stripped before
+# the payload is built, so it is never shown as `condition_already_met: unsuccessful` (seen
+# live: "The safety relays are already showing unsuccessful").
+_LADDER_HEAD = re.compile(r"^\s*If\s+(still\s+)?(un|not\s+)?successful\s*[,;:]\s*", re.IGNORECASE)
+
+
+def _strip_ladder_head(text: str) -> str:
+    return _LADDER_HEAD.sub("", text, count=1)
+
+
 def terminal_payload(t: Terminal) -> str:
     lines = [f"kind: {t.kind}"]
+    if t.kind == "ask_step":
+        t = replace(t, message=_strip_ladder_head(t.message))
     m = _IF_HEAD.match(t.message) if t.kind == "ask_step" else None
     if m:
         # A conditional KB step reached because its condition holds: the pilot is asked about
@@ -123,6 +143,10 @@ def terminal_payload(t: Terminal) -> str:
     if t.kind == "ask_step" and t.do_now:
         lines.append("do_now: the pilot has said this check is NOT done. Tell them to do it now and "
                      "report what they find. Do NOT ask whether they have done it.")
+    if t.kind == "ask_step" and t.preconditions_met:
+        lines.append("preconditions_met: " + ", ".join(p.replace("_", " ") for p in t.preconditions_met)
+                     + " — already confirmed by the pilot; the action is cleared. Do NOT ask about "
+                       "them again; put the action and its working precautions.")
     if t.hold_action:
         lines.append(f"hold_action: the pilot intends to {t.hold_action.replace('_', ' ')} — "
                      f"say plainly that this waits until the check is done")
@@ -167,14 +191,25 @@ def _unnegated_reset_sentences(text: str) -> list[str]:
     return out
 
 
+_HOLD_WORDS = re.compile(r"\b(hold|held|holds|holding|wait|waits|waited|waiting|do not (?:move|resume|proceed))\b")
+
+
+def _added_hold(t: Terminal, low: str) -> bool:
+    """A hold / wait the ENGINE did not issue — but not the step's own 'wait for 15 seconds' or
+    'DJ closed and held' (Ch.7 ladders), which the payload carries."""
+    key = lambda w: "hold" if w.startswith("h") else ("wait" if w.startswith("w") else w)
+    own = {key(m.group(1)) for m in _HOLD_WORDS.finditer(t.message.lower())}
+    return any(key(m.group(1)) not in own for m in _HOLD_WORDS.finditer(low))
+
+
 def guard(t: Terminal, text: str) -> tuple[str, ...]:
     v: list[str] = []
     s = text.strip()
     low = s.lower()
     if not s:
         return ("empty",)
-    if len(s) > MAX_CHARS:
-        v.append("too_long")
+    if len(s) > max(MAX_CHARS, int(1.3 * len(" ".join([t.message, *t.guidance])))):
+        v.append("too_long")                       # the payload's own length bounds a long step
     if re.search(r"^\s*([-*#]|\d+\.)\s", s, re.M):
         v.append("markdown_structure")
 
@@ -220,7 +255,7 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         idents = set(_identifiers(t.message))
         words = {w.lower() for w in re.findall(r"[A-Za-z][A-Za-z-]{5,}", action)} - _STOP
         lost_i = [i for i in idents if i.lower() not in low]
-        lost_w = [w for w in words if w not in low]
+        lost_w = [w for w in words if _stem(w) not in low]
         # Sanctioned SHORT FORM for a long component list (phrase prompt): the symptom, at
         # least one of the payload's own identifiers as the subsystem tag, and an offer of the
         # exact list. Anything else must keep the substance.
@@ -237,7 +272,7 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
             v.append("do_now_asked_again")               # they said no; do not ask again
         if t.hold_action and not re.search(r"\b(before|until|after|hold|wait|first)\b", low):
             v.append("hold_action_dropped")
-        if not t.hold_action and re.search(r"\b(hold|wait|do not (move|resume|proceed))\b", low):
+        if not t.hold_action and _added_hold(t, low):
             v.append("added_hold_instruction")
     elif t.kind in ("ask_step", "ask_history", "confirm_fault", "clarify", "ask_config"):
         # an ask_step (a due, ungated step) may also be put as the action with a report-back
@@ -253,7 +288,7 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
                 v.append("branch_question_dropped_alternative")
         if t.kind == "ask_step" and t.hold_action and not re.search(r"\b(before|until|after|hold|wait|first)\b", low):
             v.append("hold_action_dropped")
-        if t.kind == "ask_step" and not t.hold_action and re.search(r"\b(hold|wait|do not (move|resume|proceed))\b", low):
+        if t.kind == "ask_step" and not t.hold_action and _added_hold(t, low):
             v.append("added_hold_instruction")            # the engine issued no hold
     elif t.kind == "confirm":
         if any("10 min" in g.lower() for g in t.guidance) and "10 min" not in low:
@@ -266,8 +301,10 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         if RESET_DONE_NOTE in t.message and re.search(r"\breset qlm once and\b", low):
             v.append("confirm_reinstructs_done_reset")    # the reset is done; do not tell them to do it
     elif t.kind == "defer_to_TLC":
-        if "tlc" not in low:
+        if "tlc" in t.message.lower() and "tlc" not in low:
             v.append("defer_missing_TLC")
+        if "relief" in t.message.lower() and "relief" not in low:
+            v.append("defer_missing_relief")             # §7.04(b) "ask for relief engine"
         if "procedure set" in t.message and "verify:" in t.message:
             names = [n.strip().lower() for n in t.message.split("verify:")[1].split(".")[0].split(",")]
             if any(n and n not in low for n in names):

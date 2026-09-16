@@ -569,4 +569,67 @@ branch — `on_not_isolated` is INFERRED from the analogous sections (marked in 
 GI 7 applies through the ordered diff only from (e) onwards; (3) QOA (e) i–iii focus hints and Note 2
 folded into step (a)'s text rather than steps; (4) QOA "very frequently" mapped to `drops_frequently`.
 
-Next: batch 2 (Ch.7 ICDJ + tripping failures, 5.01 intake precheck).
+## Batch 2 — Ch.7 tripping failures + §5.01 / Ch.7-intro intake, encoded 2026-09-16
+
+Approved decisions: (1) hub-and-route with a one-line confirm before an ungated target;
+(2) wedging = hazard_exposure gate wherever the TSD states a precondition, Q100 ordinary;
+(3) no DJ-type axis — one EFDJ/MTDJ file; (4) re-glow sign → ask "VCB 5-branch loco?", don't
+know → "the signs indicate Operation 'B' part II", VCB-5 → §7.11 TLC; (5) cross-references
+verbatim; (6) post-wedge precautions in the step text / resolved terminal; (7) elimination
+ladders as applies_when chains.
+
+23 fault files (`dj_tripped_on_line`, `icdj` + 7 branches, `no_tension`, `op_a_beginning`,
+`op_a_ending`, `reglows_on_release`, `op_a_ending_part2`, `op_b_part1`, `op_b_part2`, `op_o`,
+`op_i`, `op_ii` + 3 branches, `twac`). Every step cites §7.x / §5.01 / Ch.7 intro; the
+observation-drill route rules cite each section's "Abnormal sign" line.
+
+Engine / schema added:
+- `Fault.confirm_before_guidance` — a procedure reached by a parser-classified route fact is
+  confirmed (reassess 2b) before guidance; `_switch_to` clears `fault_confirmed` for such a
+  target. A CAUTION / ASK on an unconfirmed fault now waits behind the confirm line (a REFUSE
+  never does) — `run_turn` / graph accept `confirm_fault` after a fired verdict.
+- `RouteRule.note` → `DiagnosisState.route_note`, prepended to the confirm line (decision 4).
+  `confirm_fault` is rendered VERBATIM (the phrased line asked a different question live) and
+  names the fault by its first alias.
+- `Fault.listed_as` + `INTAKE_PRECEDENCE` (= -2): the out-of-scope coverage list collapses
+  families; an intake hub's alias ("DJ tripped") yields to a specific fault the parser names
+  in the same message, and the hub's own drill steps are then dropped from the claims.
+- `Gate.precondition_question` (KB text for the H-ask branch; the roof question was hard-coded).
+- Wedge intents `wedge_Q118` / `wedge_Q44` / `wedge_Q45` / `wedge_contactor`; `Terminal.preconditions_met`
+  tells the phrasing a gated step's preconditions are already stated.
+- `engine.diff.step_skipped`: a gated step in an untaken branch (contradicted / unstated
+  side-note) neither gates nor blocks; `prior_ordinary_complete` also requires every EARLIER
+  gated step to be done (TWAC: Q118 before Q44).
+- Reassess step 4 attaches the `resolved` terminal on a claimed `completes` step of a
+  hazard-gated fault too (wedge + precautions).
+- Matcher: an alias immediately preceded by a negation is not a hit ("no operation A ending
+  trouble" while confirming the Q45 precondition).
+- Parse: `facts` values may be enumerated (`trip_sign`, `contactors_closed`, `vcb_5_branch_loco`);
+  route phrases for every sign / contactor state / DJ-type answer; "reporting the RESULT of a
+  listed check is a claim of that check".
+- Phrase guards: substance guard stems words and ignores instruction meta-words; the hold
+  guard ignores the step's own "wait 15 s" / "held"; "If unsuccessful," ladder connectors are
+  stripped from the payload (seen live: "the safety relays are already showing unsuccessful");
+  a reply may be as long as 1.3× its payload; a defer must keep "relief" when the payload has it.
+- Eval: `ambiguous_dj_tripped` gold is now the intake precheck (no longer a clarify); 4 new
+  scenarios (TWAC Q118 caution→refuse, Q44 refused without TLC, intake→Op A beginning with
+  confirm, re-glow not known → Op B II caution). 21/21 offline and live, 11 paths. 15 new
+  held-out parse cases (55 live).
+
+Judgement calls to confirm: (1) §7.08(d) "HVSI-2, HVSL-1 and HVMT-2 on 0" encoded verbatim —
+HVSL-1 looks like a misprint for HVSL-2 (cf. §7.07 MVMT-2 paragraph); (2) the ICDJ hub's
+"check whether Q45 / Q44 energises" steps are structural (the TSD lists the causes and Note 2
+says "check one by one branch"; the checks themselves are implied); (3) the Q118→Q45→Q44
+chain follows each section's "if DJ does not close, check … branches"; a Q45 manual close
+that trips routes back to the intake hub ("pick up the correct abnormal sign") and re-asks
+the precheck; (4) the contactor wedge gate's precondition (switch on 3) is a companion
+requirement rather than a strict "before" in the TSD; (5) §7.09.4 "wedge any two compressor
+contactors" left as text (no gate — not C105/C106/C107); (6) `terminal_actions.unresolved:
+contact TLC` on ladders that end without a TLC line (§7.01.1, §7.01.2) is the engine's
+default, marked in the file comments.
+
+Known phrase slips not caught by guards (recorded): "motor contactors" for the MVMT/MVSL
+blowers; "wedging while energised causes chatter" paraphrase of precaution 7. A per-step
+equipment vocabulary guard remains the candidate fix.
+
+Next: batch 3 (Ch.8 traction failures 8.01–8.07; Q50 wedging gate per §8.01 precautions).

@@ -1,0 +1,66 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation 'A' ending
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.04 "Operation 'A' ending", pp.114–116 (abnormal sign, causes 1–2,
+#         trouble shooting a–e, Note).
+# Mechanism: ARNO abnormal → relief engine (defer); ARNO working → QCVAR defective: HQCVAR
+# on '0', close DJ releasing BLRDJ within 4 seconds of the UA needle deviating (completes);
+# (e) and the Note ("Relay Q-45 should not be wedged if the loco is having Operation 'A'
+# Ending trouble") are the running conditions — the Note is also the precondition of the Q45
+# wedge gate in §7.06.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_A_ending
+aliases:
+  - "operation A ending"
+  - "operation 'A' ending"
+  - "op A ending"
+  - "LSCHBA does not extinguish"
+  - "LSCHBA not extinguishing"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Close BLDJ, press BLRDJ: LSDJ extinguishes (DJ closes), UA needle deviates, auxiliary sound may or may not be heard, LSCHBA does not extinguish and LSDJ glows again after 5.6 sec (DJ trips) before BLRDJ is released"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: arno_abnormality_found                  # (b)
+    equals: "yes"
+    text: "There is an abnormality in ARNO: ask for a relief engine."
+    source: "§7.04(b), p115"
+
+steps:
+  # (a)
+  - id: check_arno_while_closing_dj
+    text: >-
+      While closing DJ, ensure the auxiliary sound, no smoke from ARNO and no abnormality
+      from ARNO. Report whether ARNO is working properly.
+    gate: null
+    source: "§7.04(a), p115"
+
+  # (c) (d)
+  - id: hqcvar_on_0_close_dj_release_blrdj_within_4_sec
+    text: >-
+      If ARNO is working properly, QCVAR is defective: place HQCVAR in '0' and close DJ,
+      releasing BLRDJ promptly 4 seconds after the deviation of the UA needle, since
+      LSCHBA will not extinguish. If BLRDJ is not released within 4 sec, DJ will trip
+      through C118.
+    gate: null
+    applies_when: {arno_abnormality_found: "no"}
+    completes: true
+    source: "§7.04(c)(d), pp115–116"
+
+terminal_actions:
+  resolved: >-
+    work onwards with HQCVAR on '0': check the CHBA ammeter and ARNO frequently on run for
+    proper working and ensure the working of CHBA. Relay Q45 should not be wedged while the
+    loco has Operation 'A' ending trouble
+  unresolved: "ask for a relief engine"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.04, pp.114–116"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

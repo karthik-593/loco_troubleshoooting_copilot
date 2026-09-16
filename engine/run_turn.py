@@ -46,7 +46,8 @@ def run_turn(state: DiagnosisState, update: StateUpdate, kb: KnowledgeBase | Non
         # Short-circuit: no diff, no tool, no agent. reassess re-derives the same
         # verdict and builds the terminal.
         decision = reassess(state, fault)
-        assert decision.route == "gate_terminal"
+        # a CAUTION / ASK on a fault not yet confirmed waits behind the §5.5 confirm line
+        assert decision.route == "gate_terminal" or decision.terminal.kind == "confirm_fault"
         path = (f"(reroute→{rerouted})", "(reflex short-circuit)") if rerouted else ("(reflex short-circuit)",)
         return TurnTrace(verdict, True, decision, tool_path=path)
 

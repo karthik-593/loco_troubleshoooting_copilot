@@ -47,7 +47,14 @@ ACTION_RESET_QLM = "reset_QLM"
 ACTION_RESET_QLA = "reset_QLA"                # QLA standalone reset_limit gate (§6.05)
 ACTION_WORK_ON_ROOF = "work_on_roof"          # pantograph_damaged hazard gate (§10.03 / §11.04)
 ACTION_ENTER_HT = "enter_HT_compartment"      # HT-compartment entry hazard gate (GI 7 p.77 / §13.05)
-ACTIONS = (ACTION_RESET_QLM, ACTION_RESET_QLA, ACTION_WORK_ON_ROOF, ACTION_ENTER_HT)
+# Batch 2 (Ch.7, approved decision 2): wedging is a hazard_exposure gate wherever the TSD
+# states a precondition — Q118 (§7.01.3), Q44 (§7.01.5), Q45 (§7.06 / §7.04 Note), C105/C106/C107 (§7.09.2 Note 1)
+ACTION_WEDGE_Q118 = "wedge_Q118"
+ACTION_WEDGE_Q44 = "wedge_Q44"
+ACTION_WEDGE_Q45 = "wedge_Q45"
+ACTION_WEDGE_CONTACTOR = "wedge_contactor"
+ACTIONS = (ACTION_RESET_QLM, ACTION_RESET_QLA, ACTION_WORK_ON_ROOF, ACTION_ENTER_HT,
+           ACTION_WEDGE_Q118, ACTION_WEDGE_Q44, ACTION_WEDGE_Q45, ACTION_WEDGE_CONTACTOR)
 
 
 @dataclass
@@ -67,6 +74,7 @@ class DiagnosisState:
     clarify_asked: int = 0                         # unresolved-fault turns so far (§5.6 backstop)
     last_terminal_sig: Optional[str] = None        # what the pilot was last told (repeat detection)
     last_terminal: Optional[Any] = None            # the Terminal itself (re-rendered on "give me the list")
+    route_note: Optional[str] = None               # RouteRule.note of the rule that routed here (for the confirm line)
     # Session loco context ("session bar"): [leading] or [leading, trailing]. The fault is
     # attributed to locos[active_loco]. Kept alongside §10.1's ``config`` (which mirrors the
     # active loco's config for backward compatibility with BUILD_PLAN's state shape).
@@ -300,7 +308,7 @@ def resolve_combination(state: DiagnosisState, fault: Optional[Fault], lookup) -
             target = lookup(rr.route_to)
             if target is None:
                 return None
-            return _switch_to(state, target)
+            return _switch_to(state, target, note=rr.note)
     reported = {str(r).upper() for r in (state.history_facts.get(HF_OTHER_RELAYS) or [])}
     if not reported:
         return None
@@ -313,13 +321,16 @@ def resolve_combination(state: DiagnosisState, fault: Optional[Fault], lookup) -
     return None
 
 
-def _switch_to(state: DiagnosisState, target: Fault) -> str:
+def _switch_to(state: DiagnosisState, target: Fault, note: Optional[str] = None) -> str:
     """Switch the matched fault. Claimed steps carry over where ids match; claims the SOURCE
     did not recognise but the target does (the pilot named the target procedure's steps in
     the same message as the routing fact) are adopted; the rest stay unrecognised."""
     state.matched_fault = target.fault_id
     state.steps_required = list(target.step_ids)
     state.steps_claimed_done &= set(target.step_ids)
+    if target.confirm_before_guidance:
+        state.fault_confirmed = False         # the routing fact was the parser's reading: confirm first
+    state.route_note = note
     unrec = list(state.tool_results.get("unrecognised_claims", []))
     adopted = [c for c in unrec if c in target.step_ids]
     state.steps_claimed_done.update(adopted)

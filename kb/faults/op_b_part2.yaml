@@ -1,0 +1,87 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation 'B' part II
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.06 "Operation 'B' – part II", pp.119–120 (abnormal sign, causes 1–2,
+#         trouble shooting, precautions 1–7, Note); §7.04 Note p.116.
+# Mechanism: a single action — WEDGE Q45 in the energised condition — as a hazard_exposure
+# gate whose precondition is the TSD's contraindication: "Should not wedge Q45 if operation
+# A ending problem exists" (precaution 6; §7.04 Note). Precautions 1–7 and "Do not use RB if
+# loco is having B-II trouble" are the working conditions after the wedge.
+# Reached from the Reglows_on_release question hub (not a VCB 5-branch loco, or not known),
+# or directly by name.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_B_part2
+aliases:
+  - "operation B part 2"
+  - "operation B part II"
+  - "operation 'B' part II"
+  - "op B part 2"
+  - "op B part II"
+  - "operation B-II"
+  - "B-II trouble"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Close BLDJ and press BLRDJ: LSDJ extinguishes, UA needle deviates, auxiliary sound heard, LSCHBA also extinguishes; on releasing BLRDJ, LSDJ re-glows immediately (causes: defective Q30, or OHE voltage below 17.5 kV)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: wedge_q45
+    text: >-
+      Wedge relay Q45 in the energised condition and work onwards, duly observing the
+      following precautions: 1. Ensure GR is on '0' before closing DJ. 2. DJ closes as soon
+      as BLDJ is closed, so whenever DJ trips, immediately open BLDJ. 3. At a neutral
+      section open BLDJ at the DJ opening board and close BLDJ only at the DJ closing
+      board. 4. After closing DJ and on run ensure the OHE voltage is above 17.5 KV; if it
+      drops below 17.5 KV, open DJ immediately. 5. Check the working of MVSI-1 & MVSI-2
+      frequently on run. 6. Q45 should not be wedged if an Operation 'A' ending problem
+      exists. 7. When DJ has tripped, remove the Q45 wedge; wedge Q45 only before
+      energisation, to avoid chattering of Q118 & Q44. Do not use RB if the loco is having
+      B-II trouble.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q45 if the loco has Operation 'A' ending trouble. With Q45 wedged: GR
+        on '0' before closing DJ; open BLDJ immediately whenever DJ trips; at a neutral
+        section open BLDJ at the DJ opening board and close it only at the DJ closing board;
+        open DJ if the OHE voltage drops below 17.5 KV; check MVSI-1 & MVSI-2 frequently;
+        remove the wedge when DJ has tripped and wedge only before energisation; do not use RB.
+      action: wedge_Q45
+      preconditions:
+        - no_operation_a_ending_trouble          # precaution 6, p120; §7.04 Note, p116
+      on_precondition_unmet: >-
+        Q45 should not be wedged if the loco is having Operation 'A' ending trouble (LSCHBA
+        does not extinguish and LSDJ glows again after 5.6 sec before BLRDJ is released).
+        Confirm that trouble is not present before wedging Q45. Then, with Q45 wedged in the
+        energised condition: ensure GR is on '0' before closing DJ; DJ closes as soon as
+        BLDJ is closed, so whenever DJ trips immediately open BLDJ; at a neutral section
+        open BLDJ at the DJ opening board and close BLDJ only at the DJ closing board;
+        ensure the OHE voltage is above 17.5 KV and open DJ immediately if it drops below;
+        check the working of MVSI-1 & MVSI-2 frequently on run; when DJ has tripped remove
+        the Q45 wedge and wedge only before energisation, to avoid chattering of Q118 & Q44.
+        Do not use RB if the loco is having B-II trouble.
+      precondition_question: >-
+        Before wedging Q45, was it confirmed that the loco does not have Operation 'A'
+        ending trouble (LSCHBA not extinguishing, DJ tripping after 5.6 sec before BLRDJ is
+        released)?
+      source: "§7.06 Trouble shooting and Precautions 1–7, pp119–120; Note p120; §7.04 Note, p116"
+    completes: true
+    source: "§7.06 Trouble shooting, p119"
+
+terminal_actions:
+  resolved: >-
+    work onwards with Q45 wedged: GR on '0' before closing DJ; open BLDJ immediately
+    whenever DJ trips; at a neutral section open BLDJ at the DJ opening board and close it
+    only at the DJ closing board; open DJ if the OHE voltage drops below 17.5 KV; check
+    MVSI-1 & MVSI-2 frequently on run; remove the wedge when DJ has tripped and wedge only
+    before energisation; do not use RB
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.06, pp.119–120; §7.04 Note p.116"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

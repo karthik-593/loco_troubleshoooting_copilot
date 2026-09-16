@@ -1,0 +1,116 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — Q44 branch (Q44 not energised)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01.5 "Q44 branch", pp.107–109: "Q44 not energised" (a–c), "Manual
+#         energisation of Q44" (a–f) + Note, "Precautions before wedging Q44" (a–c),
+#         "Precautions after wedging Q44" (a–d).
+# Mechanism: ladder → manual energisation (≤ 1 second, ALP watching RGR) → DJ holds (resume,
+# operate Q44 manually each time) / DJ does not close → WEDGE Q44 — a hazard_exposure gate:
+# "Take the permission from TLC for wedging Q44" and "Conduct GR efficiency test" are the
+# stated preconditions; the after-wedging precautions are the working conditions.
+# Reached from the ICDJ hub (q44_energised == no) or the Q45 branch (d), or directly.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ_Q44_branch
+aliases:
+  - "Q44 not energised"
+  - "Q44 not energising"
+  - "Q44 is not energising"
+  - "Q44 not picking up"
+  - "Q44 does not energise"
+  - "ICDJ Q44 branch"
+precedence: 1
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ does not close and relay Q44 does not energise after Q118 and Q45 have energised"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: ensure_q118_q45_energised_lsgr_clean_interlocks
+    text: >-
+      Ensure Q118 and Q45 are energised and LSGR is glowing; clean the interlocks of Q118
+      and Q45.
+    gate: null
+    source: "§7.01.5(a), p107"
+
+  # (b)
+  - id: operate_gr_manually_0_to_5_and_try
+    text: "Operate GR manually from '0' to 5 and back to '0', and try to close DJ and resume traction."
+    gate: null
+    source: "§7.01.5(b), p107"
+
+  # (c) + Manual energisation (a)(b)(c)(e) + Note
+  - id: energise_q44_manually
+    text: >-
+      If unsuccessful, manually energise Q44: close BLDJ, keep ZPT in the '1' position and
+      depute the Assistant Loco Pilot to watch RGR. Press BP2DJ and press Q44 manually —
+      Q44 should not be pressed for more than one second. Release Q44 as soon as DJ is
+      closed, and BP2DJ after LSCHBA extinguishes. While operating Q44 manually, if any
+      abnormality is noticed, release Q44 and trouble shoot for the same. Report whether DJ
+      closed and held, or did not close.
+    gate: null
+    source: "§7.01.5(c), p107; Manual energisation of Q44 (a)(b)(c)(e) + Note, p107"
+
+  # Manual energisation (d)
+  - id: resume_traction_operating_q44_manually_each_time
+    text: >-
+      DJ holds with Q44 energised manually: resume traction. Every time for closing DJ,
+      operate Q44 manually.
+    gate: null
+    applies_when: {dj_closes_with_manual_q44: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.01.5 Manual energisation (d), p107"
+
+  # Manual energisation (f) + Precautions before / after wedging Q44 — HAZARD-EXPOSURE gate
+  - id: wedge_q44
+    text: >-
+      DJ does not close even with Q44 operated manually: wedge Q44 (with a suitable wooden
+      wedge) and work further with precautions — take the permission of TLC for wedging
+      Q44 and conduct the GR efficiency test before wedging (GR travelling time from 1-32
+      or 32-1 is 11-13 sec, to be conducted in LT). After wedging: check the working of all
+      auxiliary motors MVSI-1, MVSI-2 while on run; check the OHE voltage frequently and
+      trip DJ when OHE voltage drops below 17.5 KV; take all the precautions which have to
+      be taken after wedging Q118; manual operation of GR should not be done.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q44 without the permission of TLC and without conducting the GR
+        efficiency test (GR travelling time 1-32 or 32-1 is 11-13 sec, in LT). After
+        wedging: check MVSI-1, MVSI-2 on run; check the OHE voltage frequently and trip DJ
+        below 17.5 KV; take the precautions for wedging Q118; no manual operation of GR.
+      action: wedge_Q44
+      preconditions:
+        - tlc_permission_for_wedging_q44         # Precautions before wedging Q44 (a), p108
+        - gr_efficiency_test_done                # Precautions before wedging Q44 (b), p108
+      on_precondition_unmet: >-
+        Before wedging Q44: take the permission from TLC for wedging Q44, conduct the GR
+        efficiency test (GR travelling time from 1-32 or 32-1 is 11-13 sec, to be conducted
+        in LT), and wedge with a suitable wooden wedge. After wedging Q44: check the working
+        of all auxiliary motors MVSI-1, MVSI-2 while on run; check the OHE voltage
+        frequently and trip DJ when OHE voltage drops below 17.5 KV; take all the
+        precautions which have to be taken after wedging Q118; manual operation of GR
+        should not be done.
+      precondition_question: >-
+        Before wedging Q44, was the permission of TLC taken and the GR efficiency test
+        conducted (1-32 or 32-1 in 11-13 sec)?
+      source: "§7.01.5 Precautions before wedging Q44 (a)–(c), p108; Precautions after wedging Q44 (a)–(d), pp108–109"
+    applies_when: {dj_closes_with_manual_q44: "no"}
+    requires_stated: true
+    completes: true
+    source: "§7.01.5 Manual energisation (f), p107"
+
+terminal_actions:
+  resolved: >-
+    resume traction (operating Q44 manually each time DJ is closed, or with Q44 wedged —
+    then check MVSI-1, MVSI-2 on run, check the OHE voltage frequently and trip DJ below
+    17.5 KV, take the precautions for wedging Q118, and do not operate GR manually)
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01.5, pp.107–109"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

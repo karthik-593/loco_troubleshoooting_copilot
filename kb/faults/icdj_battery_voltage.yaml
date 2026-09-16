@@ -1,0 +1,66 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — less / no battery voltage
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01.1 "Less/No battery voltage", pp.103–104 (a–c + Note).
+# Reached from the ICDJ hub (battery_voltage_low_or_zero == yes), or directly.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ_battery_voltage
+aliases:
+  - "ICDJ battery voltage"
+  - "ICDJ less battery voltage"
+  - "ICDJ no battery voltage"
+  - "DJ not closing, battery voltage low"
+  - "DJ not closing, no battery voltage"
+  - "UBA shows zero"
+precedence: 1
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ does not close and the battery voltmeter (UBA) shows less or zero voltage"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: replace_addl_ccba_if_uba_zero
+    text: >-
+      If the battery voltmeter (UBA) indicates '0', the defect is either with Addl. CCBA or
+      any one of the batteries might have open-circuited: replace Addl. CCBA (in battery
+      box No.1) with a good fuse and try (reset the MCB if provided).
+    gate: null
+    applies_when: {uba_zero: "yes"}
+    source: "§7.01.1(a), p103"
+
+  # (b)
+  - id: check_battery_terminals_and_isolate_defective_battery
+    text: >-
+      With UBA indicating less or zero voltage, open the battery covers of the battery
+      boxes, check the terminals and the condition of the batteries. If any battery is
+      defective, isolate the defective battery as per the procedure.
+    gate: null
+    source: "§7.01.1(b), p103"
+
+  # (c)
+  - id: trace_and_isolate_defective_battery
+    text: >-
+      If unsuccessful, trace and isolate the defective battery (as explained in §12.5).
+    gate: null
+    source: "§7.01.1(c), p104"
+
+  # Note
+  - id: suspect_uba_zuba_if_signal_lamps_glowing
+    text: "If the signal lamps are glowing, the defect may be with UBA or ZUBA."
+    gate: null
+    applies_when: {signal_lamps_glowing: "yes"}
+    requires_stated: true
+    source: "§7.01.1 Note, p104"
+
+terminal_actions:
+  resolved: "close DJ and resume traction"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01.1, pp.103–104"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -1,0 +1,59 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — less air pressure
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01.2 "Less air pressure", p.104 (a–c).
+# Reached from the ICDJ hub (air_pressure_low == yes), or directly. (c) hands over to
+# §9.1 (MCPA not building up air pressure in RS) — a later batch.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ_air_pressure
+aliases:
+  - "ICDJ air pressure"
+  - "ICDJ less air pressure"
+  - "DJ not closing, air pressure low"
+  - "DJ not closing, less air pressure"
+  - "DJ not closing, no air pressure"
+precedence: 1
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ does not close and the RS/MR air pressure is below 6.5 kg/cm2"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: build_up_pressure_with_auxiliary_compressor
+    text: >-
+      Keep ZPT on '0' and start the auxiliary compressor and build up air pressure to 6.5
+      kg/cm2. If MCPA is not working, check the motor, CCBA, battery voltage, the terminals
+      of MCPA and ZCPA (if CCBA melts even with HOBA off, check MOV/LTBA).
+    gate: null
+    source: "§7.01.2(a), p104"
+
+  # (b)
+  - id: check_drain_cocks_closed_if_pressure_not_building
+    text: >-
+      If MCPA is working and the pressure is not building up, check that the drain cocks of
+      CPA, RS, RDJ, PANTO and the DJ oil separator (in old locos) are fully closed.
+    gate: null
+    applies_when: {mcpa_working_but_pressure_not_building: "yes"}
+    source: "§7.01.2(b), p104"
+
+  # (c)
+  - id: troubleshoot_mcpa_not_building_pressure
+    text: >-
+      If still not able to build up air pressure, troubleshoot for MCPA not building up air
+      pressure in RS (as explained in §9.1).
+    gate: null
+    applies_when: {mcpa_working_but_pressure_not_building: "yes"}
+    source: "§7.01.2(c), p104"
+
+terminal_actions:
+  resolved: "with RS/MR pressure above 6.5 kg/cm2, close DJ and resume traction"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01.2, p.104"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

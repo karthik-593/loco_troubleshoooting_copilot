@@ -19,6 +19,7 @@ aliases:
   - "QOP1 dropped"
   - "QOP 1 dropped"
   - "QOP-1 drops"
+listed_as: "QOP-1 dropped"
 config_dependency: none            # §6.03.1: TFR terminal designations differ by class (a5/a6 on
                                    # WAG5A & WAM4; a3/a4 on WAG7 & WAP4) — both given in the text
 type_dependency: none

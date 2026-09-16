@@ -1,0 +1,36 @@
+scenario_id: dj_tripped_intake_to_op_a_beginning
+klass: ambiguous
+# Intake hub → precheck → observation drill → the sign routes to §7.03 → one-line confirm
+# before any guidance (decision 1) → the ladder.
+pilot_script:
+- dj tripped, no relay target
+- prepared the loco as you said. closed BLDJ, pressed BLRDJ, LSDJ went off and came straight back, flickering
+- yes that is it
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  problem_outside_list: 'no'
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - prepare_loco_to_pick_up_abnormal_sign
+  - observe_dj_closing_and_pick_up_abnormal_sign
+  facts: {trip_sign: op_a_beginning}
+- fault_guess: null
+  fault_confidence: 0.0
+  confirms_fault: 'yes'
+gold:
+  correct_terminal: ask_step:check_qla_qoa_targets
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 3
+  expected_tool_path:
+  - diff_completed_steps
+  - (reroute→Op_A_beginning)
+  - diff_completed_steps
+  expected_turn_terminals:
+  - ask_step
+  - confirm_fault
+  - ask_step

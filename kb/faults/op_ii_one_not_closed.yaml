@@ -1,0 +1,87 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation II — any one of the contactors C107 / C105 / C106 is not closed
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.09.2, pp.124–125 (a–d, Notes 1–2).
+# Mechanism: switch on 3 → QTD105/QTD106 → coil wires / flexibility → WEDGE the contactor —
+# a hazard_exposure gate on Note 1 "When C107/C105/C106 wedged, keep concerned switch on '3'
+# position to give initial path to Q118". Note 2 (AC MVRF locos, C107) is a stated-only step.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_II_one_not_closed
+aliases:
+  - "one EM contactor not closing"
+  - "one of C105 C106 C107 not closing"
+  - "operation II one contactor not closed"
+  - "C105 not closing on BLVMT"
+  - "C106 not closing on BLVMT"
+  - "C107 not closing on BLVMT"
+precedence: 1
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Operation II: on closing BLVMT one (or more) of the contactors C107 / C105 / C106 does not close"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: keep_concerned_switch_in_3_and_try
+    text: "Keep the concerned switch (HVRH for C107, HVMT-1 for C105, HVMT-2 for C106) in '3' and try."
+    gate: null
+    source: "§7.09.2(a), p124; switch ↔ contactor pairing from §7.07 p121"
+
+  # Note 2
+  - id: tap_ctfs_if_c107_not_closed_in_ac_mvrf_loco
+    text: >-
+      In AC MVRF locos, if C107 is not closed, ensure the CTFs are on the traction side and
+      gently tap the CTFs with precautions.
+    gate: null
+    applies_when: {c107_not_closed_ac_mvrf_loco: "yes"}
+    requires_stated: true
+    source: "§7.09.2 Note 2, p125"
+
+  # (b)
+  - id: check_qtd105_qtd106_energisation
+    text: "Check QTD105 and QTD106 for energisation."
+    gate: null
+    source: "§7.09.2(b), p124"
+
+  # (c)
+  - id: check_contactor_coil_wires_and_flexibility
+    text: >-
+      If still not closing, check the condition of the contactor coil wire connections and
+      the flexibility of the contactor.
+    gate: null
+    source: "§7.09.2(c), p124"
+
+  # (d) + Note 1 — HAZARD-EXPOSURE gate
+  - id: wedge_contactor_and_work_with_precautions
+    text: >-
+      If still unsuccessful, wedge the contactor and work with precautions: when C107 /
+      C105 / C106 is wedged, keep the concerned switch on the '3' position to give the
+      initial path to Q118.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        When C107 / C105 / C106 is wedged, the concerned switch (HVRH / HVMT-1 / HVMT-2)
+        must be kept on the '3' position to give the initial path to Q118.
+      action: wedge_contactor
+      preconditions:
+        - concerned_switch_on_3
+      on_precondition_unmet: >-
+        Before working with the wedged contactor, keep the concerned switch (HVRH for C107,
+        HVMT-1 for C105, HVMT-2 for C106) on the '3' position to give the initial path to
+        Q118.
+      precondition_question: "For the wedged contactor, is the concerned switch kept on the '3' position?"
+      source: "§7.09.2 Note 1, p125; switch ↔ contactor pairing from §7.07 p121"
+    completes: true
+    source: "§7.09.2(d), p124"
+
+terminal_actions:
+  resolved: "work further with the contactor wedged and the concerned switch on '3'"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.09.2, pp.124–125"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

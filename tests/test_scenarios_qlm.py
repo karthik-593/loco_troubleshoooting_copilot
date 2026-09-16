@@ -155,7 +155,7 @@ def test_alias_phrase_containment(kb):
     assert match_alias("DJ tripped and qlm red target", kb).fault_id == QLM
     assert match_alias("QLM is locked", kb) is None          # not a verbatim alias phrase
     assert match_alias("QLM not locked", kb) is None
-    assert match_alias("dj tripped", kb) is None
+    assert match_alias("dj tripped", kb).fault_id == "DJ_tripped_on_line"     # batch 2 intake hub
 
 
 def test_fault_id_words_match_as_alias(kb):

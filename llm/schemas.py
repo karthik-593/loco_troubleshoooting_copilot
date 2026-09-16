@@ -28,7 +28,9 @@ class ParseOutput(BaseModel):
                     "more (e.g. 'DJ tripped, relay unknown'). 'unknown' if no problem is stated.")
     confirms_fault: YesNoUnknown = Field(
         default="unknown",
-        description="If the assistant just asked 'is it fault X?', the pilot's answer.")
+        description="If the assistant just asked 'Sounds like fault X … is that right?': 'yes' for an "
+                    "affirmative answer OR when the pilot simply carries on with that procedure "
+                    "(reports its checks / facts without objecting); 'no' only if they say it is not that.")
     fault_presenting: YesNoUnknown = Field(
         default="unknown",
         description="Does THIS message report the relay/fault acting NOW (dropped, locked, "
@@ -63,11 +65,14 @@ class ParseOutput(BaseModel):
         default=None, description="Loco class if the pilot states it (WAG-7 / WAG-5 / WAP-4).")
     loco_config: Optional[Literal["siv", "arno"]] = Field(
         default=None, description="Auxiliary configuration if the pilot states it (SIV or ARNO fitted).")
-    intended_action: Optional[Literal["reset_QLM", "reset_QLA", "work_on_roof", "enter_HT_compartment"]] = Field(
+    intended_action: Optional[Literal["reset_QLM", "reset_QLA", "work_on_roof", "enter_HT_compartment",
+                                      "wedge_Q118", "wedge_Q44", "wedge_Q45", "wedge_contactor"]] = Field(
         default=None,
         description="The pilot's stated NEXT move, from the provided action list, or null. "
                     "'work_on_roof' = about to climb on to the loco roof (pantograph work); "
-                    "'enter_HT_compartment' = about to open / go into the HT compartment.")
+                    "'enter_HT_compartment' = about to open / go into the HT compartment; "
+                    "'wedge_Q118' / 'wedge_Q44' / 'wedge_Q45' = about to wedge that relay; "
+                    "'wedge_contactor' = about to wedge C105 / C106 / C107.")
     loco_rb: Optional[Literal["fitted", "not_fitted"]] = Field(
         default=None,
         description="Only if the pilot states whether the loco has rheostatic braking (RB) "
@@ -91,10 +96,12 @@ class ParseOutput(BaseModel):
         default="unknown",
         description="'yes' only if the pilot says the fault is now cleared / equipment working "
                     "again (e.g. 'sanders working now', 'resumed traction').")
-    facts: dict[str, YesNoUnknown] = Field(
+    facts: dict[str, str] = Field(
         default_factory=dict,
-        description="Additional yes/no facts listed under 'Fault-specific facts' in the "
-                    "instructions, keyed exactly by the fact name. Omit facts not stated.")
+        description="Additional facts listed under 'Fault-specific facts' in the instructions, "
+                    "keyed exactly by the fact name: 'yes' / 'no', or — for a fact whose hint "
+                    "lists named values in quotes (e.g. trip_sign, contactors_closed, "
+                    "vcb_5_branch_loco) — exactly one of those values. Omit facts not stated.")
 
 
 class DecideOutput(BaseModel):

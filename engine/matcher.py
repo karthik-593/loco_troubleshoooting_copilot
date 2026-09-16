@@ -23,6 +23,11 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+# An alias immediately preceded by a negation is not a presenting sign ("no operation A
+# ending trouble" while confirming the §7.06 Q45 precondition — seen live 2026-09-16).
+_NEGATED = re.compile(r"\b(no|not|without|never|isn t|is not|no sign of|free of|ruled out)\s+(\w+\s+)?$")
+
+
 class KnowledgeBase:
     def __init__(self, faults: dict[str, Fault]):
         self._faults = faults
@@ -53,7 +58,8 @@ class KnowledgeBase:
         if fid:
             return self._faults[fid]
         hits = {f for alias, f in self._alias_index.items()
-                if re.search(rf"(?<![\w-]){re.escape(alias)}(?![\w-])", t)}
+                if any(not _NEGATED.search(t[:m.start()])
+                       for m in re.finditer(rf"(?<![\w-]){re.escape(alias)}(?![\w-])", t))}
         if len(hits) > 1:                       # a specific fault outranks a general procedure
             top = max(self._faults[f].precedence for f in hits)
             hits = {f for f in hits if self._faults[f].precedence == top}

@@ -34,6 +34,7 @@ from engine.state import (
 from engine.tools import HF_OTHER_RELAYS
 from llm.interface import LLMProvider
 from llm.schemas import ParseOutput
+from kb.schema import INTAKE_PRECEDENCE
 
 PROMPT_PATH = Path(__file__).with_name("prompts") / "parse.md"
 CLARIFY_THRESHOLD = 0.6
@@ -59,8 +60,9 @@ def _fault_name(fault_id: str) -> str:
 
 def out_of_scope_reason(kb: KnowledgeBase) -> str:
     """§5.6 wording. Lists what IS covered so the pilot is not left guessing; no procedure content."""
+    names = dict.fromkeys(kb.get(f).listed_as or _fault_name(f) for f in kb.fault_ids)
     return ("This isn't in my procedure set. I can verify: "
-            + ", ".join(_fault_name(f) for f in kb.fault_ids) + ". Refer to the TSD for it.")
+            + ", ".join(names) + ". Refer to the TSD for it.")
 
 
 def _unresolved(out: ParseOutput, state: DiagnosisState, kb: KnowledgeBase) -> ParseResult:
@@ -107,7 +109,10 @@ def kb_vocabulary(kb: KnowledgeBase) -> str:
     lines.append("Actions (intended_action): reset_QLM = about to reset the QLM relay target; "
                  "reset_QLA = about to reset the QLA relay target; "
                  "work_on_roof = about to climb on to the loco roof (pantograph work); "
-                 "enter_HT_compartment = about to open or enter the HT compartment")
+                 "enter_HT_compartment = about to open or enter the HT compartment; "
+                 "wedge_Q118 / wedge_Q44 / wedge_Q45 = about to wedge that relay (in energised "
+                 "condition); wedge_contactor = about to wedge C105 / C106 / C107. An intent is "
+                 "what they are ABOUT to do — a wedge already done is a claimed step, not an intent")
     return "\n".join(lines)
 
 
@@ -150,12 +155,12 @@ _FACT_HINTS = {
     "fault_recurred": "(use the top-level fault_recurred field instead)",
     "traction1_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-1 equipment (RSI-1, J1, SL-1, L1-L3, TM1-3, AM3 shunt, Q20/RQ20, QD1, SJ1-3, TFR terminals)",
     "ohe_power_block_obtained_and_earthed": "OHE/TRD staff have obtained the emergency power block AND earthed the contact wire on both sides of the loco",
-    "loco_grounded": "the loco has been grounded (HOM operated)",
+    "loco_grounded": "'yes' if the loco has been grounded (HOM operated); 'no' if the pilot says it is NOT grounded / HOM not operated / grounding not done",
     "pantograph_not_lowered": "the pantograph did NOT lower when ZPT was put on 0 / BPEMS pressed",
     "both_pantographs_damaged": "BOTH pantographs are damaged",
     "load_and_road_do_not_permit": "the pilot says the load and road do not permit working onwards (with the load restriction)",
-    "drops_after_long_interval": "the relay (QRSI-1/2) dropped again only after a LONG interval of running ('no' if it dropped again soon / repeatedly)",
-    "drops_frequently": "the relay (QRSI-1/2) is dropping frequently / repeatedly / soon after each reset ('no' if only after a long interval)",
+    "drops_after_long_interval": "the relay dropped again only after a LONG interval of running ('no' if it dropped again soon / within minutes / repeatedly). When the pilot says how soon it recurred, set BOTH this and drops_frequently (opposite values)",
+    "drops_frequently": "the relay is dropping frequently / repeatedly / again within minutes of a reset ('no' if only after a long interval). When the pilot says how soon it recurred, set BOTH this and drops_after_long_interval (opposite values)",
     "drops_in_particular_hmcs1_position": "with HMCS-1 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
     "drops_in_all_hmcs1_positions": "with HMCS-1 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
     "target_resets": "'no' if the pilot says the relay target does NOT reset / cannot be reset / is not resetting; 'yes' if it reset",
@@ -174,6 +179,72 @@ _FACT_HINTS = {
     "traction2_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-2 equipment (RSI-2, J2, SL-2, L4-L6, TM4-6, AM4 shunt, RU5/RU6, QD-2, SJ4-6, TFR terminals)",
     "drops_in_particular_hmcs2_position": "with HMCS-2 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
     "fire_uncontrollable": "the pilot says the fire cannot be put out / is out of control / extinguishers exhausted and still burning",
+    # ── batch 2 (Ch.7 tripping failures) ──
+    "trip_sign": "the abnormal sign observed when re-closing DJ (close BLDJ, press BLRDJ): "
+                 "'icdj' = LSDJ does not extinguish / DJ does not close at all; "
+                 "'no_tension' = DJ closes but the UA needle does not deviate, no auxiliary sound, LSCHBA stays on, trips after ~5.6 s before BLRDJ is released; "
+                 "'op_a_beginning' = DJ closes and trips immediately / LSDJ flickers; "
+                 "'op_a_ending' = UA needle deviates but LSCHBA does not extinguish and DJ trips after ~5.6 s before BLRDJ is released; "
+                 "'reglows_on_release' = everything normal (UA deviates, aux sound, LSCHBA goes off) but LSDJ re-glows the moment BLRDJ is released; "
+                 "'op_b_part1' = trips within 15 s AFTER BLRDJ is released (LSCHBA had gone off); "
+                 "'op_o' = trips within 30 s after closing BLVMT; "
+                 "'op_1' = trips on taking the first notch; "
+                 "'op_2' = trips on the sixth notch (within 15 s); "
+                 "'twac' = trips at random / on and off with none of these fixed signs. Leave unknown if the pilot has not described the sign",
+    "bp_dropped_with_trip": "BP pressure dropped suddenly along with the DJ trip ('no' if BP held)",
+    "lsgr_not_glowing_and_panto_lowered": "LSGR is NOT glowing AND the panto has also lowered",
+    "battery_voltage_zero": "the battery voltage / UBA reads zero",
+    "panto_lowered_with_normal_battery_voltage": "the panto lowered although battery voltage is normal and CCBA is good",
+    "rs_pressure_low": "RS (reservoir) pressure is less / low",
+    "lssit_glowing": "the LSSIT lamp is glowing (SIV loco)",
+    "battery_voltage_low_or_zero": "UBA / battery voltage is below 90 V or zero ('no' if normal, above 90 V)",
+    "air_pressure_low": "RS/MR air pressure is below 6.5 kg/cm2 ('no' if above)",
+    "c118_closing": "contactor C118 closes when BLDJ is closed and BLRDJ pressed ('no' if C118 does not close)",
+    "q118_energised": "relay Q118 energises / clicks when HBA is put on 1 ('no' if it does not energise)",
+    "q45_energised": "relay Q45 energises when BLDJ is closed and BLRDJ pressed ('no' if not)",
+    "q44_energised": "relay Q44 energises after Q118 and Q45 ('no' if not)",
+    "uba_zero": "the battery voltmeter UBA indicates exactly '0' ('no' if it shows a low but non-zero voltage)",
+    "signal_lamps_glowing": "the signal lamps are glowing although UBA reads low / zero",
+    "mcpa_working_but_pressure_not_building": "MCPA (auxiliary compressor) is running but the air pressure is not building up",
+    "ccba_or_ccpt_melted": "one or both of the fuses CCBA / CCPT is found melted",
+    "dj_closes_with_manual_q118": "with Q118 pressed manually: 'yes' if DJ closed AND held after Q118 was released; 'no' if DJ did not close at all. Leave unknown if it closed but tripped after release (use trips_after_releasing_q118)",
+    "trips_after_releasing_q118": "with Q118 pressed manually DJ closed but tripped when Q118 was released",
+    "all_em_contactors_open": "the pilot confirms all EM contactors (C105, C106, C107) are opened (asked before wedging Q118)",
+    "ccdj_melted_third_time": "the CCDJ fuse has melted a third time (once again, after renewing it twice)",
+    "dj_closes_with_manual_q45": "with Q45 pressed manually: 'yes' if DJ closed and held; 'no' if DJ still did not close. Leave unknown if it closed but tripped (use trips_with_manual_q45)",
+    "trips_with_manual_q45": "with Q45 pressed manually DJ closed but tripped before or after releasing Q45",
+    "dj_closes_with_manual_q44": "with Q44 pressed manually: 'yes' if DJ closed and held; 'no' if DJ did not close",
+    "tlc_permission_for_wedging_q44": "TLC has given permission to wedge Q44 ('no' if TLC refused)",
+    "gr_efficiency_test_done": "the GR efficiency test was conducted (GR travel 1-32 or 32-1 in 11-13 s, in LT) ('no' if not done / failed)",
+    "roof_foreign_body_or_ohe_cut": "a foreign body on the roof, roof equipment touching the roof, a cut roof bar, or a cut in the OHE is noticed",
+    "panto_not_touching_contact_wire": "the pantograph is not touching the contact wire",
+    "heavy_flash_noticed": "a heavy flash was noticed while raising the other panto or closing DJ",
+    "power_restored_after_5_min": "OHE power came back after about 5 minutes with no information of an OHE failure",
+    "arno_abnormality_found": "smoke / no auxiliary sound / any abnormality from ARNO while closing DJ ('no' if ARNO is working properly)",
+    "vcb_5_branch_loco": "'yes' if the loco has a VCB type 5-branch DJ; 'no' if it is a 6-branch VCB or ABCB loco; 'not_known' if the pilot says they do not know / are not sure. Leave unknown if not addressed",
+    "no_operation_a_ending_trouble": "'yes' if the pilot confirms the loco does NOT have Operation 'A' ending trouble (LSCHBA extinguishes normally, DJ does not trip after 5.6 s before BLRDJ is released); 'no' if that trouble IS present",
+    "both_mvsl_not_working": "BOTH MVSL-1 and MVSL-2 are not working",
+    "one_mvsl_not_working": "exactly one of MVSL-1 / MVSL-2 is not working ('no' if both are working)",
+    "mph_equalising_pipe_leaking": "the MPH equalising pipe (between the transformer oil conservator and MPH) is leaking",
+    "mph_equalising_pipe_broken": "the MPH equalising pipe is broken",
+    "dj_trips_with_hvsl1_on_1": "with HVSL-1 put back on '1' (15 s wait): DJ tripped ('yes') or held ('no')",
+    "dj_trips_with_hvsl2_on_1": "with HVSL-2 put back on '1' (15 s wait): DJ tripped ('yes') or held ('no')",
+    "dj_trips_with_hph_on_1": "with HPH put back on '1' (15 s wait): DJ tripped ('yes') or held ('no')",
+    "mvrh_working": "MVRH blower is working ('no' if MVRH is not working)",
+    "mvmt1_working": "MVMT-1 blower is working ('no' if not)",
+    "mvmt2_working": "MVMT-2 blower is working ('no' if not)",
+    "dj_trips_with_hvrh_on_1": "with HVRH put back on '1' (30 s wait after BLVMT): DJ tripped ('yes') or held ('no')",
+    "dj_trips_with_hvmt1_on_1": "with HVMT-1 put back on '1' (30 s wait after BLVMT): DJ tripped ('yes') or held ('no')",
+    "mvsi1_working": "MVSI-1 blower is working ('no' if not)",
+    "mvsi2_working": "MVSI-2 blower is working ('no' if not)",
+    "dj_trips_on_first_notch_with_hvsi_on_3": "with HVSI-1 & HVSI-2 on '3', taking one notch: DJ tripped ('yes') or held ('no')",
+    "dj_trips_with_hvsi1_on_1": "with HVSI-1 put back on '1', one notch, 15 s wait: DJ tripped ('yes') or held ('no')",
+    "contactors_closed": "what C105, C106, C107 do when BLVMT is closed: 'none' (none of them closes), 'some' (one or more does not close but not all), 'all' (all three close)",
+    "cca_melts_with_hoba_off": "the CCA fuse melts even with HOBA off",
+    "load_permits_5_notches": "the load permits clearing the block section within 5 notches ('no' if the load does not permit)",
+    "concerned_switch_on_3": "for the wedged contactor(s) the concerned switch (HVRH for C107, HVMT-1 for C105, HVMT-2 for C106) is kept on the '3' position",
+    "c107_not_closed_ac_mvrf_loco": "this is an AC MVRF loco and C107 is the contactor not closing",
+    "still_trips_with_hvmt_in_3": "with HVMT-1 & HVMT-2 in '3' and DJ closed: the trouble still exists / DJ still trips on the sixth notch ('yes') or DJ holds ('no')",
 }
 
 
@@ -248,6 +319,17 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
 
     out = provider.structured(system_prompt(kb), user_prompt(text, state, last_assistant), ParseOutput)
 
+    # An intake hub's alias ("DJ tripped") is a generic entry phrase: if the model names a
+    # specific KB fault in the same message ("DJ tripped, QLM is locked"), that fault wins —
+    # unconfirmed, so a hard-gated one is confirmed before guidance (§5.5).
+    yielded_hub_steps: set[str] = set()
+    if (alias_hit is not None and alias_hit.precedence <= INTAKE_PRECEDENCE
+            and out.fault_guess in kb.fault_ids and out.fault_guess != alias_hit.fault_id
+            and out.fault_confidence >= CLARIFY_THRESHOLD
+            and kb.get(out.fault_guess).precedence > alias_hit.precedence):
+        yielded_hub_steps = set(alias_hit.step_ids)   # the hub's own drill, if claimed, is simply done
+        alias_hit = None
+
     # 2. resolve the fault: alias > current state > model guess (validated).
     if alias_hit is not None:
         fault_id, confirmed, confidence = alias_hit.fault_id, True, 1.0
@@ -271,6 +353,9 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         fault_id, confirmed, confidence = guess, False, out.fault_confidence
 
     accepted, rejected = _validate(out, fault_id, kb)
+    if yielded_hub_steps:
+        accepted = tuple(s for s in accepted if s not in yielded_hub_steps)
+        rejected = tuple(s for s in rejected if s not in yielded_hub_steps)
 
     history: dict = {}
     # KB-declared route phrases ("not resetting", "cannot be reset"): deterministic, like an

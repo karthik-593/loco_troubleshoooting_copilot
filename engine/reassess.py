@@ -29,7 +29,7 @@ from dataclasses import dataclass, replace
 from typing import Any, Literal, Optional
 
 from engine import terminals as T
-from engine.diff import StepDelta, diff_steps
+from engine.diff import StepDelta, diff_steps, step_skipped
 from engine.gates import GateVerdict, Outcome, evaluate_gates, isolation_status
 from engine.state import HF_RESET_INSTRUCTED, HF_RESOLVED, DiagnosisState
 from kb.schema import Fault
@@ -83,7 +83,9 @@ def _gate_terminal(fault: Fault, verdict: GateVerdict) -> T.Terminal:
 def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     # 1. REFLEX. Always. Not optional, not the agent's call. (§5.1)
     verdict = evaluate_gates(state, fault)
-    if verdict.fired:
+    needs_confirm = (fault is not None and state.matched_fault == fault.fault_id
+                     and (fault.gated_steps or fault.confirm_before_guidance) and not state.fault_confirmed)
+    if verdict.fired and not (needs_confirm and verdict.outcome is not Outcome.REFUSE):
         assert fault is not None
         if verdict.outcome is Outcome.CAUTION and verdict.gate_type == "reset_limit":
             # The engine has told the pilot to reset: from now on a re-presentation of the
@@ -95,9 +97,13 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     if fault is None or state.matched_fault != fault.fault_id:
         return Decision("terminal", T.defer_to_TLC("This isn't in my procedure set."), verdict, None)
 
-    # 2b. §5.5 — hard-gated fault must be confirmed before any guidance.
-    if fault.gated_steps and not state.fault_confirmed:
-        return Decision("need_pilot_input", T.confirm_fault(fault), verdict, None)
+    # 2b. §5.5 — hard-gated fault must be confirmed before any guidance; so must a procedure
+    #     reached through a parser-classified routing fact (Fault.confirm_before_guidance).
+    if needs_confirm:
+        t = T.confirm_fault(fault)
+        if state.route_note:
+            t = replace(t, message=f"{state.route_note} {t.message}")
+        return Decision("need_pilot_input", t, verdict, None)
 
     # 2c. fault cleared → confirm + the KB's 'resolved' action. On a reset-gated fault the
     #     permitted reset's follow-up conditions (monitoring, log book, TLC) always ride along.
@@ -168,6 +174,8 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
             if s.id in state.steps_claimed_done:
                 continue
             if s.gate is not None:
+                if step_skipped(state, fault, s):
+                    continue            # gated step in a branch not taken
                 state.stuck_at = s.id
                 return Decision("need_pilot_input", T.ask_step(fault, s, unrecognised=delta.unrecognised), verdict, delta)
             if s.id in delta.missing:
@@ -179,12 +187,12 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     #    KB's follow-up (monitor / log / TLC) as guidance.
     state.stuck_at = None
     guidance: tuple[str, ...] = ()
-    if not fault.gated_steps:
-        last_done = next((s for s in reversed(fault.steps) if s.id in state.steps_claimed_done), None)
-        if last_done is not None and last_done.completes and fault.terminal_actions.get("resolved"):
-            guidance = (fault.terminal_actions["resolved"],)  # a sanctioned way onward
-        elif fault.terminal_actions.get("unresolved"):
-            guidance = (fault.terminal_actions["unresolved"],)   # every step tried, still not cleared
+    last_done = next((s for s in reversed(fault.steps) if s.id in state.steps_claimed_done), None)
+    reset_gated = any(s.gate and s.gate.type == "reset_limit" for s in fault.gated_steps)
+    if last_done is not None and last_done.completes and fault.terminal_actions.get("resolved"):
+        guidance = (fault.terminal_actions["resolved"],)  # a sanctioned way onward (a wedge with its precautions too)
+    elif not reset_gated and fault.terminal_actions.get("unresolved"):
+        guidance = (fault.terminal_actions["unresolved"],)   # every step tried, still not cleared
     src = "; ".join(s.gate.source for s in fault.gated_steps if s.gate) or fault.source
     return Decision("terminal", _confirm_after_reset(state, fault, guidance, src), verdict, delta)
 

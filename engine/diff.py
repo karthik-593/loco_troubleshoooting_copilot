@@ -68,6 +68,22 @@ def _chosen_route_keys(state: DiagnosisState, fault: Fault) -> set[str]:
     return chosen
 
 
+def step_skipped(state: DiagnosisState, fault: Fault, step) -> bool:
+    """Not due: a conditional step a STATED fact contradicts, or a side-note (requires_stated)
+    whose condition is not stated as required. Applies to gated steps too (batch 2: "or wedge
+    Q118" inside the MVRH-not-working branch of §7.07 must not gate the other branches)."""
+    contradicted = unstated = False
+    for k, v in step.applies_when.items():
+        val = _fact(state, fault, k)
+        if val is None:
+            unstated = True
+        elif val != v:
+            contradicted = True
+    if step.requires_stated and (unstated or contradicted):
+        return True
+    return contradicted
+
+
 def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
     """Ordinary steps not yet claimed, in TSD order. Steps that come AFTER an unclaimed
     gated step are not yet due — the gate (evaluated by the reflex) is what is pending."""
@@ -80,8 +96,6 @@ def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
                          unrecognised=tuple(state.tool_results.get("unrecognised_claims", ())))
     chosen_keys = _chosen_route_keys(state, fault)
     for s in fault.steps:
-        if s.gate is not None and s.id not in claimed:
-            break
         if s.id in claimed:
             continue
         # a conditional branch is skipped only when a STATED fact contradicts it — or, for a
@@ -90,7 +104,7 @@ def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
         unstated = False
         for k, v in s.applies_when.items():
             val = _fact(state, fault, k)
-            if val is None and k in AXIS_FACTS and not due and needs_axis is None:
+            if val is None and k in AXIS_FACTS and not due and needs_axis is None and s.gate is None:
                 needs_axis = k          # the NEXT step branches on a loco axis we don't know (§2.4)
             if val is None:
                 unstated = True
@@ -98,6 +112,10 @@ def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
                 contradicted = True
         if s.requires_stated and (unstated or contradicted):
             continue
+        if s.gate is not None:
+            if contradicted:
+                continue                # a gated step in a branch not taken: not pending
+            break                       # an unclaimed, due gated step: what is pending is the gate
         # a sibling route was chosen (its condition stated true) and this one's is unstated
         if (not contradicted and unstated and s.applies_when and not s.requires_stated
                 and chosen_keys and not (set(s.applies_when) & chosen_keys)

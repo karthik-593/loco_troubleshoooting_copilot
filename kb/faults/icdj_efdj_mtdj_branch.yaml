@@ -1,0 +1,124 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — EFDJ branch (ABCB / 6-branch VCB locos) or MTDJ branch (5-branch VCB locos)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01.7 "EFDJ Branch" p.110, §7.01.8 "MTDJ branch" pp.110–111, Note (VCB
+#         unit pressure) p.111, and the common ladder "EFDJ not energised in 6 branches loco
+#         (OR) MTDJ not energised in 5 branches loco" (a–k) p.111.
+# Mechanism: ONE file for both DJ types (approved 2026-09-16, decision 3): the TSD gives the
+# same ladder for both. Reached from the ICDJ hub when C118 IS closing (§7.01.6 Note 2), or
+# directly.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ_EFDJ_MTDJ_branch
+aliases:
+  - "EFDJ not energised"
+  - "EFDJ not energising"
+  - "MTDJ not energised"
+  - "MTDJ not energising"
+  - "MTDJ coil not energised"
+  - "ICDJ EFDJ branch"
+  - "ICDJ MTDJ branch"
+  - "DJ not closing, C118 closing"
+precedence: 1
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ does not close although C118 closes — EFDJ (ABCB / 6-branch VCB locos) or the MTDJ coil (5-branch VCB locos) is not energised"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: ensure_mr_rs_pressure_above_6_5
+    text: >-
+      Ensure MR/RS pressure is above 6.5 kg/cm2. (EFDJ/MTDJ will not energise if QOA, QOP1
+      or QOP2 is permanently energised, if air pressure is less than 6.5 kg/cm2, if QPDJ is
+      defective, if the C118 N/O interlock is defective, if the EFDJ/MTDJ coil is
+      open-circuited or a wire is disconnected. In VCB locos a minimum of 5 kg/cm2 is
+      required in the VCB unit for closing of the VCB.)
+    gate: null
+    source: "§7.01.7 p110; §7.01.8 pp110–111; Note p111; ladder (a) p111"
+
+  # (b)
+  - id: check_c118_wires_739_733_operate_2_3_times
+    text: >-
+      Check that the C118 wire connections (739 & 733) are intact; operate C118 2 or 3
+      times with precautions and try.
+    gate: null
+    source: "ladder (b), p111"
+
+  # (c)
+  - id: tap_safety_relays_gently
+    text: >-
+      Gently tap the safety relays; if any relay target drops, act accordingly (trouble
+      shoot for that relay).
+    gate: null
+    source: "ladder (c), p111"
+
+  # (d)
+  - id: build_up_rs_pressure_to_8_or_ss1_and_try
+    text: "Build up air pressure in RS up to 8 kg/cm2 or until SS1 blows, and try to close DJ."
+    gate: null
+    source: "ladder (d), p111"
+
+  # (e)
+  - id: tap_qpdj_and_try
+    text: "If DJ does not close, gently tap QPDJ and try to close DJ. If successful, work the train."
+    gate: null
+    source: "ladder (e), p111"
+
+  # (f)
+  - id: hqoa_on_0_and_try
+    text: >-
+      If DJ does not close, place HQOA on '0' and try to close DJ. If successful, work the
+      train duly observing the precautions for HQOA on '0'.
+    gate: null
+    source: "ladder (f), p111"
+
+  # (g)
+  - id: hqop1_hqop2_off_one_by_one_and_try
+    text: >-
+      If DJ does not close, place HQOP1 & HQOP2 one by one in the 'OFF' position and try to
+      close DJ. If successful, work the train duly observing the precautions for HQOP1/2 on
+      'OFF', clear the section and contact TLC.
+    gate: null
+    source: "ladder (g), p111"
+
+  # (h)
+  - id: hqoa_0_hqop1_hqop2_off_together_and_try
+    text: "If not successful, place HQOA on '0' and HQOP1 and HQOP2 in the OFF position together, and try."
+    gate: null
+    source: "ladder (h), p111"
+
+  # (i)
+  - id: hoba_off_also_and_try
+    text: "If not successful, place HOBA also in the OFF position and try."
+    gate: null
+    source: "ladder (i), p111"
+
+  # (j)
+  - id: ensure_vcb_unit_pressure_above_5
+    text: >-
+      Ensure the pressure in the VCB unit is more than 5 kg/cm2, if a gauge is available.
+      (If the pressure is less, the fine filter can be cleaned by operating the nipple and
+      the pressure adjusted with the check nut of the PRV, with precautions, in the VCB
+      unit.)
+    gate: null
+    source: "ladder (j), p111"
+
+  # (k)
+  - id: contact_tlc_if_unsuccessful
+    text: "If unsuccessful, contact TLC."
+    gate: null
+    source: "ladder (k), p111"
+
+terminal_actions:
+  resolved: >-
+    work the train duly observing the precautions for any switch left on '0' / 'OFF'
+    (HQOA, HQOP1/2, HOBA); with HQOP1/2 OFF clear the section and contact TLC
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01.7–§7.01.8 and the EFDJ/MTDJ ladder (a)–(k), pp.110–111"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

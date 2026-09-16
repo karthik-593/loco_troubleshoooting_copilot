@@ -1,0 +1,198 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: DJ tripping without apparent cause (TWAC)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.10 "DJ tripping without apparent cause (TWAC)", pp.126–127
+#         (abnormal sign, causes 1–7, trouble shooting 1–13).
+# Mechanism: a 13-step "if unsuccessful, next" ladder. Steps 3 (wedge Q118) and 5 (wedge Q44
+# "after obtaining permission from TLC") are hazard_exposure gates with the §7.01.3 / §7.01.5
+# preconditions; in TSD order they sit inside the ladder, so the ordered diff stops at each
+# until it is done. A dropped relay target found at step 6 routes to that relay (combination
+# rules; the intake hub's list).
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: TWAC
+aliases:
+  - "TWAC"
+  - "tripping without apparent cause"
+  - "DJ tripping without apparent cause"
+  - "DJ tripping without any apparent cause"
+  - "DJ trips randomly"
+  - "DJ tripping randomly"
+  - "DJ trips at random"
+  - "DJ keeps tripping on run"
+  - "DJ trips on and off"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ trips on various occasions other than the other tripping-failure indications (no relay target, no fixed point of tripping)"
+
+combination_rules:                  # step 6: "If any relay target is dropped, trouble shoot for the same"
+  - if_also: ["QLM"]
+    route_to: QLM_dropped
+    source: "§7.10 item 6, p127; §6.01 p83"
+  - if_also: ["QOP-1", "QOP1"]
+    route_to: QOP1_dropped
+    source: "§7.10 item 6, p127; §6.03.1 p89"
+  - if_also: ["QOP-2", "QOP2"]
+    route_to: QOP2_dropped
+    source: "§7.10 item 6, p127; §6.03.2 p90"
+  - if_also: ["QRSI-1", "QRSI1"]
+    route_to: QRSI1_drops_on_run
+    source: "§7.10 item 6, p127; §6.02 p87"
+  - if_also: ["QRSI-2", "QRSI2"]
+    route_to: QRSI2_drops_on_run
+    source: "§7.10 item 6, p127; §6.02 p88"
+  - if_also: ["QOA"]
+    route_to: QOA_dropped
+    source: "§7.10 item 6, p127; §6.04.1 p97"
+  - if_also: ["QLA"]
+    route_to: QLA_dropped
+    source: "§7.10 item 6, p127; §6.05 p100"
+route_rules: []
+
+steps:
+  # 1
+  - id: check_ccpt_ccdj_cca_fuses_slack_or_hot
+    text: >-
+      Check the fuses CCPT, CCDJ & CCA for any slackness or rise in temperature. If any
+      fuse is found slack or having a high temperature, change the fuse, tighten the fuse
+      cap properly and resume traction.
+    gate: null
+    source: "§7.10 item 1, p126"
+
+  # 2
+  - id: zpt_on_2_work_with_front_panto
+    text: "If unsuccessful, place ZPT on 2 and try to work with the front panto."
+    gate: null
+    source: "§7.10 item 2, p126"
+
+  # 3 — HAZARD-EXPOSURE gate (wedging Q118)
+  - id: wedge_q118_and_resume_with_precautions
+    text: >-
+      If unsuccessful, wedge Q118 in the energised condition and resume traction with
+      precautions: all EM contactors opened before wedging; after closing DJ ensure C118 is
+      fully opened; check MVMT1, MVMT2, MVRH, MVSL1, MVSL2 frequently; check the TFR oil
+      level for colour change or abnormal increase; avoid quick regression of GR.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q118 unless all EM contactors are opened (precautions for wedging
+        Q118, §7.01.3).
+      action: wedge_Q118
+      preconditions:
+        - all_em_contactors_open
+      on_precondition_unmet: >-
+        Before wedging Q118, ensure all EM contactors are opened. Then, with Q118 wedged in
+        the energised condition: after closing DJ ensure C118 is fully opened; check the
+        working of MVMT1, MVMT2, MVRH, MVSL1, MVSL2 auxiliaries frequently; check the TFR
+        oil level for any colour change or any abnormal increase of oil level; avoid quick
+        regression of GR.
+      precondition_question: "Before wedging Q118, were all EM contactors opened?"
+      source: "§7.01.3 Precautions for wedging Q118 (a)–(e), p106; §7.10 item 3, p126"
+    source: "§7.10 item 3, p126"
+
+  # 4
+  - id: hvsi_on_3_and_try
+    text: "Put HVSI-1 and HVSI-2 in the 3 position and try."
+    gate: null
+    source: "§7.10 item 4, p126"
+
+  # 5 — HAZARD-EXPOSURE gate (wedging Q44)
+  - id: wedge_q44_with_tlc_permission
+    text: >-
+      Wedge Q44 in the energised condition after obtaining permission from TLC, and try —
+      with the GR efficiency test conducted before wedging (GR travelling time 1-32 or 32-1
+      is 11-13 sec, in LT), a suitable wooden wedge, and the after-wedging precautions:
+      check MVSI-1, MVSI-2 on run; check the OHE voltage frequently and trip DJ below 17.5
+      KV; take the precautions for wedging Q118; do not operate GR manually.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q44 without the permission of TLC and without conducting the GR
+        efficiency test (§7.01.5 precautions before wedging Q44).
+      action: wedge_Q44
+      preconditions:
+        - tlc_permission_for_wedging_q44
+        - gr_efficiency_test_done
+      on_precondition_unmet: >-
+        Before wedging Q44: obtain the permission of TLC for wedging Q44, conduct the GR
+        efficiency test (GR travelling time from 1-32 or 32-1 is 11-13 sec, to be conducted
+        in LT), and wedge with a suitable wooden wedge. After wedging Q44: check the working
+        of all auxiliary motors MVSI-1, MVSI-2 while on run; check the OHE voltage
+        frequently and trip DJ when OHE voltage drops below 17.5 KV; take all the
+        precautions which have to be taken after wedging Q118; manual operation of GR
+        should not be done.
+      precondition_question: >-
+        Before wedging Q44, was the permission of TLC obtained and the GR efficiency test
+        conducted (1-32 or 32-1 in 11-13 sec)?
+      source: "§7.10 item 5, p126; §7.01.5 Precautions before / after wedging Q44, pp108–109"
+    source: "§7.10 item 5, p126"
+
+  # 6
+  - id: check_relay_fixations_and_tap_safety_relays
+    text: >-
+      If unsuccessful, check that the fixations of the safety relays are intact. Gently tap
+      the safety relay covers and see whether any red target drops. If any relay target is
+      dropped, trouble shoot for the same. Report whether any target dropped.
+    gate: null
+    source: "§7.10 item 6, p127"
+
+  # 7
+  - id: hqoa_0_hqop1_hqop2_off_and_try
+    text: >-
+      If no relay target is dropped, place HQOA on '0' and HQOP1 & HQOP2 in the OFF
+      position. If successful, work onwards duly taking the necessary precautions.
+    gate: null
+    source: "§7.10 item 7, p127"
+
+  # 8
+  - id: hoba_off_also_and_try
+    text: >-
+      If unsuccessful, place HOBA in OFF along with HQOA on '0' and HQOP1 and HQOP2 in the
+      'off' position, and try.
+    gate: null
+    source: "§7.10 item 8, p127"
+
+  # 9
+  - id: change_cab_and_try_from_rear_cab
+    text: "Change the cab and try to work from the rear cab."
+    gate: null
+    source: "§7.10 item 9, p127"
+
+  # 10
+  - id: ensure_smgr_pressure_and_notch_by_notch
+    text: >-
+      Ensure the SMGR pressure gauge is showing 2.5–3.5 kg/cm2 and try to work with
+      notch-by-notch progression or regression.
+    gate: null
+    source: "§7.10 item 10, p127"
+
+  # 11
+  - id: drain_moisture_from_mr_cr_and_gr_board
+    text: "Drain out the moisture from the main reservoirs, control reservoir and GR board, and try."
+    gate: null
+    source: "§7.10 item 11, p127"
+
+  # 12
+  - id: manual_control_of_gr_30_kmph_and_contact_tlc
+    text: >-
+      If unsuccessful, try to work with manual control of GR and clear the block section
+      at 30 km/h; contact TLC.
+    gate: null
+    source: "§7.10 item 12, p127"
+
+  # 13
+  - id: contact_tlc_and_act_as_per_instructions
+    text: "If unsuccessful, contact TLC and act as per the instructions."
+    gate: null
+    source: "§7.10 item 13, p127"
+
+terminal_actions:
+  resolved: "work onwards duly taking the necessary precautions for whatever was wedged or placed on '0' / OFF"
+  unresolved: "contact TLC and act as per the instructions"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.10, pp.126–127"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

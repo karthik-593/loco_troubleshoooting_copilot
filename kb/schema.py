@@ -38,6 +38,9 @@ LOCO_TYPES = ("wag7", "wag5", "wap4")
 AXIS_FACT_CONFIG = "loco_config"
 AXIS_FACT_TYPE = "loco_type"
 AXIS_FACT_RB = "loco_rb"          # rheostatic-braking equipment fitted: "fitted" | "not_fitted"
+# An intake hub ("DJ tripped") carries this precedence: its aliases are generic entry phrases,
+# so a specific fault the parser names in the same message outranks the alias hit (llm/parse).
+INTAKE_PRECEDENCE = -2
 
 
 class _Strict(BaseModel):
@@ -61,6 +64,9 @@ class Gate(_Strict):
     preconditions: list[str] = Field(default_factory=list)
     on_precondition_unmet: Optional[str] = None
     action: Optional[str] = None
+    # The ONE question asked when the gated step is claimed done with a precondition still
+    # unstated (never confirm a hazardous step on an unstated precondition). KB text.
+    precondition_question: Optional[str] = None
 
     @model_validator(mode="after")
     def _type_fields(self) -> "Gate":
@@ -162,6 +168,9 @@ class RouteRule(_Strict):
     # phrase, case-insensitive) the fact is set to `equals` without the model. Declared in
     # the KB, like aliases; the parser is only the fallback.
     phrases: list[str] = Field(default_factory=list)
+    # KB sentence prepended to the target's confirm line when this rule fired (§7.06/§7.11:
+    # "DJ type not known: the signs indicate Operation 'B' part II").
+    note: Optional[str] = None
 
 
 class DeferCondition(_Strict):
@@ -191,6 +200,14 @@ class Fault(_Strict):
     # is ambiguous (no deterministic match). General procedures (fire_on_loco) declare -1 so
     # a specific fault named in the same message ("QLM locked, arc chute burning") wins.
     precedence: int = 0
+    # Short name under which the fault appears in the out-of-scope coverage list (§5.6); faults
+    # sharing a `listed_as` collapse to one entry (a hub and its branches, a relay's two
+    # procedures). Default: the fault_id with underscores as spaces.
+    listed_as: Optional[str] = None
+    # Batch 2 (approved 2026-09-16, decision 1): a procedure reached by a fact-keyed route whose
+    # fact the PARSER classified (the DJ-trip abnormal sign) is confirmed in one line before any
+    # guidance — like a hard-gated fault under §5.5 — so a misread sign never routes silently.
+    confirm_before_guidance: bool = False
     presenting_signs: list[str] = Field(default_factory=list)
     combination_rules: list[CombinationRule] = Field(default_factory=list)
     route_rules: list[RouteRule] = Field(default_factory=list)

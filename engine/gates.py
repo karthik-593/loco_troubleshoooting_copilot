@@ -129,7 +129,7 @@ def prior_ordinary_complete(state: DiagnosisState, fault: Fault, step: Step) -> 
     """Every ordinary step BEFORE ``step`` (in TSD order) that is DUE is claimed done. A
     conditional step that is contradicted, a side-note (requires_stated) whose condition is
     not stated, or an unchosen route alternative is not pending (engine.diff decides)."""
-    from engine.diff import diff_steps          # local import: diff imports state, not gates
+    from engine.diff import diff_steps, step_skipped   # local import: diff imports state, not gates
     delta = diff_steps(state, fault)
     if delta.completed:
         return False                            # the procedure ended on a completing step: not reached
@@ -137,6 +137,8 @@ def prior_ordinary_complete(state: DiagnosisState, fault: Fault, step: Step) -> 
     for s in fault.steps:
         if s.id == step.id:
             break
+        if s.gate is not None and s.id not in state.steps_claimed_done and not step_skipped(state, fault, s):
+            return False                        # an earlier gated step is still pending (§7.10: Q118 before Q44)
         before.append(s.id)
     return not (set(delta.missing) & set(before))
 
@@ -176,9 +178,10 @@ def evaluate_hazard_exposure(state: DiagnosisState, fault: Fault, step: Step) ->
     """
     gate = step.gate
     assert gate is not None and gate.type == "hazard_exposure"
+    from engine.diff import step_skipped        # local import: diff imports state, not gates
     claimed = step.id in state.steps_claimed_done
     in_play = (claimed or state.intended_action == gate.action
-               or prior_ordinary_complete(state, fault, step))
+               or (not step_skipped(state, fault, step) and prior_ordinary_complete(state, fault, step)))
     if not in_play:
         return NO_FIRE
     values = {p: state.history(p) for p in gate.preconditions}
@@ -191,7 +194,8 @@ def evaluate_hazard_exposure(state: DiagnosisState, fault: Fault, step: Step) ->
     unstated = tuple(p for p, v in values.items() if v is None)
     if claimed:
         return GateVerdict(Outcome.ASK, gate.type, step.id, rule="H-ask", reasons=unstated,
-                           question="Before the roof work, was the OHE power block obtained and the "
+                           question=gate.precondition_question or
+                                    "Before the roof work, was the OHE power block obtained and the "
                                     "contact wire earthed by OHE staff, and was the loco grounded?",
                            message=gate.on_precondition_unmet or gate.rule, source=gate.source)
     return GateVerdict(Outcome.CAUTION, gate.type, step.id, rule="H-caution", reasons=unstated,

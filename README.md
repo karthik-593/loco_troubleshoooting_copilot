@@ -58,27 +58,32 @@ five showcase conversations, run live, are in [docs/walkthrough.md](docs/walkthr
   list of faults it *can* verify; a vague message is clarified once, and the engine defers
   on the next unresolved turn rather than repeat the question (BUILD_PLAN §5.6).
 
-Gate mechanisms encoded so far (15 faults): **reset-limit** (QLM: once only; a stated prior reset *or*
+Gate mechanisms encoded so far (38 fault files): **reset-limit** (QLM: once only; a stated prior reset *or*
 a re-lock after the permitted reset — both refuse, and the recurrence is detected by the
 engine itself, not the parser), **isolate-then-reset** (QLM with QOP/QRSI or QLA/QOA),
 **hazard-exposure** (pantograph roof work gated on the OHE power block + earthing and
-loco grounding), the gate-free **isolate-and-retest** ladders (QRSI-1/QRSI-2, with alternative
-branches), and the general **smoke/fire response** procedure.
+loco grounding; HT-compartment entry gated on grounding; **relay / contactor wedging** gated
+on the TSD's stated preconditions — EM contactors open for Q118, TLC permission + GR
+efficiency test for Q44, no Operation 'A' ending trouble for Q45, the concerned switch on 3
+for C105/C106/C107), the gate-free **isolate-and-retest** and **isolate-by-elimination**
+ladders (QRSI-1/2, Operations B-I / O / I), **hub-and-route intake** ("DJ tripped" → the
+§5.01 precheck and observation drill → the tripping failure the sign names, confirmed in one
+line before any guidance), and the general **smoke/fire response** procedure.
 
 ## Evaluation
 
-17 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
+21 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
 step, pilot's next move is unsafe, ambiguous intake, combination fault, config axis —
 scored against a **flat-retrieval baseline that has the same KB content** and only
 recites it. Live run (DeepSeek parse/decide, Claude phrase):
 
 | Metric | Agent | Flat baseline |
 |---|---|---|
-| Unsafe-instruction rate (target 0) | **0.00** | 0.54 |
+| Unsafe-instruction rate (target 0) | **0.00** | 0.38 |
 | Missed-gate rate (target 0) | **0.00** | 1.00 |
 | Specific-miss detection | 1.00 | 0.00 |
-| Correct-terminal rate | 1.00 | 0.08 |
-| Distinct tool paths (proof of agency) | 9 | 1 |
+| Correct-terminal rate | 1.00 | 0.05 |
+| Distinct tool paths (proof of agency) | 11 | 1 |
 
 The baseline's unsafe rate is not a strawman: it prints the correct procedure, which says
 "reset QLM" / "climb on the roof" unconditionally and can never ask about the log book or
@@ -116,6 +121,13 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | QOP-1 / QOP-2 target not resetting | §6.03.3 / 6.03.4 + GI 7, §13.05, §11.02 | **HT-compartment hazard gate** (loco grounded); reverser-bit table on the lazily-asked RB axis |
 | QOA drops (resets / not resetting) | §6.04.1 / 6.04.2 | aux-circuit ladder; one-switch-at-a-time isolation |
 | QLA drops on run | §6.05 | reset-limit gate on its own key; second act → TLC |
+| DJ tripped on line (intake) | §5.01 / Ch.7 intro | hub: nine-point precheck, side-notes, observation drill; routes on the reported sign; dropped relay → its procedure |
+| ICDJ + 7 branches | §7.01.1–7.01.8 | hub in Note-2 order (C118 closing first); branch chain Q118 → Q45 → Q44; manual energisation outcomes; **wedge Q118 / Q44 gates** |
+| No tension · Op A beginning · Op A ending (+ part II) | §7.02 / 7.03 / 7.04 / 7.11 | BP-drop branches; relay reroute; relief-engine defer; the re-glow question (VCB 5-branch?) |
+| Op B part 1 · Op O · Op I | §7.05 / 7.07 / 7.08 | isolate-by-elimination ladders (one switch back to 1, 15/30 s wait, the tripping switch names the defect) |
+| Op B part II | §7.06 | single gated action: **wedge Q45** (contraindicated by Op A ending trouble) |
+| Op II + 3 branches | §7.09.1–7.09.4 | hub on contactor state; wedge Q100 ordinary (no stated precondition); **contactor wedge gate** (switch on 3); minimum-contactor working |
+| TWAC | §7.10 | 13-step ladder with two wedge gates in TSD order |
 
 ## Layout
 
@@ -129,7 +141,7 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Streamlit chat client showing the engine trace | `client/` |
 | Scenario suite, harness, baseline, report | `eval/` |
 | Showcase walkthrough generator | `scripts/demo.py` |
-| Tests — 230 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 40 live parse cases | `tests/` |
+| Tests — 267 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 55 live parse cases | `tests/` |
 
 Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 

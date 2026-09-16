@@ -1,0 +1,117 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — Q45 branch (Q45 not energised)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01.4 "Q45 Branch", pp.106–107: "Q45 not energised" (a–h) and
+#         "Manual energisation of Q45" (a–d).
+# Mechanism: ladder → manual energisation → outcomes: DJ closes (resume, operate Q45
+# manually each time) / closes but trips (pick up the abnormal sign again → intake hub) /
+# still not closing (next branches: Q44 → …). No wedging in this section (Q45 wedging is
+# §7.06 only, with its own gate).
+# Reached from the ICDJ hub (q45_energised == no) or from the Q118 branch (e), or directly.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ_Q45_branch
+aliases:
+  - "Q45 not energised"
+  - "Q45 not energising"
+  - "Q45 is not energising"
+  - "Q45 not picking up"
+  - "Q45 does not energise"
+  - "ICDJ Q45 branch"
+precedence: 1
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ does not close and relay Q45 does not energise when BLDJ is closed and BLRDJ pressed"
+
+combination_rules: []
+route_rules:
+  - if_fact: dj_closes_with_manual_q45
+    equals: "no"
+    route_to: ICDJ_Q44_branch
+    source: "§7.01.4 Manual energisation (d), p107: 'If still is not closing, check Q44, C118, and EFDJ/MTDJ branches'"
+  - if_fact: trips_with_manual_q45
+    equals: "yes"
+    route_to: DJ_tripped_on_line
+    source: "§7.01.4 Manual energisation (c), p107: 'If DJ closes but trips before or after releasing Q45, pick up the correct abnormal sign and trouble shoot'"
+
+steps:
+  # (a)
+  - id: ensure_bldj_closed_zpt_1_lsgr_gr_zero
+    text: "Ensure BLDJ is closed, ZPT is in the '1' position, LSGR is glowing, and the GR drum is on '0'."
+    gate: null
+    source: "§7.01.4(a), p106"
+
+  # (b)
+  - id: check_ccdj_renew_if_melted
+    text: >-
+      Check CCDJ. If it is melted, renew the fuse. If it melts a second time, put HOBA in
+      the 'OFF' position, renew the fuse and operate Q45 manually.
+    gate: null
+    source: "§7.01.4(b), p106"
+
+  # (c)
+  - id: try_rear_cab_if_ccdj_melts_again
+    text: >-
+      If once again the fuse (CCDJ) is melted, try from the rear cab. If unsuccessful,
+      contact TLC.
+    gate: null
+    applies_when: {ccdj_melted_third_time: "yes"}
+    requires_stated: true
+    source: "§7.01.4(c), p106"
+
+  # (d)
+  - id: operate_gr_manually_0_to_5_and_try_if_ccdj_good
+    text: >-
+      If CCDJ is in good condition, operate GR manually from '0' to 5 notches and back to
+      '0'. Then try to close DJ and resume traction.
+    gate: null
+    source: "§7.01.4(d), p106"
+
+  # (e)
+  - id: press_bp2dj_instead_of_blrdj_and_bp1dj
+    text: >-
+      Press BP2DJ instead of BLRDJ for closing DJ, and press BP1DJ a couple of times to
+      make proper contact.
+    gate: null
+    source: "§7.01.4(e), p106"
+
+  # (f)
+  - id: change_zpt_to_other_position
+    text: "Change ZPT to the other position and try."
+    gate: null
+    source: "§7.01.4(f), p106"
+
+  # (g)
+  - id: try_from_rear_cab
+    text: "Try from the rear cab."
+    gate: null
+    source: "§7.01.4(g), p106"
+
+  # (h) + Manual energisation (a)(b)(c)
+  - id: energise_q45_manually
+    text: >-
+      If unsuccessful, energise Q45 manually: keep ZPT in the '1' position, close BLDJ and
+      press Q45; release it 4 seconds after LSDJ extinguishes. Report whether DJ closed,
+      did not close, or closed but tripped before or after releasing Q45.
+    gate: null
+    source: "§7.01.4(h), p106; Manual energisation of Q45 (a), pp106–107"
+
+  # Manual energisation (b)
+  - id: resume_traction_operating_q45_manually_each_time
+    text: >-
+      DJ closes with Q45 energised manually: resume traction. Every time for closing DJ,
+      operate Q45 manually.
+    gate: null
+    applies_when: {dj_closes_with_manual_q45: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.01.4 Manual energisation (b), pp106–107"
+
+terminal_actions:
+  resolved: "resume traction, operating Q45 manually every time DJ is closed"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01.4, pp.106–107"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -20,6 +20,7 @@ aliases:
   - "QOP-1 will not reset"
   - "QOP1 not resetting"
 precedence: 1                      # more specific than "QOP-1 dropped" in the same message
+listed_as: "QOP-1 dropped"
 config_dependency: none
 type_dependency: none
 rb_dependency: true                # §6.03.3(j): bit table "For WAP4 locos without RB" differs

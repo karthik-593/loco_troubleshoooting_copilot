@@ -1,0 +1,142 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — Q118 branch (Q118 not energised)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01.3 "Q118 Branch", pp.104–106: "Q118 not energised" (a–g), "Manual
+#         energisation of relay Q118" (a–f), "Precautions for wedging Q118" (a–e), Note (§9.3 photos).
+# Mechanism: ladder → manual energisation → outcome branches: DJ closes and holds (resume,
+# energise Q118 manually each time) / DJ does not close (next branches: Q45 → …) / DJ closes
+# but trips after releasing Q118 → WEDGE Q118 — a hazard_exposure gate: "Before wedging
+# ensure all EM contactors are opened" (precaution a), with precautions b–e as the working
+# conditions after the wedge.
+# Reached from the ICDJ hub (q118_energised == no), or directly.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ_Q118_branch
+aliases:
+  - "Q118 not energised"
+  - "Q118 not energising"
+  - "Q118 is not energising"
+  - "Q118 not picking up"
+  - "Q118 does not energise"
+  - "ICDJ Q118 branch"
+  - "no click from Q118"
+precedence: 1
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ does not close and relay Q118 does not energise (no click) when HBA is placed on '1'"
+
+combination_rules: []
+route_rules:
+  - if_fact: dj_closes_with_manual_q118
+    equals: "no"
+    route_to: ICDJ_Q45_branch
+    source: "§7.01.3 Manual energisation (e), p105: 'If DJ does not close, check Q45, Q44, C118 and EFDJ/MTDJ branches for any abnormality'"
+
+steps:
+  # Q118 not energised (a)–(g)
+  - id: ensure_battery_voltage_above_90
+    text: "Ensure battery voltage is above 90 volts."
+    gate: null
+    source: "§7.01.3(a), p104"
+
+  - id: ensure_panto_raised_check_ccba_ccpt_if_lowered
+    text: >-
+      Ensure the pantograph is in the raised condition. If it is lowered, check the fuses
+      CCBA and CCPT.
+    gate: null
+    source: "§7.01.3(b), p104"
+
+  - id: renew_melted_fuses_hoba_off_if_melts_again
+    text: >-
+      If one or both fuses (CCBA, CCPT) are melted, renew the same. If it melts again,
+      place HOBA in the OFF position, renew the fuse and resume traction with precautions.
+    gate: null
+    applies_when: {ccba_or_ccpt_melted: "yes"}
+    requires_stated: true
+    source: "§7.01.3(c), p104"
+
+  - id: check_c118_c105_c106_c107_fully_opened
+    text: >-
+      Check that C118, C105, C106 and C107 are fully opened. If any one is welded, release
+      the same; operate 2 or 3 times with precautions.
+    gate: null
+    source: "§7.01.3(d), p104"
+
+  - id: check_q44_q46_deenergised_and_clean_interlocks
+    text: >-
+      Check and ensure the relays Q44 and Q46 are in the de-energised condition; tap and
+      clean the interlocks of Q44/Q46.
+    gate: null
+    source: "§7.01.3(e), p104"
+
+  - id: check_gr_on_zero_operate_0_5_0
+    text: "Check GR is on '0' (LSGR is glowing); operate GR 0-5-0 manually."
+    gate: null
+    source: "§7.01.3(f), p104"
+
+  # (g) + Manual energisation (a)–(d)
+  - id: energise_q118_manually
+    text: >-
+      If everything is normal, manually operate the relay Q118: close BLDJ and BLVMT, press
+      Q118 manually and press BP2DJ. Release BP2DJ after LSDJ and LSCHBA have extinguished,
+      and release Q118 after 30 seconds or after all the blowers have started. While
+      manually operating Q118, if any abnormal sign is noticed, release Q118 and trouble
+      shoot for the same. Report whether DJ closed and held, did not close, or closed but
+      tripped after Q118 was released.
+    gate: null
+    source: "§7.01.3(g), p104; Manual energisation of relay Q118 (a)(b)(d), p105"
+
+  # Manual energisation (c)
+  - id: resume_traction_energising_q118_manually_each_time
+    text: >-
+      DJ is closed and maintained with Q118 energised manually: resume traction. For
+      closing DJ every time, energise Q118 manually.
+    gate: null
+    applies_when: {dj_closes_with_manual_q118: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.01.3 Manual energisation (c), p105"
+
+  # Manual energisation (f) + Precautions for wedging Q118 — HAZARD-EXPOSURE gate
+  - id: wedge_q118
+    text: >-
+      DJ closed but tripped after releasing Q118: wedge Q118 in the energised condition and
+      work with precautions — before wedging ensure all EM contactors are opened; after
+      closing DJ ensure C118 is fully opened; check the working of MVMT1, MVMT2, MVRH,
+      MVSL1, MVSL2 auxiliaries frequently; check the TFR oil level for any colour change or
+      any abnormal increase of oil level; avoid quick regression of GR. (The method of
+      wedging for different makes of relay is shown in the photographs in §9.3.)
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q118 unless all EM contactors are opened. After wedging: after closing
+        DJ ensure C118 is fully opened; check MVMT1, MVMT2, MVRH, MVSL1, MVSL2 frequently;
+        check the TFR oil level for colour change or abnormal increase; avoid quick
+        regression of GR.
+      action: wedge_Q118
+      preconditions:
+        - all_em_contactors_open                 # Precautions for wedging Q118 (a), p106
+      on_precondition_unmet: >-
+        Before wedging Q118, ensure all EM contactors are opened. Then, with Q118 wedged in
+        the energised condition: after closing DJ ensure C118 is fully opened; check the
+        working of MVMT1, MVMT2, MVRH, MVSL1, MVSL2 auxiliaries frequently; check the TFR
+        oil level for any colour change or any abnormal increase of oil level; avoid quick
+        regression of GR.
+      precondition_question: "Before wedging Q118, were all EM contactors opened?"
+      source: "§7.01.3 Precautions for wedging Q118 (a)–(e), p106; Manual energisation (f), p105"
+    applies_when: {trips_after_releasing_q118: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.01.3 Manual energisation (f), p105; Precautions for wedging Q118, p106"
+
+terminal_actions:
+  resolved: >-
+    resume traction (energising Q118 manually each time DJ is closed, or with Q118 wedged
+    — then ensure C118 is fully opened after closing DJ, check MVMT1, MVMT2, MVRH, MVSL1,
+    MVSL2 frequently, check the TFR oil level, avoid quick regression of GR)
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01.3, pp.104–106"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

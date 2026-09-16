@@ -1,0 +1,198 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Intake: DJ tripped on line, no safety-relay target identified yet
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         §5.01 "General checking in case of DJ tripping on line" pp.81–82 (incl. Notes a–d)
+#         and Chapter 7 "Tripping failures" introduction, p.102.
+# Mechanism: HUB. Prepare the loco (the nine checks + the side-notes), then the observation
+# drill "Close BLDJ, press BLRDJ and observe LSDJ, UA needle, auxiliaries sound & LSCHBA";
+# the abnormal sign the pilot reports (fact `trip_sign`) routes to the tripping-failure
+# procedure whose "Abnormal sign" it matches (§7.01–§7.11). A dropped safety-relay target
+# routes to that relay's procedure (combination rules; §5.01 "If any safety relay target is
+# found dropped, trouble shoot for DJ tripping through safety relays").
+# precedence -2: a relay or fire named in the same message wins the alias match.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: DJ_tripped_on_line
+aliases:
+  - "DJ tripped"
+  - "DJ tripping"
+  - "DJ trips"
+  - "DJ has tripped"
+  - "DJ tripped on line"
+  - "DJ opened"
+  - "loco tripped"
+  - "VCB tripped"
+precedence: -2
+listed_as: "DJ tripped on line"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ tripped on line (LSDJ glowing) and no safety-relay red target has been identified yet"
+
+combination_rules:                  # §5.01 "If any safety relay target is found dropped, trouble shoot for DJ tripping through safety relays"
+  - if_also: ["QLM"]
+    route_to: QLM_dropped
+    source: "§5.01, p81; §6.01 p83"
+  - if_also: ["QOP-1", "QOP1"]
+    route_to: QOP1_dropped
+    source: "§5.01, p81; §6.03.1 p89"
+  - if_also: ["QOP-2", "QOP2"]
+    route_to: QOP2_dropped
+    source: "§5.01, p81; §6.03.2 p90"
+  - if_also: ["QRSI-1", "QRSI1"]
+    route_to: QRSI1_drops_on_run
+    source: "§5.01, p81; §6.02 p87"
+  - if_also: ["QRSI-2", "QRSI2"]
+    route_to: QRSI2_drops_on_run
+    source: "§5.01, p81; §6.02 p88"
+  - if_also: ["QOA"]
+    route_to: QOA_dropped
+    source: "§5.01, p81; §6.04.1 p97"
+  - if_also: ["QLA"]
+    route_to: QLA_dropped
+    source: "§5.01, p81; §6.05 p100"
+
+route_rules:                        # the abnormal sign picked up in the observation drill (Ch.7 intro, p102)
+  - if_fact: trip_sign
+    equals: icdj
+    route_to: ICDJ
+    source: "§7.01 Abnormal sign, p103: 'While trying to re-close DJ, LSDJ does not extinguish (DJ does not close)'"
+    phrases: ["LSDJ does not extinguish", "LSDJ not extinguishing", "DJ does not close", "DJ not closing",
+              "DJ is not closing", "DJ won't close", "DJ will not close", "cannot close DJ", "can't close DJ",
+              "unable to close DJ", "ICDJ", "impossible to close DJ"]
+  - if_fact: trip_sign
+    equals: no_tension
+    route_to: No_tension
+    source: "§7.02 Abnormal sign, p112: 'LSDJ extinguishes (DJ closes), UA meter needle does not deviate, no sound from auxiliaries, LSCHBA does not extinguish and LSDJ glows again after 5.6sec (DJ trips) before BLRDJ is released'"
+    phrases: ["no tension"]
+  - if_fact: trip_sign
+    equals: op_a_beginning
+    route_to: Op_A_beginning
+    source: "§7.03 Abnormal sign, p113: 'LSDJ extinguishes and immediately glows again (DJ closes and trips immediately, i.e. LSDJ flickers)'"
+    phrases: ["operation A beginning", "op A beginning", "LSDJ flickers", "LSDJ flickering"]
+  - if_fact: trip_sign
+    equals: op_a_ending
+    route_to: Op_A_ending
+    source: "§7.04 Abnormal sign, pp114–115: 'LSDJ extinguishes (DJ closes), UA needle deviates, auxiliary sound may or may not heard, LSCHBA does not extinguish and LSDJ glows again after 5.6 sec (DJ trips) before BLRDJ is released'"
+    phrases: ["operation A ending", "op A ending"]
+  - if_fact: trip_sign
+    equals: reglows_on_release
+    route_to: Reglows_on_release
+    source: "§7.06 Abnormal sign, p119: 'on releasing BLRDJ, LSDJ re glows immediately'; §7.11 Abnormal sign, p128: 'while releasing BLRDJ, LSDJ re-glows'"
+    phrases: ["operation B part 2", "operation B part II", "op B part 2", "operation B-II", "B-II trouble",
+              "operation A ending part 2", "operation A ending part II"]
+  - if_fact: trip_sign
+    equals: op_b_part1
+    route_to: Op_B_part1
+    source: "§7.05 Abnormal sign, pp116–117: 'after releasing BLRDJ, while counting 15 seconds LSDJ re-glows (after 5.6 sec of extinguishing of LSCHBA)'"
+    phrases: ["operation B part 1", "operation B part I", "op B part 1", "operation B-I"]
+  - if_fact: trip_sign
+    equals: op_o
+    route_to: Op_O
+    source: "§7.07 Abnormal sign, p120: 'After closing DJ, wait for 15sec, close BLVMT, while counting 30sec, LSDJ re glows (DJ trips)'"
+    phrases: ["operation O", "op O", "operation 'O'"]
+  - if_fact: trip_sign
+    equals: op_1
+    route_to: Op_I
+    source: "§7.08 Abnormal sign, p121: 'After closing DJ, wait for 15sec, close BLVMT, wait for 30sec, take one notch, LSDJ re glows (DJ trips)'"
+    phrases: ["operation I", "operation 1", "op I", "operation-I", "trips on first notch", "trips on the first notch",
+              "trips on taking one notch", "trips on one notch"]
+  - if_fact: trip_sign
+    equals: op_2
+    route_to: Op_II
+    source: "§7.09 Abnormal sign, p123: 'After closing DJ, wait for 15 sec, close BLVMT, wait for 30sec, take sixth notch, while counting 15sec, LSDJ re glows (DJ trips)'"
+    phrases: ["operation II", "operation 2", "op II", "operation-II", "trips on sixth notch", "trips on the sixth notch",
+              "trips on 6th notch", "trips at 6th notch"]
+  - if_fact: trip_sign
+    equals: twac
+    route_to: TWAC
+    source: "§7.10 Abnormal sign, p126: 'DJ trips in various occasions other than above indications'"
+    phrases: ["TWAC", "without apparent cause", "without any apparent cause", "trips randomly", "tripping randomly",
+              "trips at random", "trips on and off", "keeps tripping on run"]
+
+steps:
+  # §5.01 first sentence — only when BP dropped with the trip
+  - id: flasher_and_gsr_if_bp_dropped
+    text: >-
+      If DJ trips on line with sudden dropping of BP pressure, switch ON Flasher light
+      immediately and act as per G & SR.
+    gate: null
+    applies_when: {bp_dropped_with_trip: "yes"}
+    requires_stated: true
+    source: "§5.01, p81"
+
+  # Ch.7 intro items 1–9 (p102) + §5.01 Notes c, d (p82)
+  - id: prepare_loco_to_pick_up_abnormal_sign
+    text: >-
+      Prepare the loco to pick up the correct abnormal sign: 1. Bring MP to '0'. 2. Ensure
+      LSGR is glowing. 3. Open all top row BL switches. 4. Ensure air pressure in RS/MR is
+      above 6.5 kg/cm2. 5. Ensure battery voltage is above 90 volts (ensures Addl CCBA is in
+      good condition). 6. Ensure that all the EM contactors (C105, C106 & C107) are fully
+      opened. 7. Check the safety relays for dropping of RED targets (red coloured stencil
+      'LOCKED' indication for QLM). 8. Check whether LSSIT lamp is glowing (in SIV provided
+      locos). 9. Ensure physically panto is raised and touching the OHE (ensures CCBA, CCPT
+      and CHBA ammeter shunt are in good condition). Before trouble shooting for tripping
+      failures switch 'ON' ZCPA. Do not leave the train with only loco brake (SA-9) applied:
+      after stopping, both loco and train brake should be applied by automatic brake valve
+      (A-9).
+    gate: null
+    source: "Ch.7 introduction items 1–9, p102; §5.01 Notes c, d, p82"
+
+  # Ch.7 intro side-notes (p102) — each only when its finding is stated
+  - id: check_ccpt_if_lsgr_not_glowing_and_panto_lowered
+    text: "If LSGR is not glowing and panto also lowered, check CCPT fuse."
+    gate: null
+    applies_when: {lsgr_not_glowing_and_panto_lowered: "yes"}
+    requires_stated: true
+    source: "Ch.7 introduction, p102; §5.01 item 3, p81"
+
+  - id: check_hba_addl_ccba_and_batteries_if_ba_voltage_zero
+    text: >-
+      If BA voltage is '0', check HBA on 1, Addl CCBA and the batteries. If HBA is on 1 and
+      Addl CCBA is in good condition then identify the defective battery and isolate it.
+    gate: null
+    applies_when: {battery_voltage_zero: "yes"}
+    requires_stated: true
+    source: "Ch.7 introduction, p102"
+
+  - id: hchba_3rd_position_if_panto_lowered_with_normal_battery
+    text: >-
+      If, after passing a neutral section or when DJ tripped, the panto also lowered with
+      normal battery voltage and CCBA in good condition, suspect that the CHBA ammeter shunt
+      is defective. In modified HCHBA provided locos, place HCHBA in the 3rd position.
+    gate: null
+    applies_when: {panto_lowered_with_normal_battery_voltage: "yes"}
+    requires_stated: true
+    source: "Ch.7 introduction, p102"
+
+  - id: troubleshoot_rs_pressure_if_less
+    text: "If RS pressure is less, trouble shoot accordingly (Chapter 9, pneumatic failures)."
+    gate: null
+    applies_when: {rs_pressure_low: "yes"}
+    requires_stated: true
+    source: "Ch.7 introduction, p102"
+
+  - id: check_siv_panel_if_lssit_glowing
+    text: "If LSSIT is glowing, then check the SIV panel and troubleshoot for it (in SIV locos)."
+    gate: null
+    applies_when: {lssit_glowing: "yes"}
+    requires_stated: true
+    source: "Ch.7 introduction, p102"
+
+  # the observation drill (p102) — the pilot's report sets `trip_sign`
+  - id: observe_dj_closing_and_pick_up_abnormal_sign
+    text: >-
+      If everything is normal, pick up the correct abnormal sign: close BLDJ, press BLRDJ
+      and observe LSDJ, UA needle, auxiliaries sound & LSCHBA. After extinguishing of
+      LSCHBA, release BLRDJ. If LSCHBA does not extinguish, release BLRDJ after re-glowing
+      of LSDJ. Report what LSDJ, the UA needle, the auxiliaries and LSCHBA did, and when DJ
+      tripped (immediately, after 5.6 sec before BLRDJ was released, on releasing BLRDJ,
+      within 15 sec, after BLVMT, on the first notch, on the sixth notch, or at random).
+    gate: null
+    source: "Ch.7 introduction, p102; §5.01 tripping failures list 1–11, pp81–82"
+
+terminal_actions:
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), §5.01 pp.81–82; Ch.7 introduction p.102"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

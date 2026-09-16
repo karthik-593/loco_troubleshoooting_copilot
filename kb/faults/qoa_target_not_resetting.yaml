@@ -19,6 +19,7 @@ aliases:
   - "QOA target does not reset"
   - "QOA will not reset"
 precedence: 1
+listed_as: "QOA dropped"
 config_dependency: none
 type_dependency: none
 presenting_signs:

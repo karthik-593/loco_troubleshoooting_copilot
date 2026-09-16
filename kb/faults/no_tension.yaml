@@ -1,0 +1,139 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: No tension on line
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.02 "No tension on line", pp.112–113 (abnormal sign, causes 1–6,
+#         trouble shooting a–k).
+# Mechanism: BP-drop branch (a) vs no-BP-drop branch (b), then the roof / panto checks (c–e),
+# then the DJ / panto retries (f–k). (d), (i) heavy flash, (k) are ways the procedure ends.
+# (e) "trouble shoot for panto not rising" is a Ch.9 procedure (later batch).
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: No_tension
+aliases:
+  - "no tension"
+  - "no tension on line"
+  - "no OHE supply"
+  - "no supply in OHE"
+  - "OHE dead"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Close BLDJ, press BLRDJ: LSDJ extinguishes (DJ closes), UA meter needle does not deviate, no sound from auxiliaries, LSCHBA does not extinguish and LSDJ glows again after 5.6 sec (DJ trips) before BLRDJ is released"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: flasher_stop_check_formation_if_bp_dropped
+    text: >-
+      If BP drops along with DJ tripping, switch ON the flasher light, stop the train and
+      check the formation. If any infringement is noticed with the adjacent track, protect
+      the train as per GR and SR.
+    gate: null
+    applies_when: {bp_dropped_with_trip: "yes"}
+    source: "§7.02(a), p112"
+
+  # (b)
+  - id: check_track_ahead_if_no_bp_drop
+    text: >-
+      If there is no sudden drop of BP and NO TENSION is observed, check for any
+      abnormality in the track ahead (an adjacent train formation may be infringing the
+      track). If so, stop the train immediately and act as per GR and SR.
+    gate: null
+    applies_when: {bp_dropped_with_trip: "no"}
+    source: "§7.02(b), p112"
+
+  # (c)
+  - id: check_loco_roof_and_panto_contact
+    text: >-
+      Check the loco roof for any foreign body or loco roof equipment touching the roof,
+      any cut in the roof bar, and whether the panto is touching the contact wire.
+    gate: null
+    source: "§7.02(c), p112"
+
+  # (d)
+  - id: stop_lower_panto_secure_contact_tlc_tpc
+    text: >-
+      If any foreign body is noticed, or loco roof equipment is touching the roof, or a cut
+      in the OHE is noticed: immediately stop the train, lower the panto, secure the loco
+      and contact TLC & TPC for TRD staff assistance.
+    gate: null
+    applies_when: {roof_foreign_body_or_ohe_cut: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.02(d), p112"
+
+  # (e)
+  - id: try_other_panto_if_not_touching_contact_wire
+    text: >-
+      If the panto is not touching the contact wire, try with the other panto or trouble
+      shoot for panto not rising (Chapter 9).
+    gate: null
+    applies_when: {panto_not_touching_contact_wire: "yes"}
+    requires_stated: true
+    source: "§7.02(e), p112"
+
+  # (f)
+  - id: try_to_close_dj_if_everything_normal
+    text: "If everything is normal, try to close DJ."
+    gate: null
+    source: "§7.02(f), p112"
+
+  # (g)
+  - id: change_panto_and_close_dj
+    text: >-
+      If power is not restored, lower the working panto and raise the other panto. Close
+      DJ; if power is restored, work with the other panto.
+    gate: null
+    source: "§7.02(g), p113"
+
+  # (h)
+  - id: check_for_heavy_flash_with_other_panto
+    text: >-
+      If still unsuccessful, check for any heavy flash when the other panto is touching
+      the contact wire.
+    gate: null
+    source: "§7.02(h), p113"
+
+  # (i) heavy flash
+  - id: lower_panto_and_contact_tpc_if_heavy_flash
+    text: >-
+      If a heavy flash is noticed while raising the other panto or closing DJ, lower the
+      panto and contact TPC.
+    gate: null
+    applies_when: {heavy_flash_noticed: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.02(i), p113"
+
+  # (j)
+  - id: lower_both_pantos_and_contact_tpc
+    text: >-
+      If still power is not restored, stop at a convenient place, then lower both the
+      pantographs and contact TPC.
+    gate: null
+    source: "§7.02(j), p113"
+
+  # (k)
+  - id: clear_section_at_restricted_speed_if_power_restored_after_5_min
+    text: >-
+      If power is restored after 5 minutes and there is no information regarding an OHE
+      failure, clear the section with a speed restriction of 60/30 km/h (view ahead clear /
+      view ahead not clear), duly observing the adjacent line OHE also. If any
+      abnormality is noticed in the OHE, protect and inform TPC and TLC.
+    gate: null
+    applies_when: {power_restored_after_5_min: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.02(k), p113"
+
+terminal_actions:
+  resolved: "resume traction; if working after an OHE interruption, observe the 60/30 km/h restriction and watch the adjacent line OHE, informing TPC and TLC of any abnormality"
+  unresolved: "keep both pantographs lowered and contact TPC (and TLC)"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.02, pp.112–113"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

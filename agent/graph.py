@@ -131,7 +131,8 @@ class Copilot:
                            "rerouted": False}
         if verdict.fired:
             d = reassess(diag, self._fault(diag))      # re-derives the same verdict → terminal
-            assert d.route == "gate_terminal"
+            # (a CAUTION / ASK on a fault not yet confirmed waits behind the §5.5 confirm line)
+            assert d.route == "gate_terminal" or d.terminal.kind == "confirm_fault"
             out.update({"terminal": d.terminal, "stop_reason": "gate",
                         "tool_path": s.get("tool_path", []) + [REFLEX_SHORT_CIRCUIT]})
         return out
@@ -141,7 +142,7 @@ class Copilot:
         fault = self._fault(diag)
         if fault is None:                                  # nothing to decide about → engine terminal
             return {"stop_reason": "reassess"}
-        if diag.fault_confirmed is False and fault.gated_steps:
+        if diag.fault_confirmed is False and (fault.gated_steps or fault.confirm_before_guidance):
             return {"stop_reason": "reassess"}             # §5.5: confirm first; no tools yet
         if max_iter_reached(diag, self.max_iter):
             return {"stop_reason": "max_iter"}

@@ -1,0 +1,48 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation 'A' ending — part II  (VCB type 5-branch DJ locos only)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.11 "Operation 'A' ending – part II", p.128.
+# Mechanism: the TSD gives no ladder — "Problem with DJ N/O I/L on MTDJ branch, contact TLC
+# for advice." Reached from the Reglows_on_release question hub (vcb_5_branch_loco == yes),
+# or directly by name.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_A_ending_part2
+aliases:
+  - "operation A ending part 2"
+  - "operation A ending part II"
+  - "operation 'A' ending part II"
+  - "op A ending part 2"
+  - "op A ending part II"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "VCB type 5-branch DJ loco: close BLDJ and press BLRDJ, LSDJ extinguishes, UA meter needle deviates, sound comes from the auxiliaries and LSCHBA also extinguishes, and while releasing BLRDJ, LSDJ re-glows"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:                   # reached from the Reglows_on_release hub: the fact is set by the route
+  - fact: vcb_5_branch_loco
+    equals: "yes"
+    text: "Problem with DJ N/O I/L on MTDJ branch, contact TLC for advice."
+    source: "§7.11 Cause and Trouble shooting, p128"
+
+steps:
+  - id: contact_tlc_dj_no_interlock_on_mtdj_branch
+    text: >-
+      The cause is a defective DJ N/O interlock on the MTDJ branch. Problem with DJ N/O I/L
+      on MTDJ branch: contact TLC for advice.
+    gate: null
+    completes: true
+    source: "§7.11 Cause and Trouble shooting, p128"
+
+terminal_actions:
+  resolved: "contact TLC for advice (defective DJ N/O interlock on the MTDJ branch)"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.11, p.128"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

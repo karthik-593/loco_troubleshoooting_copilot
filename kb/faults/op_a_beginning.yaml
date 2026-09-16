@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation 'A' beginning
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.03 "Operation 'A' beginning", pp.113–114 (abnormal sign, causes a–c,
+#         trouble shooting a–h).
+# Mechanism: (a) a dropped QLA / QOA target → that relay's procedure (combination rules);
+# else the switch-isolation ladder b–h, each "if successful resume traction duly observing …
+# every 10 minutes".
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_A_beginning
+aliases:
+  - "operation A beginning"
+  - "operation 'A' beginning"
+  - "op A beginning"
+  - "LSDJ flickers"
+  - "LSDJ flickering"
+  - "DJ closes and trips immediately"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Close BLDJ and press BLRDJ: LSDJ extinguishes and immediately glows again (DJ closes and trips immediately, i.e. LSDJ flickers)"
+
+combination_rules:                  # (a) "If any safety relay target is dropped, troubleshoot for the concerned safety relay"
+  - if_also: ["QLA"]
+    route_to: QLA_dropped
+    source: "§7.03(a), p114; §6.05 p100"
+  - if_also: ["QOA"]
+    route_to: QOA_dropped
+    source: "§7.03(a), p114; §6.04.1 p97"
+route_rules: []
+
+steps:
+  # (a)
+  - id: check_qla_qoa_targets
+    text: >-
+      Check the safety relays QLA and QOA. If any safety relay target is dropped, trouble
+      shoot for the concerned safety relay. Report whether either target is dropped.
+    gate: null
+    source: "§7.03(a), p114"
+
+  # (b)
+  - id: tap_relays_press_reset_buttons_close_dj
+    text: >-
+      If no relay target is dropped, tap the safety relays gently and operate the target
+      resetting buttons physically even though no relay target is dropped. Close DJ and
+      resume traction.
+    gate: null
+    source: "§7.03(b), p114"
+
+  # (c)
+  - id: hqoa_on_0_and_close_dj
+    text: >-
+      If unsuccessful, place HQOA on '0' and close DJ. If successful, resume traction duly
+      observing for any abnormality in the auxiliary power circuit equipment every 10
+      minutes.
+    gate: null
+    source: "§7.03(c), p114"
+
+  # (d)
+  - id: normalise_hqoa_hqop1_off_and_close_dj
+    text: >-
+      If unsuccessful, normalise HQOA, place HQOP-1 in the 'OFF' position as per procedure
+      and close DJ. If successful, resume traction duly observing for any abnormality in
+      the traction power circuit equipment every 10 minutes.
+    gate: null
+    source: "§7.03(d), p114"
+
+  # (e)
+  - id: normalise_hqop1_hqop2_off_and_close_dj
+    text: >-
+      If unsuccessful, normalise HQOP1, place HQOP-2 in the 'OFF' position as per procedure
+      and close DJ. If successful, resume traction duly observing for any abnormality in
+      the traction power circuit every 10 minutes.
+    gate: null
+    source: "§7.03(e), p114"
+
+  # (f)
+  - id: hoba_off_and_try
+    text: "If still unsuccessful, place HOBA in the OFF position and try."
+    gate: null
+    source: "§7.03(f), p114"
+
+  # (g)
+  - id: build_maximum_pressure_tap_qpdj_and_try
+    text: "Try by building maximum pressure; tap QPDJ and try."
+    gate: null
+    source: "§7.03(g), p114"
+
+  # (h)
+  - id: contact_tlc_if_unsuccessful
+    text: "If unsuccessful, contact TLC."
+    gate: null
+    source: "§7.03(h), p114"
+
+terminal_actions:
+  resolved: >-
+    resume traction, observing the circuit whose switch was placed on '0' / 'OFF' (HQOA:
+    auxiliary power circuit; HQOP-1/2: traction power circuit) for any abnormality every 10
+    minutes
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.03, pp.113–114"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

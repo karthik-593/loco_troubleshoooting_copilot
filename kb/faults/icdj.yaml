@@ -1,0 +1,127 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — Impossible to Close DJ  (hub)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01 "ICDJ (Impossible to Close DJ)", p.103 (abnormal sign, causes 1–11,
+#         "Before trouble shooting…"); §7.01.6 Note 2, p.110 (quick trouble shooting order).
+# Mechanism: HUB. Causes 1–8 each have their own branch procedure (§7.01.1–§7.01.8); the hub
+# checks in the order the TSD prescribes — battery voltage, air pressure, then "first ensure
+# C118 closing or not and then check one by one branch" — and routes on the finding.
+# Causes 9–11 (VCB unit pressure, conk slack, ammeter shunt) have no procedure of their own
+# in §7.01; VCB pressure is item (j) of the EFDJ/MTDJ branch.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ
+aliases:
+  - "ICDJ"
+  - "impossible to close DJ"
+  - "DJ not closing"
+  - "DJ is not closing"
+  - "DJ does not close"
+  - "DJ won't close"
+  - "DJ will not close"
+  - "cannot close DJ"
+  - "can't close DJ"
+  - "unable to close DJ"
+  - "LSDJ does not extinguish"
+  - "LSDJ not extinguishing"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "While trying to re-close DJ, LSDJ does not extinguish (DJ does not close)"
+
+combination_rules: []
+route_rules:
+  - if_fact: battery_voltage_low_or_zero
+    equals: "yes"
+    route_to: ICDJ_battery_voltage
+    source: "§7.01 cause 1 'Less/No battery voltage' → §7.01.1, p103"
+  - if_fact: air_pressure_low
+    equals: "yes"
+    route_to: ICDJ_air_pressure
+    source: "§7.01 cause 2 'Less air pressure' → §7.01.2, p103"
+  - if_fact: c118_closing
+    equals: "yes"
+    route_to: ICDJ_EFDJ_MTDJ_branch
+    source: "§7.01.6 Note 2, p110: 'If C118 is closing no need to check Q118, Q45, Q44 & C118 branches' → §7.01.7 / §7.01.8"
+  - if_fact: q118_energised
+    equals: "no"
+    route_to: ICDJ_Q118_branch
+    source: "§7.01 cause 3 'Q118 not energised' → §7.01.3, p103"
+  - if_fact: q45_energised
+    equals: "no"
+    route_to: ICDJ_Q45_branch
+    source: "§7.01 cause 4 'Q45 not energised' → §7.01.4, p103"
+  - if_fact: q44_energised
+    equals: "no"
+    route_to: ICDJ_Q44_branch
+    source: "§7.01 cause 5 'Q44 not energised' → §7.01.5, p103"
+  - if_fact: q44_energised
+    equals: "yes"
+    route_to: ICDJ_C118_branch
+    source: "§7.01 cause 6 'C118 not closed' with Q118, Q45, Q44 energised → §7.01.6, p103"
+
+steps:
+  - id: stop_and_secure_train
+    text: "Before trouble shooting, ensure the train is stopped at a convenient place and secured properly."
+    gate: null
+    source: "§7.01 Trouble Shooting, p103"
+
+  - id: check_battery_voltage_uba
+    text: >-
+      Check the battery voltmeter (UBA): battery voltage should be above 90 volts. Report
+      whether UBA shows normal, less, or zero voltage.
+    gate: null
+    source: "§7.01 cause 1, p103; §7.01.1, p103; Ch.7 introduction item 5, p102"
+
+  - id: check_air_pressure_rs_mr
+    text: "Ensure air pressure in RS/MR is above 6.5 kg/cm2. Report the pressure."
+    gate: null
+    source: "§7.01 cause 2, p103; Ch.7 introduction item 4, p102"
+
+  # §7.01.6 Note 2: "Quick trouble shooting of ICDJ, first ensure C118 closing or not and then
+  # check one by one branch. If C118 is closing no need to check Q118, Q45, Q44 & C118 branches."
+  - id: check_whether_c118_closes
+    text: >-
+      First ensure whether C118 is closing or not when BLDJ is closed and BLRDJ pressed.
+      Report whether C118 closes.
+    gate: null
+    source: "§7.01.6 Note 2, p110"
+
+  - id: check_q118_energising
+    text: >-
+      Q118 will energise as soon as HBA is placed on the '1' position, which can be
+      identified through a click sound, also to be ensured personally. Report whether Q118
+      energises.
+    gate: null
+    applies_when: {c118_closing: "no"}
+    source: "§7.01.3, p103–104; §7.01 cause 3, p103"
+
+  - id: check_q45_energising
+    text: >-
+      Check whether relay Q45 energises when BLDJ is closed and BLRDJ pressed (Q45 will not
+      energise if BLDJ is not closed, ZPT is not on 1 or 2, SMGR drum is not on '0', BP1DJ
+      is stuck in the pressed position, BLRDJ or BP2DJ is not making proper contact, CCDJ
+      fuse is melted, the Q45 coil is open-circuited or a wire is disconnected). Report
+      whether Q45 energises.
+    gate: null
+    applies_when: {c118_closing: "no", q118_energised: "yes"}
+    source: "§7.01.4, p106; §7.01 cause 4, p103"
+
+  - id: check_q44_energising
+    text: >-
+      Check whether relay Q44 energises after Q118 and Q45 (Q44 will not energise if the
+      normally-open interlocks of Q118 and Q45 have bad contacts, GR is not on full notch,
+      the Q44 coil is open or a wire in the Q44 coil is disconnected). Report whether Q44
+      energises.
+    gate: null
+    applies_when: {c118_closing: "no", q118_energised: "yes", q45_energised: "yes"}
+    source: "§7.01.5, p107; §7.01 cause 5, p103"
+
+terminal_actions:
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01 p.103; §7.01.6 Note 2 p.110"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

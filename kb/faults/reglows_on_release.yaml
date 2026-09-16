@@ -1,0 +1,61 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Question hub: LSDJ re-glows on releasing BLRDJ — Operation 'B' part II or Operation 'A'
+# ending part II?
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         §7.06 Abnormal sign p.119 ("on releasing BLRDJ, LSDJ re glows immediately") and
+#         §7.11 p.128 ("In VCB type 5-branches DJ provided locos only … while releasing BLRDJ,
+#         LSDJ re-glows").
+# Mechanism (approved 2026-09-16, decision 4): the two sections describe the same observation;
+# the ONE question is whether the loco is a VCB type 5-branch DJ loco. Yes → §7.11 (TLC);
+# no, or the pilot does not know → §7.06 (the signs indicate Operation 'B' part II). The
+# answers are deterministic route phrases; the parser is the fallback.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Reglows_on_release
+aliases:
+  - "LSDJ re-glows on releasing BLRDJ"
+  - "LSDJ reglows on releasing BLRDJ"
+  - "trips on releasing BLRDJ"
+  - "DJ trips when BLRDJ is released"
+  - "trips when I release BLRDJ"
+precedence: 1
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Close BLDJ and press BLRDJ: LSDJ extinguishes, UA needle deviates, auxiliary sound heard, LSCHBA also extinguishes; on releasing BLRDJ, LSDJ re-glows"
+
+combination_rules: []
+route_rules:
+  - if_fact: vcb_5_branch_loco
+    equals: "yes"
+    route_to: Op_A_ending_part2
+    source: "§7.11, p128: 'In VCB type 5-branches DJ provided locos only'"
+    phrases: ["5 branch", "5-branch", "five branch", "five-branch", "vcb 5", "vcb-5", "5 branches"]
+  - if_fact: vcb_5_branch_loco
+    equals: "no"
+    route_to: Op_B_part2
+    source: "§7.06 Abnormal sign, p119"
+    phrases: ["6 branch", "6-branch", "six branch", "six-branch", "6 branches", "ABCB", "not a VCB", "not VCB"]
+  - if_fact: vcb_5_branch_loco
+    equals: "not_known"
+    route_to: Op_B_part2
+    source: "§7.06 Abnormal sign, p119 (the signs indicate Operation 'B' part II when the DJ type is not known)"
+    note: "The DJ type is not known: the signs indicate Operation 'B' part II (§7.06); on a VCB 5-branch DJ loco the same sign is Operation 'A' ending part II — a defective DJ N/O interlock on the MTDJ branch, contact TLC for advice (§7.11)."
+    phrases: ["don't know", "dont know", "do not know", "not sure", "no idea", "not known", "unsure",
+              "can't say", "cannot say", "no clue", "not aware"]
+
+steps:
+  - id: ask_vcb_5_branch_dj_type
+    text: >-
+      Is this a VCB type 5-branch DJ loco? On a VCB type 5-branch DJ loco this sign is
+      Operation 'A' ending part II; otherwise it is Operation 'B' part II. Say "don't know"
+      if you cannot tell.
+    gate: null
+    source: "§7.06 Abnormal sign, p119; §7.11, p128"
+
+terminal_actions:
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.06 p.119; §7.11 p.128"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

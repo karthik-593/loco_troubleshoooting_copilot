@@ -45,7 +45,7 @@ def test_llm_guess_of_gated_fault_is_not_confirmed(kb):
 def test_low_confidence_clarifies_instead_of_acting(kb):
     p = _fake(ParseOutput(fault_guess=QLM, fault_confidence=CLARIFY_THRESHOLD - 0.1,
                           claimed_steps=[ORDINARY[0]]))
-    r = parse_turn("dj tripped", DiagnosisState(), kb, p)
+    r = parse_turn("the main relay thing is red", DiagnosisState(), kb, p)
     assert r.update is None and r.needs_clarification and "?" in r.clarification
 
 
@@ -64,10 +64,11 @@ def test_described_problem_with_no_listed_fault_is_out_of_scope(kb):
 
 
 def test_in_scope_but_underspecified_clarifies_not_defers(kb):
-    """'DJ tripped, relay unknown' is inside the procedure set → clarify, not §5.6."""
+    """'DJ tripped, relay unknown' is inside the procedure set: since batch 2 it is the intake
+    hub (§5.01 / Ch.7 intro precheck), matched deterministically — never §5.6, never a clarify loop."""
     p = _fake(ParseOutput(fault_guess=None, fault_confidence=0.0, problem_outside_list="no"))
     r = parse_turn("dj tripped, dont know which relay", DiagnosisState(), kb, p)
-    assert r.needs_clarification and not r.out_of_scope
+    assert r.update is not None and r.update.fault_id == "DJ_tripped_on_line" and not r.out_of_scope
 
 
 def test_fact_key_of_another_fault_family_is_dropped(kb):

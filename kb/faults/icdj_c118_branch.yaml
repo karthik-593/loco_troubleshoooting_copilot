@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: ICDJ — C118 branch (C118 not closed with Q118, Q45, Q44 energised)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.01.6 "C118 BRANCH", pp.109–110 (a–e, Notes 1–2).
+# Reached from the ICDJ hub (Q44 energised, C118 not closing), or directly.
+# Note 1: "C118 should not be operated manually for closing DJ." — kept in the step text
+# (there is no manual-operation step to gate).
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: ICDJ_C118_branch
+aliases:
+  - "C118 not closing"
+  - "C118 not closed"
+  - "C118 is not closing"
+  - "C118 does not close"
+  - "ICDJ C118 branch"
+precedence: 1
+listed_as: "ICDJ (DJ not closing)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "DJ does not close; Q118, Q45 and Q44 energise but contactor C118 does not close"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: check_c118_wire_connections_and_flexibility
+    text: >-
+      Check that the wire connections (740-B315) of C118 are normal and check the
+      flexibility of the contactor. If it is not moving freely, operate it 2 or 3 times and
+      try; if that fails, contact TLC. (C118 should not be operated manually for closing DJ.)
+    gate: null
+    source: "§7.01.6(a), p109; Note 1, p110"
+
+  # (b)
+  - id: ensure_rs_pressure_and_c118_coc_if_ep_type
+    text: >-
+      If C118 is an EP-type contactor, ensure RS pressure, and ensure the C118 COC is in the
+      opened condition if available.
+    gate: null
+    source: "§7.01.6(b), p109"
+
+  # (c)
+  - id: clean_interlocks_q44_q45_qcvar_and_try
+    text: "Clean the interlocks of Q44, Q45 and QCVAR (DC coil) and try to close DJ."
+    gate: null
+    source: "§7.01.6(c), pp109–110"
+
+  # (d)
+  - id: try_in_lt
+    text: >-
+      Try in LT. If successful, the Q44 interlock is defective: inform TLC and follow the
+      instructions of TLC.
+    gate: null
+    source: "§7.01.6(d), p110"
+
+  # (e)
+  - id: contact_tlc_if_unsuccessful
+    text: "If unsuccessful, contact TLC for further instructions."
+    gate: null
+    source: "§7.01.6(e), p110"
+
+terminal_actions:
+  resolved: "inform TLC and follow the instructions of TLC"
+  unresolved: "contact TLC for further instructions"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.01.6, pp.109–110"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

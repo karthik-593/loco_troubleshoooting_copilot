@@ -17,6 +17,7 @@ aliases:
   - "QOA tripped"
   - "QOA drops"
   - "QOA locked"
+listed_as: "QOA dropped"
 config_dependency: none            # §6.04.1 lists the ARNO-build equipment (ARNO, its capacitor bank,
                                    # QCVAR…); SIV locos are not distinguished in this section
 type_dependency: none

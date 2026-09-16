@@ -1,0 +1,36 @@
+scenario_id: reglow_on_release_dj_type_not_known
+klass: config_axis
+# Decision 4: LSDJ re-glows on releasing BLRDJ → ask "VCB 5-branch loco?"; "don't know" →
+# state that the signs indicate Operation 'B' part II (confirm line carries the route note);
+# on yes → the §7.06 Q45 wedge waits behind its gate (Op A ending trouble must be absent).
+pilot_script:
+- DJ tripped. closing DJ everything looks normal, aux sound, LSCHBA goes off, but the moment I release BLRDJ LSDJ re-glows
+- dont know
+- "yes"
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  facts: {trip_sign: reglows_on_release}
+- fault_guess: null
+  fault_confidence: 0.0
+- fault_guess: null
+  fault_confidence: 0.0
+  confirms_fault: 'yes'
+gold:
+  correct_terminal: caution:hazard_exposure
+  must_fire_gates:
+  - hazard_exposure:Op_B_part2
+  must_not_do:
+  - instruct_gated_step
+  - confirm
+  max_turns: 3
+  expected_tool_path:
+  - (reroute→Reglows_on_release)
+  - diff_completed_steps
+  - (reroute→Op_B_part2)
+  - (reflex short-circuit)
+  - (reflex short-circuit)
+  expected_turn_terminals:
+  - ask_step
+  - confirm_fault
+  - caution

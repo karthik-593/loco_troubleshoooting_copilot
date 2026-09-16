@@ -1,14 +1,20 @@
 scenario_id: ambiguous_dj_tripped
 klass: ambiguous
+# Batch 2: "DJ tripped, relay unknown" is no longer a clarify — it is the TSD's own intake
+# (§5.01 / Ch.7 intro): prepare the loco, then the observation drill that names the tripping
+# failure. Still no procedure for any specific fault, no gate, no reset.
 pilot_script:
 - dj tripped, dont know which relay
 structured:
 - fault_guess: QLM_dropped
   fault_confidence: 0.3
 gold:
-  correct_terminal: clarify
+  correct_terminal: ask_step:prepare_loco_to_pick_up_abnormal_sign
   must_fire_gates: []
   must_not_do:
-  - any_procedure
+  - instruct_reset
+  - confirm
+  - instruct_gated_step
   max_turns: 1
-  expected_tool_path: []
+  expected_tool_path:
+  - diff_completed_steps

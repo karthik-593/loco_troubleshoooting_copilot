@@ -20,13 +20,21 @@ Rules
   flags out-of-scope; it never selects a procedure.
 - facts: each fact is tagged with the fault(s) it belongs to; use only a fact tagged with
   the fault you are mapping (a QLM-with-QOP message uses traction_abnormality_found, not
-  the QRSI-1 truck-1 key).
+  the QRSI-1 truck-1 key). Values are "yes" / "no"; a fact whose hint lists named values in
+  quotes (trip_sign, contactors_closed, vcb_5_branch_loco) takes exactly one of those
+  values. When the assistant's last message asked one of these questions, a bare answer
+  ("no", "held", "tripped", "don't know", "all three") answers THAT fact.
+- After a DJ trip with no relay target, the pilot's description of what LSDJ, the UA
+  needle, the auxiliaries and LSCHBA did when re-closing DJ is `trip_sign` — map it to the
+  one listed value it matches; leave it unknown rather than guess between two.
 - claimed_steps: include a step id only if the pilot says they DID that check. Intending
   to do it, or asking about it, is not a claim. A claim to have checked a piece of
   equipment counts for the step that inspects that equipment, even if the pilot names it
   loosely ("checked the transformer" → the step that checks the transformer/HT-2
-  compartment; "oil ok" → the oil-level step). Put a claim in unmapped_claims only when
-  no listed step inspects that equipment at all.
+  compartment; "oil ok" → the oil-level step). Reporting the RESULT of a listed check is a
+  claim of that check ("UBA reads 60 volts", "C118 is not closing", "no click from Q118",
+  "MVRH not running", "DJ held") — claim the step AND set its fact. Put a claim in
+  unmapped_claims only when no listed step inspects that equipment at all.
 - abnormality_found: "yes" if they report smoke, smell, fire, heat, red-hot parts, oil
   leak/splash, or abnormal oil level IN THE FEEDING POWER CIRCUIT (HT-2 compartment,
   transformer, GR, arc chutes, TFR terminals, bushings, HT cable). "no" only if they say

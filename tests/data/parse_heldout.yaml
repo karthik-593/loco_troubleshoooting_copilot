@@ -31,7 +31,7 @@
 - text: "sanders not working on both sides"
   fault: sanders_not_working
 - text: "dj tripped, dont know which relay"
-  fault_confidence_below: 0.6
+  fault: DJ_tripped_on_line               # batch 2: the intake hub (alias), no longer a clarify
 - text: "QLM dropped. checked the horn and the headlight, both fine"
   fault: QLM_dropped
   claimed: []
@@ -168,3 +168,81 @@
   fault: QOA_dropped
   claimed: [check_aux_circuit_equipment]
   facts: {target_resets: "no", aux_abnormality_found: "no"}
+# --- batch 2 (Ch.7 tripping failures + intake) ---
+- text: "DJ tripped, no idea which relay. nothing dropped"
+  fault: DJ_tripped_on_line
+- text: "DJ tripped, QLM is locked"
+  fault: QLM_dropped
+- text: "done all that. closed BLDJ pressed BLRDJ, LSDJ goes off and comes back straight away, flickering"
+  state_fault: DJ_tripped_on_line
+  last_assistant: "Now pick up the sign: close BLDJ, press BLRDJ and watch LSDJ, the UA needle, the auxiliaries and LSCHBA. Tell me what each did and when DJ tripped."
+  fault: DJ_tripped_on_line
+  claimed: [observe_dj_closing_and_pick_up_abnormal_sign]
+  facts: {trip_sign: op_a_beginning}
+- text: "DJ closes, UA needle moves, aux sound there, LSCHBA goes off. released BLRDJ and after about 10 seconds LSDJ came on again"
+  state_fault: DJ_tripped_on_line
+  last_assistant: "Now pick up the sign: close BLDJ, press BLRDJ and watch LSDJ, the UA needle, the auxiliaries and LSCHBA. Tell me what each did and when DJ tripped."
+  fault: DJ_tripped_on_line
+  facts: {trip_sign: op_b_part1}
+- text: "UA needle moved but LSCHBA never went off, DJ tripped after 5 seconds or so while I was still holding BLRDJ"
+  state_fault: DJ_tripped_on_line
+  last_assistant: "Now pick up the sign: close BLDJ, press BLRDJ and watch LSDJ, the UA needle, the auxiliaries and LSCHBA. Tell me what each did and when DJ tripped."
+  fault: DJ_tripped_on_line
+  facts: {trip_sign: op_a_ending}
+- text: "everything normal, but the moment I let go of BLRDJ the LSDJ came on again"
+  state_fault: DJ_tripped_on_line
+  last_assistant: "Now pick up the sign: close BLDJ, press BLRDJ and watch LSDJ, the UA needle, the auxiliaries and LSCHBA. Tell me what each did and when DJ tripped."
+  fault: DJ_tripped_on_line
+  facts: {trip_sign: reglows_on_release}
+- text: "dont know what type it is"
+  state_fault: Reglows_on_release
+  last_assistant: "Is this a VCB type 5-branch DJ loco? Say don't know if you can't tell."
+  fault: Reglows_on_release
+  facts: {vcb_5_branch_loco: not_known}
+- text: "stopped and secured. UBA reading about 60 volts"
+  state_fault: ICDJ
+  last_assistant: "First, is the train stopped at a convenient place and secured? Then check the battery voltmeter UBA — it should read above 90 volts. Tell me the reading."
+  fault: ICDJ
+  claimed: [stop_and_secure_train, check_battery_voltage_uba]
+  facts: {battery_voltage_low_or_zero: "yes"}
+- text: "C118 is not closing when I press BLRDJ. and no click from Q118 with HBA on 1"
+  state_fault: ICDJ
+  last_assistant: "Now check whether C118 closes when BLDJ is closed and BLRDJ pressed — if it does, we skip the Q118, Q45, Q44 and C118 branches."
+  fault: ICDJ
+  claimed: [check_whether_c118_closes, check_q118_energising]
+  facts: {c118_closing: "no", q118_energised: "no"}
+- text: "pressed Q118 manually with BP2DJ, DJ closed but tripped as soon as I released Q118"
+  state_fault: ICDJ_Q118_branch
+  last_assistant: "If everything is normal, energise Q118 manually: close BLDJ and BLVMT, press Q118 and press BP2DJ; release BP2DJ once LSDJ and LSCHBA go off, release Q118 after 30 seconds or when the blowers start. Tell me whether DJ closed and held, did not close, or tripped after release."
+  fault: ICDJ_Q118_branch
+  claimed: [energise_q118_manually]
+  facts: {trips_after_releasing_q118: "yes"}
+- text: "all EM contactors are open, going to wedge Q118 now"
+  state_fault: ICDJ_Q118_branch
+  last_assistant: "Before wedging Q118, make sure all EM contactors are open. Once wedged: after closing DJ check C118 is fully open, keep checking MVMT1, MVMT2, MVRH, MVSL1, MVSL2, watch the TFR oil level, and avoid quick regression of GR."
+  fault: ICDJ_Q118_branch
+  claimed: []
+  facts: {all_em_contactors_open: "yes"}
+  intended_action: wedge_Q118
+- text: "TLC has given permission and GR test done, 12 seconds"
+  state_fault: ICDJ_Q44_branch
+  last_assistant: "Before wedging Q44: get TLC's permission and do the GR efficiency test — GR travel 1 to 32 or 32 to 1 should take 11 to 13 seconds, in LT."
+  fault: ICDJ_Q44_branch
+  facts: {tlc_permission_for_wedging_q44: "yes", gr_efficiency_test_done: "yes"}
+- text: "HVSL-1 on 1, closed DJ, waited 15 sec, it held"
+  state_fault: Op_B_part1
+  last_assistant: "After clearing the section, trip DJ, put HVSL-1 on position 1, close DJ and wait 15 seconds. Tell me whether DJ trips or holds."
+  fault: Op_B_part1
+  claimed: [test_hvsl1_on_1]
+  facts: {dj_trips_with_hvsl1_on_1: "no"}
+- text: "MVRH is not running, other two blowers ok"
+  state_fault: Op_O
+  last_assistant: "With HVRH, HVMT-1 and HVMT-2 on 3, close DJ, close BLVMT and wait 30 seconds. If DJ holds, check MVRH, MVMT-1 and MVMT-2 and tell me which blowers are working."
+  fault: Op_O
+  facts: {mvrh_working: "no", mvmt1_working: "yes", mvmt2_working: "yes"}     # the claim is borderline (outcome only); the facts drive the branch
+- text: "only C107 is not closing, other two closed"
+  state_fault: Op_II
+  last_assistant: "With DJ closed, close BLVMT and check C105, C106 and C107. Tell me whether none of them closes, one of them does not close, or all three close."
+  fault: Op_II
+  claimed: [check_c105_c106_c107_closing_on_blvmt]
+  facts: {contactors_closed: some}

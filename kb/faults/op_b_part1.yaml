@@ -1,0 +1,187 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation 'B' part 1
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.05 "Operation 'B' part - 1", pp.116–119 (abnormal sign, causes 1–4,
+#         trouble shooting 1–8, Note on HPH, Notes 1–3 on MPH equalising pipe).
+# Mechanism: ISOLATE-BY-ELIMINATION ladder: HVSL-1/2 on 3 and HQCVAR & HPH on 0 → DJ holds →
+# MVSL working? (one not working → isolate, 50% load; both → TLC) → clear section → normalise
+# ONE switch at a time with a 15-second wait; the switch on which DJ trips names the defective
+# relay/motor. Each conclusion is a `completes` step. Notes 2–3 (MPH equalising pipe leaking
+# / broken) are stated-only branches.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_B_part1
+aliases:
+  - "operation B part 1"
+  - "operation B part I"
+  - "operation 'B' part 1"
+  - "op B part 1"
+  - "op B part I"
+  - "operation B-I"
+  - "B-I trouble"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Close BLDJ and press BLRDJ: LSDJ extinguishes, UA needle deviates, auxiliary sound heard, LSCHBA also extinguishes; after releasing BLRDJ, while counting 15 seconds LSDJ re-glows (after 5.6 sec of the extinguishing of LSCHBA)"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: both_mvsl_not_working                   # Note 1
+    equals: "yes"
+    text: "Both MVSL-1 and MVSL-2 are not working: contact TLC."
+    source: "§7.05 Note 1, p118"
+
+steps:
+  # 1
+  - id: check_mvsl_mph_for_smell_smoke_fire
+    text: >-
+      Check for any smell, smoke or fire from MVSL1, MVSL2 and MPH; if any, use the fire
+      extinguishers and work with precautions.
+    gate: null
+    source: "§7.05 item 1, p117"
+
+  # Note 2
+  - id: arrest_mph_equalising_pipe_leak
+    text: >-
+      If the MPH equalising pipe line is leaking: stop the train, open DJ, take safety
+      measures and try to arrest the leakage with insulation tape or by some other means.
+      If the leakage is stopped, energise the loco and resume traction. Otherwise trip DJ,
+      place HPH on '0', ensure the TFR oil level is above 150°C, clear the block section
+      with the restricted current (920 A for the first 5 min and then 500 A continuous) and
+      contact TLC for advice.
+    gate: null
+    applies_when: {mph_equalising_pipe_leaking: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.05 Note 2, p118"
+
+  # Note 3
+  - id: crush_broken_mph_equalising_pipe
+    text: >-
+      If the MPH equalising pipe line is broken: stop the train, open DJ, take safety
+      measures and crush the copper pipe at both ends with the help of cutting pliers,
+      ensuring there is no oil leakage. Place HPH on '0', ensure the TFR oil level is above
+      150°C, clear the block section with restricted current (920 A for the first 5 min and
+      then 500 A continuous) and contact TLC for advice.
+    gate: null
+    applies_when: {mph_equalising_pipe_broken: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.05 Note 3, pp118–119"
+
+  # 2
+  - id: hvsl_on_3_hqcvar_hph_on_0_close_dj
+    text: >-
+      If there is no abnormality, place HVSL-1 & HVSL-2 on the '3' position and HQCVAR &
+      HPH on the '0' position, and close DJ.
+    gate: null
+    source: "§7.05 item 2, p117"
+
+  # 3
+  - id: check_mvsl1_mvsl2_working
+    text: >-
+      Check the working of MVSL-1 and MVSL-2. Report whether both are working, one is not
+      working, or both are not working.
+    gate: null
+    source: "§7.05 item 3, p117"
+
+  - id: isolate_mvsl_not_working_and_work_50pc
+    text: >-
+      If any one of MVSL-1 / MVSL-2 is not working, isolate the concerned MVSL (also isolate
+      its MVMT & MVSI) and work onwards with 50% of the maximum load permitted.
+    gate: null
+    applies_when: {one_mvsl_not_working: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.05 item 3, p117"
+
+  # 4
+  - id: clear_section_observing_transformer_oil
+    text: "If MVSL-1 and MVSL-2 are working normally, clear the section duly observing the transformer oil."
+    gate: null
+    source: "§7.05 item 4, p117"
+
+  # 5
+  - id: test_hvsl1_on_1
+    text: >-
+      After clearing the section, trip DJ, place HVSL-1 on position '1', close DJ and wait
+      for 15 seconds. Report whether DJ trips or holds.
+    gate: null
+    source: "§7.05 item 5, p117"
+
+  - id: qvsl1_defective_hvsl1_on_3
+    text: >-
+      If DJ trips with HVSL-1 on '1', conclude QVSL-1 is defective: place HVSL-1 on '3',
+      normalise the other switches (HVSL-2, HQCVAR & HPH) and work onwards duly watching
+      the working of the VSL-1 blower.
+    gate: null
+    applies_when: {dj_trips_with_hvsl1_on_1: "yes"}
+    completes: true
+    source: "§7.05 item 5, p117"
+
+  # 6
+  - id: test_hvsl2_on_1
+    text: >-
+      If DJ holds after keeping HVSL-1 on '1', trip DJ, place HVSL-2 on position '1', close
+      DJ and wait for 15 seconds. Report whether DJ trips or holds.
+    gate: null
+    applies_when: {dj_trips_with_hvsl1_on_1: "no"}
+    source: "§7.05 item 6, p117"
+
+  - id: qvsl2_defective_hvsl2_on_3
+    text: >-
+      If DJ trips with HVSL-2 on '1', conclude QVSL-2 is defective: place HVSL-2 on '3',
+      normalise the other switches (HQCVAR & HPH) and work onwards duly watching the
+      working of the VSL-2 blower.
+    gate: null
+    applies_when: {dj_trips_with_hvsl2_on_1: "yes"}
+    completes: true
+    source: "§7.05 item 6, p117"
+
+  # 7
+  - id: test_hph_on_1
+    text: >-
+      If DJ holds after keeping HVSL-1 & HVSL-2 on '1', trip DJ, place HPH on position '1',
+      close DJ and wait for 15 seconds. Report whether DJ trips or holds.
+    gate: null
+    applies_when: {dj_trips_with_hvsl2_on_1: "no"}
+    source: "§7.05 item 7, p117"
+
+  - id: mph_or_qph_defective_hph_on_0_restricted_current
+    text: >-
+      If DJ trips with HPH on '1', MPH or QPH is defective: place HPH on '0', normalise the
+      other switch (HQCVAR) and clear the section duly observing 920 A for the first five
+      minutes and 500 A as the continuous current restriction (duly ensuring the TFP oil
+      level is above +150°C, MVRH is working, and observing the TFP oil level frequently
+      for any abnormality), and inform TLC for advice. Whenever HPH is kept on '0', inform
+      the same to TLC and make a remark in the loco log book.
+    gate: null
+    applies_when: {dj_trips_with_hph_on_1: "yes"}
+    completes: true
+    source: "§7.05 item 7, p117; Note on HPH, p118"
+
+  # 8
+  - id: qcvar_interlock_defective_hqcvar_on_0
+    text: >-
+      If DJ holds after keeping HVSL-1, HVSL-2 & HPH on '1', conclude the defect is with the
+      QCVAR N/O interlock: keep HQCVAR on the '0' position and work onwards duly watching
+      ARNO, with the necessary precautions.
+    gate: null
+    applies_when: {dj_trips_with_hph_on_1: "no"}
+    completes: true
+    source: "§7.05 item 8, pp117–118"
+
+terminal_actions:
+  resolved: >-
+    work onwards with the identified switch kept on '3' / '0', watching the concerned
+    blower (or ARNO) frequently; if HPH is on '0', observe the 920 A / 500 A current
+    restriction, inform TLC and make a remark in the loco log book
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.05, pp.116–119"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -36,6 +36,8 @@ class Terminal:
     unrecognised_claims: tuple[str, ...] = field(default=())
     do_now: bool = False                # ask_step: the pilot has said this check is NOT done —
                                         # tell them to do it now, do not ask again
+    preconditions_met: tuple[str, ...] = ()   # ask_step of a hazard-gated step: these facts are
+                                              # already stated 'yes' (the gate let it through)
     verbatim: bool = False              # render the KB text itself, no phrasing (pilot asked
                                         # for the exact list after the short spoken form)
 
@@ -85,6 +87,7 @@ def ask_step(fault: Fault, step: Step, hold_action: Optional[str] = None,
         hold_action=hold_action,
         unrecognised_claims=unrecognised,
         do_now=do_now,
+        preconditions_met=tuple(step.gate.preconditions) if step.gate and step.gate.type == "hazard_exposure" else (),
     )
 
 
@@ -156,11 +159,13 @@ def confirm_fault(fault: Fault) -> Terminal:
     """§5.5: an LLM-matched fault that carries a hard gate is confirmed in ONE line before
     any guidance. The line names the fault and its KB presenting signs — nothing else."""
     signs = "; ".join(fault.presenting_signs)
+    name = fault.aliases[0] if fault.aliases else fault.fault_id.replace("_", " ")
     return Terminal(
         kind="confirm_fault",
         fault_id=fault.fault_id,
-        message=f"Sounds like {fault.fault_id.replace('_', ' ')} — {signs}?",
+        message=f"Sounds like {name} — {signs}? Is that right?",
         source=fault.source,
+        verbatim=True,          # one engine sentence; seen live: the phrased line asked a different question
     )
 
 

@@ -1,0 +1,136 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation I
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.08 "Operation-I", pp.121–123 (abnormal sign, causes 1–4, trouble
+#         shooting a–f).
+# Mechanism: CCPT / panto check (a) → HVSI-1/2 on 3, MVSI working? (b–d: a block isolated,
+# 50% load) → one notch: trips → sluggish SMGR (e, manual GR 30 km/h) / holds → clear the
+# section and test HVSI-1 on 1 to name QVSI-1 or QVSI-2 (f).
+# NOTE (flagged for the user): §7.08(d) reads "keeping HVSI-2, HVSL-1 and HVMT-2 on '0'" —
+# encoded verbatim; HVSL-1 there is probably a misprint for HVSL-2 (cf. §7.07 MVMT-2 paragraph).
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_I
+aliases:
+  - "operation I"
+  - "operation 1"
+  - "operation-I"
+  - "op I"
+  - "op 1"
+  - "trips on first notch"
+  - "trips on the first notch"
+  - "DJ trips on taking one notch"
+  - "trips on one notch"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "After closing DJ, wait for 15 sec, close BLVMT, wait for 30 sec, take one notch: LSDJ re-glows (DJ trips)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: ensure_lsgr_glowing_panto_raised_check_ccpt
+    text: >-
+      Ensure LSGR is glowing and the panto is raised. If LSGR is not glowing and the panto
+      is also in the lowered condition, check the fuse CCPT. If it is melted, renew the
+      fuse and try to resume traction. If CCPT melts again, place HOBA in the OFF position,
+      renew the fuse and try. If CCPT melts once again, renew the fuse and clear the block
+      section with manual control of GR.
+    gate: null
+    source: "§7.08(a), p122"
+
+  # (b)
+  - id: hvsi_on_3_close_dj_check_mvsi
+    text: >-
+      If the panto is in the raised condition, place HVSI-1 and HVSI-2 on the '3' position
+      and close DJ. Check the working of MVSI-1 and MVSI-2. Report which are working.
+    gate: null
+    source: "§7.08(b), p122"
+
+  # (c)
+  - id: mvsi1_not_working_isolate_rsi1_block
+    text: >-
+      If MVSI-1 is not working, isolate the RSI-1 block by keeping HVSI-1, HVMT-1 & HVSL-1
+      on '0' and resume traction with 50% of the maximum permissible load.
+    gate: null
+    applies_when: {mvsi1_working: "no"}
+    requires_stated: true
+    completes: true
+    source: "§7.08(c), p122"
+
+  # (d) — verbatim; see the NOTE in the header
+  - id: mvsi2_not_working_isolate_rsi2_block
+    text: >-
+      If MVSI-2 is not working, isolate the RSI-2 block by keeping HVSI-2, HVSL-1 and
+      HVMT-2 on '0' and resume traction with 50% of the maximum permissible load.
+    gate: null
+    applies_when: {mvsi2_working: "no"}
+    requires_stated: true
+    completes: true
+    source: "§7.08(d), p122"
+
+  # (e) first sentence / (f) first sentence
+  - id: take_one_notch_with_hvsi_on_3
+    text: >-
+      If MVSI-1 and MVSI-2 are working, take one traction notch with HVSI-1 & HVSI-2 on
+      '3'. Report whether DJ trips or holds.
+    gate: null
+    source: "§7.08(e)(f), pp122–123"
+
+  # (e)
+  - id: sluggish_smgr_manual_gr_and_drain_moisture
+    text: >-
+      If DJ trips on the first notch, it indicates sluggish operation of SMGR: normalise
+      HVSI-1 and HVSI-2, keep MP on 'N' and try to clear the block section with manual
+      control of GR with a speed restriction of 30 km/h. After clearing the block section,
+      stop the train and drain out the moisture from the main reservoirs and the GR board
+      pipeline, and try to resume traction through MP. Slightly improve the SMGR pressure
+      by 0.5 kg/cm2 and try (SMGR pressure should be in the range of 2.5 kg/cm2 to 3.5
+      kg/cm2). If unsuccessful, contact TLC and act as per instructions.
+    gate: null
+    applies_when: {dj_trips_on_first_notch_with_hvsi_on_3: "yes"}
+    completes: true
+    source: "§7.08(e), pp122–123"
+
+  # (f)
+  - id: clear_section_and_test_hvsi1_on_1
+    text: >-
+      If DJ does not trip after keeping HVSI-1 & HVSI-2 on '3' and taking one notch, clear
+      the block section. Then open DJ, place HVSI-1 on the '1' position, close DJ, take one
+      notch and wait for 15 seconds. Report whether DJ trips or holds.
+    gate: null
+    applies_when: {dj_trips_on_first_notch_with_hvsi_on_3: "no"}
+    source: "§7.08(f), p123"
+
+  - id: qvsi1_defective_hvsi1_on_3
+    text: >-
+      If DJ trips with HVSI-1 on '1', QVSI-1 is defective: place HVSI-1 on '3' and
+      normalise HVSI-2, and work further duly watching the working of MVSI-1.
+    gate: null
+    applies_when: {dj_trips_with_hvsi1_on_1: "yes"}
+    completes: true
+    source: "§7.08(f), p123"
+
+  - id: qvsi2_defective_hvsi2_on_3
+    text: >-
+      If DJ holds with HVSI-1 on '1', QVSI-2 is defective: let HVSI-2 be as it is on '3',
+      and work further duly watching the working of MVSI-2.
+    gate: null
+    applies_when: {dj_trips_with_hvsi1_on_1: "no"}
+    completes: true
+    source: "§7.08(f), p123"
+
+terminal_actions:
+  resolved: >-
+    work further with the identified HVSI switch on '3' watching that MVSI, or with the
+    isolated RSI block at 50% load, or under manual control of GR at 30 km/h as the case
+    may be
+  unresolved: "contact TLC and act as per instructions"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.08, pp.121–123"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -1,0 +1,155 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation II — C107, C105 and C106 are not closed
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.09.1 "C107, C105 and C106 are not closed", p.124 (a–c + Note a–f);
+#         §7.09.4 "Instructions to work after wedging minimum contactors", p.125 (1–5).
+# Mechanism: switches on 1 → CPs / CCA fuse → Q100 (wedge Q100: the TSD states no precondition,
+# so an ordinary step — approved decision 2) → notch, clean I/Ls → still none closing: WEDGE
+# C107 + one of C105/C106 (light load) or C105 + C106 (heavy load) — a hazard_exposure gate on
+# "If any C105/C106/C107 contactor is wedged, concern switch to be kept in 3 position" (Note f;
+# §7.09.2 Note 1). CCA melting even with HOBA off → §7.09.4 minimum-contactor working, where
+# "if load does not permit, wedge Q118" is the Q118 gate.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_II_none_closed
+aliases:
+  - "C105, C106 and C107 not closed"
+  - "C105 C106 C107 not closing"
+  - "none of C105 C106 C107 closing"
+  - "no EM contactor closing on BLVMT"
+  - "operation II none closed"
+precedence: 1
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Operation II: on closing BLVMT none of the contactors C105, C106, C107 closes"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: ensure_hvrh_hvmt_on_1
+    text: "Ensure HVRH, HVMT-1 and HVMT-2 are on the '1' position."
+    gate: null
+    source: "§7.09.1(a), p124"
+
+  # (b)
+  - id: ensure_cps_working_check_cca
+    text: >-
+      Ensure the CPs are working by BLCPD. If the CPs are also not working, check the CCA
+      fuse; if melted, replace it; if it melts again, put HOBA off and replace it. Report
+      whether the CPs work and whether CCA is good.
+    gate: null
+    source: "§7.09.1(b), p124"
+
+  # Note (a) → §7.09.4
+  - id: work_with_minimum_contactors_wedged_if_cca_melts_with_hoba_off
+    text: >-
+      If CCA melts even with HOBA off, clear the section with minimum contactor wedging:
+      1. Wedge any two compressor contactors. 2. Ensure the working of the SS2 safety valve
+      (blowing after building up pressure of more than 10.5 kg/cm2). 3. Slightly create a
+      leakage in CDC to maintain MR pressure at 8 to 9.5 kg/cm2. 4. Clear the block section
+      within 5 notches if the load permits. 5. If the load does not permit, wedge Q118 in
+      the energised condition and clear the block section as far as possible with lower
+      notches, duly observing the 500 A current restriction (since MVMT1, MVMT2 and MVRH
+      are not working). Report whether the load permits working within 5 notches.
+    gate: null
+    applies_when: {cca_melts_with_hoba_off: "yes"}
+    requires_stated: true
+    source: "§7.09.1 Note (a), p124; §7.09.4 items 1–5, p125"
+
+  - id: wedge_q118_if_load_does_not_permit_5_notches
+    text: >-
+      The load does not permit clearing within 5 notches: wedge Q118 in the energised
+      condition and clear the block section as far as possible with lower notches, duly
+      observing the 500 A current restriction (MVMT1, MVMT2 and MVRH not working), with the
+      precautions for wedging Q118.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q118 unless all EM contactors are opened (precautions for wedging
+        Q118, §7.01.3).
+      action: wedge_Q118
+      preconditions:
+        - all_em_contactors_open
+      on_precondition_unmet: >-
+        Before wedging Q118, ensure all EM contactors are opened. Then, with Q118 wedged in
+        the energised condition: after closing DJ ensure C118 is fully opened; check the
+        working of MVMT1, MVMT2, MVRH, MVSL1, MVSL2 auxiliaries frequently; check the TFR
+        oil level for any colour change or any abnormal increase of oil level; avoid quick
+        regression of GR.
+      precondition_question: "Before wedging Q118, were all EM contactors opened?"
+      source: "§7.01.3 Precautions for wedging Q118 (a)–(e), p106; §7.09.4 item 5, p125"
+    applies_when: {cca_melts_with_hoba_off: "yes", load_permits_5_notches: "no"}
+    requires_stated: true
+    completes: true
+    source: "§7.09.4 item 5, p125"
+
+  - id: clear_section_within_5_notches_with_minimum_contactors
+    text: >-
+      The load permits: clear the block section within 5 notches with the minimum
+      contactors wedged, SS2 working and MR pressure maintained at 8 to 9.5 kg/cm2.
+    gate: null
+    applies_when: {cca_melts_with_hoba_off: "yes", load_permits_5_notches: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.09.4 item 4, p125"
+
+  # (c) + Note (b)
+  - id: check_q100_energised_wedge_if_not
+    text: >-
+      If CCA is good, check relay Q100 for energisation. If it is not energised, wedge
+      Q100 and close BLVMT/BLCP with a 5-second time gap after loco energisation. (After
+      wedging Q100, if ICDJ is experienced, remove the wedge, energise the loco and then
+      wedge Q100.)
+    gate: null
+    source: "§7.09.1(c), p124; Note (b), p124"
+
+  # Note (d)
+  - id: take_one_notch_and_try_if_cps_working
+    text: "If the CPs are working, take one notch and try."
+    gate: null
+    source: "§7.09.1 Note (d), p124"
+
+  # Note (e)
+  - id: clean_q100_interlocks_and_try
+    text: "Clean the Q100 interlocks and try."
+    gate: null
+    source: "§7.09.1 Note (e), p124"
+
+  # Note (f) — HAZARD-EXPOSURE gate: wedging C105 / C106 / C107
+  - id: wedge_minimum_contactors_by_load
+    text: >-
+      If still all of C105/C106/C107 are not closing: in case of a light load, wedge C107
+      and one of C105/C106 and work further; if a heavy load, wedge C105 and C106 and work
+      with the restricted current ratings. If any C105/C106/C107 contactor is wedged, the
+      concerned switch is to be kept in the '3' position.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        If any C105/C106/C107 contactor is wedged, the concerned switch (HVMT-1 / HVMT-2 /
+        HVRH) must be kept in the '3' position to give the initial path to Q118.
+      action: wedge_contactor
+      preconditions:
+        - concerned_switch_on_3                  # Note (f), p124; §7.09.2 Note 1, p125
+      on_precondition_unmet: >-
+        Before working with a wedged contactor: if any C105/C106/C107 contactor is wedged,
+        keep the concerned switch (HVMT-1 for C105, HVMT-2 for C106, HVRH for C107) in the
+        '3' position to give the initial path to Q118. Light load: wedge C107 and one of
+        C105/C106; heavy load: wedge C105 and C106 and work with the restricted current
+        ratings.
+      precondition_question: "For the wedged contactor(s), is the concerned switch kept in the '3' position?"
+      source: "§7.09.1 Note (f), p124; §7.09.2 Note 1, p125; switch ↔ contactor pairing from §7.07 p121"
+    completes: true
+    source: "§7.09.1 Note (f), p124"
+
+terminal_actions:
+  resolved: >-
+    work further with the wedged contactors, the concerned switches kept in '3'; with C105
+    and C106 wedged observe the restricted current ratings
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.09.1 p.124; §7.09.4 p.125"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

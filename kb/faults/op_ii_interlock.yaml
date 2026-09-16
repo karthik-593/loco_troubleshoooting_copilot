@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Operation II — C107, C105 & C106 closed but an interlock is not closed
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 7, §7.09.3 "If any I/L is not Closed", p.125.
+# Mechanism: HVMT-1 & HVMT-2 in 3, close DJ → still trips: C107 N/O interlock defective, work
+# by WEDGING Q118 (hazard_exposure gate, §7.01.3 precautions) / holds: clear the section,
+# normalise the switches one by one to find the trouble, keep that switch in 3.
+# STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Op_II_interlock
+aliases:
+  - "operation II interlock"
+  - "contactors closed but interlock not closed"
+  - "C105 C106 C107 closed but still trips on sixth notch"
+  - "EM contactor interlock defective"
+precedence: 1
+listed_as: "DJ tripping failures (no tension / operations A-B-O-I-II / TWAC)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Operation II: when BLVMT is closed, C107, C105 & C106 close, yet DJ trips on the sixth notch (an interlock parallel to GR 0-5 is not closed)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: hvmt1_hvmt2_in_3_and_close_dj
+    text: >-
+      Keep the HVMT-1 & HVMT-2 switches in '3' and close DJ. Report whether the trouble
+      still exists (DJ still trips on the sixth notch) or DJ holds.
+    gate: null
+    source: "§7.09.3, p125"
+
+  - id: wedge_q118_c107_interlock_defective
+    text: >-
+      The trouble still exists with HVMT-1 & HVMT-2 in '3': conclude the C107 N/O interlock
+      is defective and work by wedging Q118 in the energised position with precautions (all
+      EM contactors opened before wedging; after closing DJ ensure C118 is fully opened;
+      check MVMT1, MVMT2, MVRH, MVSL1, MVSL2 frequently; check the TFR oil level; avoid
+      quick regression of GR).
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q118 unless all EM contactors are opened (precautions for wedging
+        Q118, §7.01.3).
+      action: wedge_Q118
+      preconditions:
+        - all_em_contactors_open
+      on_precondition_unmet: >-
+        Before wedging Q118, ensure all EM contactors are opened. Then, with Q118 wedged in
+        the energised condition: after closing DJ ensure C118 is fully opened; check the
+        working of MVMT1, MVMT2, MVRH, MVSL1, MVSL2 auxiliaries frequently; check the TFR
+        oil level for any colour change or any abnormal increase of oil level; avoid quick
+        regression of GR.
+      precondition_question: "Before wedging Q118, were all EM contactors opened?"
+      source: "§7.01.3 Precautions for wedging Q118 (a)–(e), p106; §7.09.3, p125"
+    applies_when: {still_trips_with_hvmt_in_3: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§7.09.3, p125"
+
+  - id: normalise_switches_one_by_one_to_find_trouble
+    text: >-
+      If DJ does not trip after keeping HVMT-1 & HVMT-2 in '3', clear the section, then
+      normalise the switches one by one and find out where the trouble is; keep the
+      concerned switch in '3' and work further with precautions.
+    gate: null
+    applies_when: {still_trips_with_hvmt_in_3: "no"}
+    completes: true
+    source: "§7.09.3, p125"
+
+terminal_actions:
+  resolved: "work further with the concerned switch in '3' (or Q118 wedged with its precautions)"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.7, §7.09.3, p.125"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"
