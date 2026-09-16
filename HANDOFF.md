@@ -616,10 +616,10 @@ Engine / schema added:
   confirm, re-glow not known → Op B II caution). 21/21 offline and live, 11 paths. 15 new
   held-out parse cases (55 live).
 
-Judgement calls to confirm: (1) §7.08(d) "HVSI-2, HVSL-1 and HVMT-2 on 0" encoded verbatim —
-HVSL-1 looks like a misprint for HVSL-2 (cf. §7.07 MVMT-2 paragraph); (2) the ICDJ hub's
-"check whether Q45 / Q44 energises" steps are structural (the TSD lists the causes and Note 2
-says "check one by one branch"; the checks themselves are implied); (3) the Q118→Q45→Q44
+Confirmed by the user 2026-09-16: (1) §7.08(d) stays verbatim (HVSI is the RSI-block switch);
+(2) the ICDJ hub's Q118 / Q45 / Q44 steps ASK whether the relay energises and, as an
+instruction, tell the pilot to check for energisation (step texts reworded accordingly).
+Judgement calls still open: (3) the Q118→Q45→Q44
 chain follows each section's "if DJ does not close, check … branches"; a Q45 manual close
 that trips routes back to the intake hub ("pick up the correct abnormal sign") and re-asks
 the precheck; (4) the contactor wedge gate's precondition (switch on 3) is a companion

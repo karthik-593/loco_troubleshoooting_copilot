@@ -6,8 +6,8 @@
 # Mechanism: CCPT / panto check (a) → HVSI-1/2 on 3, MVSI working? (b–d: a block isolated,
 # 50% load) → one notch: trips → sluggish SMGR (e, manual GR 30 km/h) / holds → clear the
 # section and test HVSI-1 on 1 to name QVSI-1 or QVSI-2 (f).
-# NOTE (flagged for the user): §7.08(d) reads "keeping HVSI-2, HVSL-1 and HVMT-2 on '0'" —
-# encoded verbatim; HVSL-1 there is probably a misprint for HVSL-2 (cf. §7.07 MVMT-2 paragraph).
+# §7.08(d) "keeping HVSI-2, HVSL-1 and HVMT-2 on '0'" is encoded verbatim (confirmed by the
+# user 2026-09-16: HVSI is the RSI-block switch, HVSI-2 for the RSI-2 block).
 # STATUS: encoded 2026-09-16 (batch 2) — pending human confirmation.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Op_I

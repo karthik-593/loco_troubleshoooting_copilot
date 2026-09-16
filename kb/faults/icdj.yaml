@@ -92,30 +92,30 @@ steps:
 
   - id: check_q118_energising
     text: >-
-      Q118 will energise as soon as HBA is placed on the '1' position, which can be
-      identified through a click sound, also to be ensured personally. Report whether Q118
-      energises.
+      Check whether relay Q118 energises as soon as HBA is placed on the '1' position: a
+      click sound is heard, and its energisation is also to be ensured personally. Report
+      whether Q118 energises.
     gate: null
     applies_when: {c118_closing: "no"}
     source: "§7.01.3, p103–104; §7.01 cause 3, p103"
 
   - id: check_q45_energising
     text: >-
-      Check whether relay Q45 energises when BLDJ is closed and BLRDJ pressed (Q45 will not
-      energise if BLDJ is not closed, ZPT is not on 1 or 2, SMGR drum is not on '0', BP1DJ
-      is stuck in the pressed position, BLRDJ or BP2DJ is not making proper contact, CCDJ
-      fuse is melted, the Q45 coil is open-circuited or a wire is disconnected). Report
-      whether Q45 energises.
+      Check whether relay Q45 energises when BLDJ is closed and BLRDJ pressed. Report
+      whether Q45 energises. (Q45 will not energise if BLDJ is not closed, ZPT is not on 1
+      or 2, SMGR drum is not on '0', BP1DJ is stuck in the pressed position, BLRDJ or BP2DJ
+      is not making proper contact, CCDJ fuse is melted, the Q45 coil is open-circuited or a
+      wire is disconnected.)
     gate: null
     applies_when: {c118_closing: "no", q118_energised: "yes"}
     source: "§7.01.4, p106; §7.01 cause 4, p103"
 
   - id: check_q44_energising
     text: >-
-      Check whether relay Q44 energises after Q118 and Q45 (Q44 will not energise if the
-      normally-open interlocks of Q118 and Q45 have bad contacts, GR is not on full notch,
-      the Q44 coil is open or a wire in the Q44 coil is disconnected). Report whether Q44
-      energises.
+      Check whether relay Q44 energises after Q118 and Q45 have energised. Report whether
+      Q44 energises. (Q44 will not energise if the normally-open interlocks of Q118 and Q45
+      have bad contacts, GR is not on full notch, the Q44 coil is open or a wire in the Q44
+      coil is disconnected.)
     gate: null
     applies_when: {c118_closing: "no", q118_energised: "yes", q45_energised: "yes"}
     source: "§7.01.5, p107; §7.01 cause 5, p103"

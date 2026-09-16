@@ -73,7 +73,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Right, we need to set the loco up properly before we can pick up the right fault. Here's what we're checking: MP to zero, LSGR glowing, all top row BL switches open, air pressure in the RS/MR above 6.5, battery voltage above 90 volts, all three EM contactors C105, C106, C107 fully open, safety relays dropping their RED targets for the QLM, LSSIT lamp glowing if it's an SIV loco, panto physically raised and on the OHE, and ZCPA switched on before we start troubleshooting tripping failures. Once you've stopped, both loco and train brake go on through the automatic brake valve — don't leave it on loco brake alone. Want me to walk through any of those in detail?",
+            "reply": "Right, we need to set the loco up properly to catch the fault. Here's what we're checking: bring the MP to zero, make sure the LSGR is glowing, open all top row BL switches, confirm air pressure in the RS/MR is above 6.5, battery voltage above 90 volts, all three EM contactors fully open, RED targets on the safety relays haven't dropped, LSSIT lamp glowing if it's an SIV loco, panto physically raised and on the OHE, and switch the ZCPA on before we start troubleshooting tripping failures. Once you've stopped, remember — don't leave the train with just loco brake; both loco and train brake need to be set by the automatic brake valve. Want me to walk through any of those in detail?",
             "phrase_fallback": false,
             "violations": [],
             "source": "Ch.7 introduction items 1–9, p102; §5.01 Notes c, d, p82"
@@ -106,7 +106,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Look for red-hot condition on the arc chutes and resistor gear — CGR-1, CGR-2, CGR-3, RGR, RPGR. Then check the TFR side for smoke, burning smell, fire, or heat in the terminals, bushings, cable, and film components, plus any oil weeping from the breathers, drain plug, and trap box. Want the exact component list?",
+            "reply": "Look for red-hot condition on the arc chutes and the RGR and RPGR, and check the TFR side for any smell, smoke, fire, or abnormality — oil leakage from the breathers, drain plug, and oil trap box. Want the exact component list for the TFR terminals and bushings?",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(c), p84"
@@ -139,8 +139,8 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Next check: Prepare the loco to pick up the correct abnormal sign: 1. Bring MP to '0'. 2. Ensure LSGR is glowing. 3. Open all top row BL switches. 4. Ensure air pressure in RS/MR is above 6.5 kg/cm2. 5. Ensure battery voltage is above 90 volts (ensures Addl CCBA is in good condition). 6. Ensure that all the EM contactors (C105, C106 & C107) are fully opened. 7. Check the safety relays for dropping of RED targets (red coloured stencil 'LOCKED' indication for QLM). 8. Check whether LSSIT lamp is glowing (in SIV provided locos). 9. Ensure physically panto is raised and touching the OHE (ensures CCBA, CCPT and CHBA ammeter shunt are in good condition). Before trouble shooting for tripping failures switch 'ON' ZCPA. Do not leave the train with only loco brake (SA-9) applied: after stopping, both loco and train brake should be applied by automatic brake valve (A-9). Done?",
-            "phrase_fallback": true,
+            "reply": "Right, we need to set the loco up to catch the fault properly. Here's what we're checking: MP to zero, LSGR glowing, all top BL switches open, air pressure in the RS/MR above 6.5, battery over 90 volts, all three EM contactors fully open, RED targets on the safety relays for any drop, LSSIT lamp glowing if you've got the SIV, panto physically raised and on the OHE, and ZCPA switched on before we start troubleshooting tripping failures. That's the full setup — want me to walk through any one of those in detail? And once you've stopped, remember: don't leave it with just loco brake — get both loco and train brake on through the automatic valve.",
+            "phrase_fallback": false,
             "violations": [],
             "source": "Ch.7 introduction items 1–9, p102; §5.01 Notes c, d, p82"
           },
@@ -167,7 +167,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Check the safety relays QLA and QOA — report back whether either target is dropped.",
+            "reply": "Check the safety relays QLA and QOA for dropped targets. Report what you find — whether either one has dropped.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§7.03(a), p114"
@@ -239,8 +239,8 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "BP's already at zero or below. Switch on the flasher light right now and send the ALP to protect the adjacent line — that's GR and SR. Once you've done that, report back what you find on the train. If there's nothing wrong with the train itself, we'll isolate the damaged pantograph with OHE.",
-            "phrase_fallback": false,
+            "reply": "Next check: If BP has dropped to '0' or less, suspect an abnormality on the train: switch on the flasher light immediately and send the Assistant Loco Pilot to protect the adjacent line as per GR & SR. If there is no abnormality on the train, isolate the damaged pantograph in coordination with OHE staff, after taking the necessary precautions. Done?",
+            "phrase_fallback": true,
             "violations": [],
             "source": "§10.03(b), p164"
           }
@@ -346,7 +346,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Do not reset. Log the abnormality, inform TLC, and request a relief loco. Have the fire extinguisher ready.",
+            "reply": "Do not reset. Log what you found, inform TLC right away, and ask for a relief loco. Have the fire extinguisher ready.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
@@ -379,7 +379,7 @@
             "tool_path": [],
             "stop": "none",
             "reflex_runs": 1,
-            "reply": "Right, you're clear to go. Resume traction and keep an eye on the feeding-power-circuit items every 10 minutes. Get a remark in the log book and let TLC know. And remember — QLM stays locked if it trips again; do not reset the target a second time.",
+            "reply": "Right, you're clear to go. Resume traction and keep an eye on the feeding-power-circuit items every 10 minutes. Log it and get word to TLC. Remember — that reset was your one shot. If QLM acts again, do not reset the target.",
             "phrase_fallback": false,
             "violations": [],
             "source": "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.01/6.1.1–6.1.3, pp.83–86"
@@ -410,7 +410,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Look for red-hot condition on the CGR-1/CGR-2/CGR-3 arc chutes, RGR, and RPGR — and for smoke, burning smell, or fire around the TFR side: terminals, bushings, HT cable, TFILM, TFSPM, and the breathers, transformer drain plug, and oil trap box. Want the exact component list?",
+            "reply": "Look for red-hot condition on the arc chutes and the RGR and RPGR, and check the TFR side for smoke, burning smell, fire, or heat — want the exact component list?",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(c), p84"
@@ -443,8 +443,8 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Next check: Check TFP and GR oil level for any abnormal increase. Hold the reset QLM until this is done. Done?",
-            "phrase_fallback": true,
+            "reply": "Check the TFP and GR oil level for any abnormal increase. That reset waits until we've got this done — what do you see?",
+            "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(b), p84"
           }
@@ -477,7 +477,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Right — the feeding power's clean. Now I need you to walk the traction power circuit end to end. Look for anything out of place: burned contacts, loose terminals, heat, discoloration, corrosion, smell. That's the TFP terminals, both RSI units, the line and shunting contactors and their resistances, the SJs, J1, J2, both QD and SL pairs, the CTFs, Q20, RQ20, C145, ATFEX, the RCC panel, all the meters and their resistances, the AM shunts, and the traction motors. Want the exact component list as you go, or does that frame it?",
+            "reply": "Right — you're looking for any smoke, burning smell, heat, or damage in the traction power circuit: TFP, RSI-1, RSI-2, the contactors, SJs, J1, J2, QD1, QD-2, SL-1, SL-2, CTFs, Q20, RQ20, C145, ATFEX, RCC panel, the meters and AM shunts, and the traction motors. Want the exact component list to work through, or are you good to scan those subsystems now?",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.2(b), p84"
@@ -493,7 +493,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "You can't proceed with that. The abnormal equipment couldn't be isolated — that's the blocker. Contact TLC for further instructions. Don't use the fire extinguishers on your own.",
+            "reply": "We can't proceed with that. The abnormal equipment couldn't be isolated — you'll need to contact TLC for further instructions before using fire extinguishers.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.2(c) reset; §6.1.2(d) second time forbidden; §6.1.2 note (reset direction); §6.1.2(a)→§6.1.1(d)(e), p84–85"
@@ -530,7 +530,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Reset the QLM once, resume traction, and check the feeding-power-circuit items every 10 minutes. Make a remark in the log book and inform TLC.",
+            "reply": "Right — reset the QLM once, get traction back, then check the feeding-power-circuit items every 10 minutes. Log it and let TLC know.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
@@ -542,7 +542,7 @@
             "tool_path": [],
             "stop": "none",
             "reflex_runs": 1,
-            "reply": "Right, you're clear. Resume traction and check the feeding-power-circuit items every 10 minutes. Make a log-book remark and get word to TLC. Remember — that reset was your one shot. If QLM acts again, do not reset the target.",
+            "reply": "Right. Resume traction and keep an eye on the feeding-power-circuit items every 10 minutes. Log it and get word to TLC. Remember — QLM's had its one reset; if it acts again, do not reset the target.",
             "phrase_fallback": false,
             "violations": [],
             "source": "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.6, §6.01/6.1.1–6.1.3, pp.83–86"
@@ -558,7 +558,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "QLM's acted twice now — that's it, do not reset the relay target again. Write it up in the log book, call TLC, and ask for a relief loco. The fault's real.",
+            "reply": "QLM's acted twice now. Do not reset it again — that's a real fault. Mark it clearly in the log book, call TLC, and ask for a relief loco.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
@@ -608,8 +608,8 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "DO NOT reset the relay target a second time. Make a clear remark in the loco log book, inform TLC, and ask for a relief loco.",
-            "phrase_fallback": true,
+            "reply": "Do not reset the relay target a second time. Make a clear remark in the loco log book, inform TLC, and ask for a relief loco.",
+            "phrase_fallback": false,
             "violations": [],
             "source": "§6.1.1(d) reset-once; §6.1.1(e) log+TLC; §6.1.1(f)(ii) second act (prior reset or re-lock after first reset) forbidden, p84"
           }
@@ -644,8 +644,8 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Right — the feeding power's clean. Now walk the traction power circuit: TFP terminals, both RSI units, line and shunting contactors with their resistances, the SJs, J1, J2, QD1, QD-2, SL-1, SL-2, CTFs, Q20, RQ20, C145, ATFEX, RCC panel, voltmeters, ammeters and their resistances, AM shunts, and the traction motors — look for anything out of the ordinary. Want the exact component list to work through?",
-            "phrase_fallback": false,
+            "reply": "Next check: If everything is normal in the feeding power circuit, check the traction power circuit equipment completely: TFP terminals, RSI-1, RSI-2, line contactors, shunting contactors and their resistances, SJs, J1, J2, QD1, QD-2, SL-1, SL-2, CTFs, Q20, RQ20, C145, ATFEX, RCC panel, voltmeters, ammeters and their resistances, the AM shunts and traction motors for any abnormality. Done?",
+            "phrase_fallback": true,
             "violations": [],
             "source": "§6.1.2(b), p84"
           }
@@ -768,7 +768,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Don't go into the HT compartment until you've grounded the loco — open the DJ, lower both pantographs and confirm the LSDJ's glowing, put the ZPT key in the BV box on HOM and turn it, work the HOM handle up, pull the fitchet keys and open the door.",
+            "reply": "Do not enter the HT compartment until the loco is grounded — open DJ, lower both pantographs and confirm LSDJ glowing, put the ZPT key in the BV box on HOM and turn it, operate the HOM handle upwards, then remove the fitchet keys and open the HT compartment door.",
             "phrase_fallback": false,
             "violations": [],
             "source": "General Instructions item 7, p77; §13.05 'Grounding the loco for entering into HT compartment' items 5–9, pp198–199"
@@ -782,7 +782,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Don't go into the HT compartment until you've grounded the loco — open the DJ, lower both pantographs and check the LSDJ is glowing, put the ZPT key in the BV box on HOM and turn it, work the HOM handle up, pull the fitchet keys and open the door.",
+            "reply": "Don't go into the HT compartment until you've grounded the loco — open the DJ, lower both pantographs and make sure the LSDJ's glowing, put the ZPT key in the BV box on HOM and turn it, work the HOM handle up, pull the fitchet keys and open the door.",
             "phrase_fallback": false,
             "violations": [],
             "source": "General Instructions item 7, p77; §13.05 'Grounding the loco for entering into HT compartment' items 5–9, pp198–199"
@@ -819,7 +819,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Is this a VCB type 5-branch DJ loco, or not? That tells us whether you're in Operation A or B for this part.",
+            "reply": "Is this a VCB type 5-branch DJ loco, or are you running something else? That'll tell us whether you're in Operation A or B for part II.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§7.06 Abnormal sign, p119; §7.11, p128"
@@ -848,7 +848,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Right, listen — before you wedge Q45, make sure that Operation A trouble isn't sitting there: that's LSCHBA not extinguishing and LSDJ glowing again after 5.6 seconds before BLRDJ releases. Once you've confirmed that's clear, you can wedge Q45 in the energised state. Then: GR has to be on zero before you close DJ. DJ will close as soon as BLDJ closes, so if DJ trips immediately, open BLDJ straight away. At a neutral section, open BLDJ at the opening board and close it only at the closing board. Keep OHE voltage above 17.5 KV — if it drops below that, open DJ right now. Check MVSI-1 and MVSI-2 working frequently while you're running. When DJ trips, remove the Q45 wedge — wedge it again only before the next energisation, to stop Q118 and Q44 chattering. And do not use RB if B-II trouble is present.",
+            "reply": "Right, listen carefully. Before you wedge Q45, you need to confirm that Operation A ending trouble is not present — that's LSCHBA not extinguishing and LSDJ glowing again after 5.6 seconds before BLRDJ releases. Once you've confirmed it's clear, wedge Q45 in the energised condition and hold these points: GR on zero before you close DJ; DJ closes the moment BLDJ closes, so if DJ trips immediately, open BLDJ straight away. At a neutral section, open BLDJ at the opening board and close it only at the closing board. Keep OHE voltage above 17.5 KV and open DJ the instant it drops below. Check MVSI-1 and MVSI-2 frequently while you're running. When DJ trips, remove the wedge — wedge Q45 only before energisation, never after, or you'll get chatter on Q118 and Q44. And do not use RB if you're carrying B-II trouble.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§7.06 Trouble shooting and Precautions 1–7, pp119–120; Note p120; §7.04 Note, p116"
@@ -900,7 +900,7 @@
             ],
             "stop": "reassess",
             "reflex_runs": 2,
-            "reply": "Right, you're clear to resume traction.",
+            "reply": "You're clear to resume traction.",
             "phrase_fallback": false,
             "violations": [],
             "source": "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.12, pp.172–173"
@@ -934,7 +934,7 @@
             ],
             "stop": "gate",
             "reflex_runs": 1,
-            "reply": "Before you wedge Q118, make sure all EM contactors are open. Once Q118 is wedged in the energised condition—after you close DJ, check that C118 is fully open; keep a close eye on MVMT1, MVMT2, MVRH, MVSL1, MVSL2 auxiliaries; watch the TFR oil level for colour change or any abnormal rise; and avoid quick regression of GR.",
+            "reply": "Before you wedge Q118, make sure all EM contactors are open. Once Q118 is wedged in the energised condition — after you close DJ, check that C118 is fully open; then keep a close eye on MVMT1, MVMT2, MVRH, MVSL1, MVSL2 auxiliaries; watch the TFR oil level for colour change or any abnormal rise; and avoid quick regression of GR.",
             "phrase_fallback": false,
             "violations": [],
             "source": "§7.01.3 Precautions for wedging Q118 (a)–(e), p106; §7.10 item 3, p126"

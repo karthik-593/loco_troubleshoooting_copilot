@@ -1,6 +1,6 @@
 # Evaluation report — mode: live
 
-21 scripted-pilot scenarios · KB c1c967c
+21 scripted-pilot scenarios · KB 0c36d04
 
 ## Agent vs flat-retrieval baseline (same KB content, same gold)
 

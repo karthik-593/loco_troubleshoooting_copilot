@@ -44,7 +44,17 @@ _STOP = {"everything", "whether", "otherwise", "further", "normal", "abnormality
          "anything", "before", "after", "through", "again", "should", "please", "maximum",
          # instruction meta-words with everyday synonyms (Ch.7 texts: "Report whether…",
          # "For quick trouble shooting…", "Ensure…" → "make sure")
-         "report", "trouble", "shooting", "ensure", "properly", "position", "convenient"}
+         "report", "trouble", "shooting", "ensure", "properly", "position", "convenient",
+         "placed", "identified", "making", "proper"}
+
+_PAREN = re.compile(r"\([^)]*\)")
+
+
+def _substance(text: str) -> str:
+    """The part of a KB step the rendering must keep: its action clause, without a leading
+    "If …," condition and without parenthetical notes (cause lists, cross-references)."""
+    text = re.sub(r"^\s*If\s.+?[,;:]", "", text, count=1, flags=re.IGNORECASE | re.DOTALL)
+    return _PAREN.sub(" ", text)
 
 
 def _stem(w: str) -> str:
@@ -106,8 +116,7 @@ _OFFER = re.compile(r"\b(list|detail|components?|items?)\b[^.?!]*\?", re.I)
 
 def _identifiers(text: str) -> list[str]:
     """Equipment identifiers in a KB step's ACTION clause, in order, deduplicated."""
-    action = re.sub(r"^\s*If\s.+?[,;:]", "", text, count=1, flags=re.IGNORECASE | re.DOTALL)
-    return list(dict.fromkeys(m for m in _IDENT.findall(action) if len(m) >= 2))
+    return list(dict.fromkeys(m for m in _IDENT.findall(_substance(text)) if len(m) >= 2))
 
 
 # Ch.7 ladders chain their steps with "If unsuccessful, …" / "If still unsuccessful, …" /
@@ -251,11 +260,11 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         # RSI-2, L4...) and the distinctive words of its ACTION clause (isolate, traction,
         # motor, permissible...). Seen live: an action rendered as a question about its own
         # "If ..." condition, and "the equipment listed above" for a full checklist.
-        action = re.sub(r"^\s*If\s.+?[,;:]", "", t.message, count=1, flags=re.IGNORECASE | re.DOTALL)
+        action = _substance(t.message)
         idents = set(_identifiers(t.message))
         words = {w.lower() for w in re.findall(r"[A-Za-z][A-Za-z-]{5,}", action)} - _STOP
         lost_i = [i for i in idents if i.lower() not in low]
-        lost_w = [w for w in words if _stem(w) not in low]
+        lost_w = [w for w in words if _stem(w) not in low and w[:6] not in low]   # energisation ≈ energise
         # Sanctioned SHORT FORM for a long component list (phrase prompt): the symptom, at
         # least one of the payload's own identifiers as the subsystem tag, and an offer of the
         # exact list. Anything else must keep the substance.
