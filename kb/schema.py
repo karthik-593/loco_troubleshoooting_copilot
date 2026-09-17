@@ -123,7 +123,8 @@ class Step(_Strict):
     implies: dict[str, str] = Field(default_factory=dict)
     # An observation step exists to elicit ONE fact ("report the occasion", "report which
     # meter is not deviating"): it counts as done once that fact is stated, claimed or not
-    # (§8.07: the pilot who opens with "CCPT melts on the 6th notch" is not asked the occasion).
+    # (§8.07: the pilot who opens with "CCPT melts on the 6th notch" is not asked the occasion)
+    # — and ONLY then: a claim on the step without the fact is not completion (batch 4).
     elicits: Optional[str] = Field(default=None, pattern=r"^[a-z][a-z0-9_]*$")
     # Completing this step ends the procedure on its 'resolved' terminal (e.g. "isolate that
     # TM and work with 5/6 load" — a sanctioned way onward, not a failure).

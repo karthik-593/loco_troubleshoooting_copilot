@@ -1,0 +1,34 @@
+scenario_id: brakes_not_releasing_bp_below_5_reroute
+klass: combination
+# Batch 4: §9.08(b) "If BP < 5, trouble shoot for the same" → deterministic route to §9.03; the
+# pilot has skipped (a) of §9.03 (MR pressure) → the specific missed check is asked.
+pilot_script:
+- loco brakes not releasing. handles in release, tapped C2B. BP is below 5, only 4
+- A9 in release both cabs, cocs right, A8 open, MU2B lead
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - ensure_a9_sa9_in_release_tap_c2b
+  - check_bp_pressure_5
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - a9_handle_in_release_in_both_cabs
+  - a9_inlet_outlet_cocs_open_working_cab_closed_non_working
+  - a8_cock_open
+  - ensure_mu2b_in_lead
+gold:
+  correct_terminal: ask_step:check_mr_pressure_8_to_9_5
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 2
+  expected_tool_path:
+  - (reroute→BP_pressure_not_charging)
+  - diff_completed_steps
+  - diff_completed_steps
+  expected_turn_terminals:
+  - ask_step
+  - ask_step

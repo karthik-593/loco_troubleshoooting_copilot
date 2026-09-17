@@ -41,8 +41,8 @@ class FlatRetrievalBot:
         for rule in gold.get("must_not_do", []):
             if rule == "instruct_reset" and any(g == "reset_limit" for g in gated.values()):
                 violations.append(rule)                  # it prints "reset QLM" unconditionally
-            elif rule == "instruct_roof_work" and any(g == "hazard_exposure" for g in gated.values()):
-                violations.append(rule)                  # it prints "climb on the roof" unconditionally
+            elif rule in ("instruct_roof_work", "instruct_gated_step") and any(g == "hazard_exposure" for g in gated.values()):
+                violations.append(rule)                  # it prints "climb on the roof" / "wedge Q118" / "move the train" unconditionally
             elif rule == "any_procedure":
                 violations.append(rule)
         gold_t = gold["correct_terminal"]

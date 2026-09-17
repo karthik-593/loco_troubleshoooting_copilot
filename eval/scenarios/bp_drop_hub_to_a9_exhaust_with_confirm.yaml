@@ -1,0 +1,33 @@
+scenario_id: bp_drop_hub_to_a9_exhaust_with_confirm
+klass: ambiguous
+# Batch 4: "BP dropped suddenly" → the §9.04 hub (flasher / formation check) → the pilot names the
+# A9 exhaust port → routed to §9.04.5 with a one-line confirm → the ladder.
+pilot_script:
+- BP dropped suddenly on run
+- flasher on, formation checked, no derailment. air is leaking through A9 exhaust
+- "yes"
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - flasher_on_and_check_formation_for_derailment
+- fault_guess: null
+  fault_confidence: 0.0
+  confirms_fault: 'yes'
+gold:
+  correct_terminal: ask_step:apply_a9_to_emergency_and_try
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 3
+  expected_tool_path:
+  - diff_completed_steps
+  - (reroute→A9_exhaust_port_leaking)
+  - diff_completed_steps
+  expected_turn_terminals:
+  - ask_step
+  - confirm_fault
+  - ask_step

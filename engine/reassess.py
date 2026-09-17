@@ -187,9 +187,12 @@ def reassess(state: DiagnosisState, fault: Optional[Fault]) -> Decision:
     #    KB's follow-up (monitor / log / TLC) as guidance.
     state.stuck_at = None
     guidance: tuple[str, ...] = ()
-    last_done = next((s for s in reversed(fault.steps) if s.id in state.steps_claimed_done), None)
+    # A claimed `completes` step ended the procedure wherever it sits in file order (the diff's
+    # `completed` rule): a stated-only aside placed ahead of ladder steps that were claimed
+    # earlier (§9.02 Note 2 before l–m) still ends on the resolved terminal.
+    completed_on = next((s for s in fault.steps if s.completes and s.id in state.steps_claimed_done), None)
     reset_gated = any(s.gate and s.gate.type == "reset_limit" for s in fault.gated_steps)
-    if last_done is not None and last_done.completes and fault.terminal_actions.get("resolved"):
+    if completed_on is not None and fault.terminal_actions.get("resolved"):
         guidance = (fault.terminal_actions["resolved"],)  # a sanctioned way onward (a wedge with its precautions too)
     elif not reset_gated and fault.terminal_actions.get("unresolved"):
         guidance = (fault.terminal_actions["unresolved"],)   # every step tried, still not cleared

@@ -1,0 +1,92 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Air flow indicator (AFI) overshoots on run
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.04.7, p.157 (causes 1–3, preamble, trouble shooting 1–3).
+# Mechanism (batch 4 decision 2): its own sign → its own file. Preamble (flasher, check for
+# derailment); cause 1 (ACP) routes to §9.04.4 "as stated above" (confirm line); cause 2
+# (excess BP leakage) and cause 3 (defective AFI) are branches on `bp_leakage_found` — arrest
+# a found leak (stated-only, completes); no leak → ensure no brake binding → ignore the AFI
+# and work the train watching the BP gauge (completes). Brake binding found: no TSD text →
+# engine default TLC.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: AFI_overshoots_on_run
+aliases:
+  - "AFI overshoots"
+  - "AFI overshooting"
+  - "AFI overshoot"
+  - "AFI overshoots on run"
+  - "air flow indicator overshoots"
+  - "air flow indicator overshooting"
+  - "AFI shot up"
+  - "AFI needle overshoots"
+  - "AFI needle shot up"
+precedence: 0
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The air flow indicator (AFI) overshoots on run — alarm chain pulling, excess leakage in the BP pipe line, or a defective AFI"
+
+combination_rules: []
+route_rules:
+  - if_fact: afi_cause
+    equals: acp
+    route_to: Alarm_chain_pulling
+    source: "§9.04.7 trouble shooting 1(a), p157: 'In case of chain pulling, procedure to be followed for chain pulling as stated above' → §9.04.4"
+    phrases: ["alarm chain", "chain pulling", "chain pulled", "ACP", "pulled the chain"]
+
+steps:
+  # preamble
+  - id: flasher_on_and_ensure_no_abnormality
+    text: >-
+      Switch on flasher light immediately and ensure for any abnormality such as derailment.
+    gate: null
+    source: "§9.04.7, p157"
+
+  # 2 (a)
+  - id: stop_and_check_bp_leakage_in_loco_and_formation
+    text: >-
+      Stop the train and check any leakage in the locomotive and in the formation BP
+      pipeline. Report whether any leakage is found.
+    gate: null
+    source: "§9.04.7 trouble shooting 2(a), p157"
+
+  # 2 (b) — only when a leak is found
+  - id: arrest_bp_leakage_if_found
+    text: "If any leakage, arrest the same and try."
+    gate: null
+    applies_when: {bp_leakage_found: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§9.04.7 trouble shooting 2(b), p157"
+
+  # 3 (a)
+  - id: ensure_no_brake_binding_if_no_leakage
+    text: >-
+      If there is no leakage in Brake pipe pressure, ensure no brake binding in the
+      formation. Report whether any brake binding is found.
+    gate: null
+    applies_when: {bp_leakage_found: "no"}
+    source: "§9.04.7 trouble shooting 3(a), p157"
+
+  # 3 (b)(c)
+  - id: ignore_afi_and_work_watching_bp_gauge_if_no_brake_binding
+    text: >-
+      If there is no brake binding, ignore the AFI and work the train, duly watching the BP
+      gauge and free movement of train. After brake application, ensure BP pressure has
+      recharged fully; resume traction after complete releasing of the brakes only.
+    gate: null
+    applies_when: {bp_leakage_found: "no", brake_binding_found: "no"}
+    completes: true
+    source: "§9.04.7 trouble shooting 3(b)(c), p157"
+
+terminal_actions:
+  resolved: >-
+    work the train duly watching the BP gauge and free movement of train; after brake
+    application ensure BP pressure has recharged fully and resume traction after complete
+    releasing of the brakes only
+  unresolved: "contact TLC for advice"          # engine default: §9.04.7 ends without a TLC line
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.04.7, p.157"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

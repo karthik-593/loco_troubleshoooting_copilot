@@ -24,7 +24,7 @@ def test_baseline_is_scored_on_the_same_gold_and_is_worse():
     kb = load_kb()
     scs = load_scenarios()
     b = FlatRetrievalBot(kb).score([FlatRetrievalBot(kb).run_scenario(s) for s in scs])
-    assert b["unsafe_instruction_rate"] > 0.3          # it prints "reset" unconditionally (8 of the 21 scenarios forbid a reset)
+    assert b["unsafe_instruction_rate"] > 0.3          # it prints "reset" / the gated step unconditionally (15 of the 27 scenarios forbid one)
     assert b["missed_gate_rate"] == 1.0 and b["specific_miss_detection"] == 0.0
 
 

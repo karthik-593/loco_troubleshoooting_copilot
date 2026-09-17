@@ -1,0 +1,79 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: BP not dropping through A9 operation
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.10, p.161 (a–f).
+# Mechanism: plain ladder a–f; (c) the banker-loco A8 check is a STATED-ONLY step
+# (banker_loco: yes); (f)'s "if BP is still not dropping contact TLC" = unresolved terminal.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: BP_not_dropping_through_A9
+aliases:
+  - "BP not dropping"
+  - "BP not dropping through A9"
+  - "BP not dropping on A9"
+  - "BP not dropping with A9"
+  - "BP does not drop"
+  - "BP does not drop with A9"
+  - "BP not reducing"
+  - "BP not reducing with A9"
+  - "BP not falling with A9"
+  - "BP is not dropping"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BP pressure does not drop when A9 is operated"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: stop_by_bringing_a9_to_emergency
+    text: "Stop the train by bringing A9 to emergency."
+    gate: null
+    source: "§9.10(a), p161"
+
+  # (b)
+  - id: check_rear_cab_a9_cocs_close_if_open
+    text: "Check rear cab A9 inlet / outlet COC are open; if it is open, close the same and try."
+    gate: null
+    source: "§9.10(b), p161"
+
+  # (c) — banker loco only
+  - id: ensure_a8_coc_closed_if_banker_loco
+    text: >-
+      In Banker loco, ensure A8 COC is closed; if it is in open condition, close and release
+      the brake binding in the formation and try.
+    gate: null
+    applies_when: {banker_loco: "yes"}
+    requires_stated: true
+    source: "§9.10(c), p161"
+
+  # (d)
+  - id: clear_section_with_rear_cab_if_all_normal
+    text: "If everything is normal, but BP is not dropping, clear the section with rear cab operation."
+    gate: null
+    source: "§9.10(d), p161"
+
+  # (e)
+  - id: drain_moisture_after_clearing_section
+    text: >-
+      After clearing the section, drain out the moisture from accessories drain cock, MR,
+      CDC, after cooler drain cocks.
+    gate: null
+    source: "§9.10(e), p161"
+
+  # (f)
+  - id: try_from_leading_cab
+    text: "Try from the leading cab; if BP is still not dropping, contact TLC."
+    gate: null
+    source: "§9.10(f), p161"
+
+terminal_actions:
+  resolved: "with BP dropping through A9, resume traction"
+  unresolved: "contact TLC"                     # §9.10(f)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.10, p.161"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

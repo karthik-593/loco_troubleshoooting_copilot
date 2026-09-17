@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: BP pressure raises beyond 5 kg/cm2 after A9 operation
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.09, p.161 (causes 1–2, a–h).
+# Mechanism: plain ladder a–g; (h) TLC = unresolved terminal.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: BP_rises_beyond_5_after_A9
+aliases:
+  - "BP rises beyond 5"
+  - "BP raises beyond 5"
+  - "BP rising beyond 5"
+  - "BP pressure raises beyond 5"
+  - "BP pressure rises beyond 5"
+  - "BP going above 5"
+  - "BP above 5 after A9"
+  - "BP more than 5"
+  - "BP overcharging"
+  - "BP overcharged"
+  - "BP rises above 5"
+  - "BP shooting above 5"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BP pressure rises beyond 5 kg/cm2 after an A9 operation (defective A9 / C2A stuck up)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: stop_with_single_application
+    text: "Try to stop the train with single application."
+    gate: null
+    source: "§9.09(a), p161"
+
+  # (b)
+  - id: apply_a9_to_emergency_and_release
+    text: "Apply A9 to emergency and release."
+    gate: null
+    source: "§9.09(b), p161"
+
+  # (c)
+  - id: drain_moisture_and_try
+    text: "Drain out the moisture and try."
+    gate: null
+    source: "§9.09(c), p161"
+
+  # (d)
+  - id: tap_c2a_relay_valve_gently
+    text: "Gently tap C2A relay valve and try."
+    gate: null
+    source: "§9.09(d), p161"
+
+  # (e)
+  - id: clear_section_from_rear_cab
+    text: "If unsuccessful, clear the section from rear cab."
+    gate: null
+    source: "§9.09(e), p161"
+
+  # (f)
+  - id: try_from_leading_cab_after_clearing_section
+    text: "After clearing the section, try from leading cab."
+    gate: null
+    source: "§9.09(f), p161"
+
+  # (g)
+  - id: several_applications_and_releases_inform_tlc_if_satisfied
+    text: >-
+      With several applications and release of A9, if satisfied, inform TLC and act
+      accordingly.
+    gate: null
+    source: "§9.09(g), p161"
+
+terminal_actions:
+  resolved: "if satisfied with several applications and release of A9, inform TLC and act accordingly"   # §9.09(g)
+  unresolved: "contact TLC"                     # §9.09(h)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.09, p.161"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

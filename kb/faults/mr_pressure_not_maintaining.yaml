@@ -1,0 +1,170 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: MR pressure dropping gradually / not maintaining
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.02, pp.150–152 (causes 1–4, preamble, a)–o), Notes 1–2).
+# Mechanism: preamble + ladder a–k; l–m only "If loco is attached on formation (twin pipe)"
+# (l is asked as its own "If …" question; a light engine skips both); n; o = TLC.
+# Note 1 (air dryer leaking) is a STATED-ONLY step placed with (e); Note 2 (Duranto air-spring
+# rakes, burst air spring) is a STATED-ONLY step that completes with the 60 kmph + TLC/SCOR
+# guidance.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: MR_pressure_not_maintaining
+aliases:
+  - "MR pressure dropping"
+  - "MR pressure dropping gradually"
+  - "MR pressure not maintaining"
+  - "MR not maintaining"
+  - "MR pressure falling"
+  - "MR pressure dropping slowly"
+  - "MR pressure not holding"
+  - "MR pressure coming down"
+  - "MR pressure is dropping"
+  - "MR dropping"
+  - "MR pressure going down"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "MR pressure is dropping gradually / not maintaining"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # preamble
+  - id: ensure_mcps_working_close_blcpd
+    text: "Ensure MCPs are working. Close BLCPD and try."
+    gate: null
+    source: "§9.02 Trouble Shooting, p151"
+
+  # a
+  - id: increase_cps_by_hcp
+    text: "Increase No. of CPs by HCP and try."
+    gate: null
+    source: "§9.02(a), p151"
+
+  # b
+  - id: close_vead_coc
+    text: "Close VEAD COC and try."
+    gate: null
+    source: "§9.02(b), p151"
+
+  # c
+  - id: close_veul_and_adv_cocs
+    text: "Close VEUL COCs and ADV cocs and try."
+    gate: null
+    source: "§9.02(c), p151"
+
+  # d
+  - id: ensure_all_drain_cocks_closed
+    text: "Ensure all drain cocks are closed."
+    gate: null
+    source: "§9.02(d), p151"
+
+  # e
+  - id: isolate_air_drier
+    text: "Isolate air drier and try."
+    gate: null
+    source: "§9.02(e), p151"
+
+  # Note 1 — only when the pilot states air is leaking through the air dryer
+  - id: air_dryer_bypass_if_leaking
+    text: >-
+      In air dryer provided locos, if air is leaking through air drier: close air dryer
+      Inlet and outlet COCs (GREEN) and open bypass cut out COCs (RED) & try.
+    gate: null
+    applies_when: {air_dryer_leaking: "yes"}
+    requires_stated: true
+    source: "§9.02 Note 1, p152"
+
+  # f
+  - id: tap_safety_valves_ensure_none_stuck_lifted
+    text: >-
+      Tap safety valves gently and ensure no safety valve is struck up in lifted position;
+      if so, tap / close COC / dummy concern safety valve and try.
+    gate: null
+    source: "§9.02(f), p151"
+
+  # g
+  - id: tap_nrv
+    text: "Tap NRV and try."
+    gate: null
+    source: "§9.02(g), p151"
+
+  # h
+  - id: close_air_intake_coc
+    text: "Close air intake COC and try."
+    gate: null
+    source: "§9.02(h), p151"
+
+  # i
+  - id: check_sanders_wipers_horns_leakage
+    text: "Ensure no leakage of air from sanders, wipers, horns. If so, close concerned COCs."
+    gate: null
+    source: "§9.02(i), p151"
+
+  # j
+  - id: ensure_mr_bc_equalising_cocs_closed_single_loco
+    text: >-
+      Ensure MR equalising, BC equalising COCs on both sides for single loco, are in closed
+      position.
+    gate: null
+    source: "§9.02(j), p151"
+
+  # k
+  - id: check_system_leakage_and_arrest
+    text: "Ensure no leakage in the system / loco; if found, try to arrest them."
+    gate: null
+    source: "§9.02(k), p151"
+
+  # Note 2 — Duranto air-spring rakes; only when the pilot states the air spring is burst
+  - id: isolate_burst_air_spring_and_work_60_kmph
+    text: >-
+      In Air spring provided Duranto rakes, if MR is not maintaining check the FP pressure.
+      If FP pressure is also not maintaining, then check for the defect in Air Spring. If Air
+      spring is in bursted condition, isolate it as per procedure and work with 60 kmph duly
+      informing TLC/SCOR.
+    gate: null
+    applies_when: {air_spring_burst: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§9.02 Note 2, p152"
+
+  # l — "If loco is attached on formation (twin pipe)"
+  - id: check_bp_fp_leakage_on_formation_isolate_fp_single_pipe
+    text: >-
+      If loco is attached on formation (twin pipe): ensure no leakage of BP / FP on
+      formation. If twin pipe formation, isolate FP and work with single pipe and try.
+    gate: null
+    applies_when: {attached_to_formation: "yes"}
+    source: "§9.02(l), p151"
+
+  # m
+  - id: isolate_bp_after_fp_and_locate_defective_auxiliary_reservoir
+    text: >-
+      After isolating FP, if still MR is not maintaining then isolate BP and try. After
+      isolating BP & FP, if MR is maintaining then defect may be in Auxiliary Reservoir of
+      any coach/wagon. Close FP side coc of defective Auxiliary Reservoir and then isolate
+      DV and release brakes.
+    gate: null
+    applies_when: {attached_to_formation: "yes"}
+    source: "§9.02(m), p151"
+
+  # n
+  - id: deenergise_drain_all_pressure_energise_and_try
+    text: >-
+      If still unsuccessful, de-energise the loco, drain out all the pressure from the
+      system, again energise the loco and try.
+    gate: null
+    source: "§9.02(n), p151"
+
+terminal_actions:
+  resolved: >-
+    MR pressure maintaining — resume traction. If a burst air spring was isolated, work with
+    60 kmph duly informing TLC/SCOR.
+  unresolved: "contact TLC"                       # §9.02(o)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.02, pp.150–152"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

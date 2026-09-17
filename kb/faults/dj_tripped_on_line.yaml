@@ -10,7 +10,8 @@
 # routes to that relay's procedure (combination rules; §5.01 "If any safety relay target is
 # found dropped, trouble shoot for DJ tripping through safety relays").
 # precedence -2: a relay or fire named in the same message wins the alias match.
-# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16; §9.01 route on
+#         rs_pressure_low added 2026-09-17 (batch 4), confirmed by the user 2026-09-17.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: DJ_tripped_on_line
 aliases:
@@ -109,6 +110,12 @@ route_rules:                        # the abnormal sign picked up in the observa
     source: "§7.10 Abnormal sign, p126: 'DJ trips in various occasions other than above indications'"
     phrases: ["TWAC", "without apparent cause", "without any apparent cause", "trips randomly", "tripping randomly",
               "trips at random", "trips on and off", "keeps tripping on run"]
+  # Ch.7 intro side-note "If RS pressure is less, trouble shoot accordingly (Chapter 9)" — wired to
+  # §9.01 in batch 4 (judgement call 7); listed after the sign rules so a stated sign routes first.
+  - if_fact: rs_pressure_low
+    equals: "yes"
+    route_to: RS_pressure_not_building
+    source: "Ch.7 introduction, p102: 'If RS pressure is less, trouble shoot accordingly (Chapter 9)' → §9.01 pp149–150"
 
 steps:
   # §5.01 first sentence — only when BP dropped with the trip

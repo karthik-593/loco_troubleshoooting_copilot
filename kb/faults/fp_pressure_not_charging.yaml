@@ -1,0 +1,90 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: FP pressure (6 kg/cm2) not charging in loco
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.05, p.158 (causes 1–3, a–d, Notes 1–3).
+# Mechanism: ladder a–d; (d) closes the FP feed valve COC and works with single pipe
+# (completes). Note 1 (AFTER ATTACHING on to the formation) is a STATED-ONLY branch placed
+# first (completes either way: twin pipe if FP charges, else single pipe); Notes 2–3 (60 kmph
+# for air-suspension bogies, whole formation single pipe) are the resolved guidance.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: FP_pressure_not_charging
+aliases:
+  - "FP not charging"
+  - "FP pressure not charging"
+  - "FP not charging in loco"
+  - "FP pressure not charging in loco"
+  - "FP not building"
+  - "FP pressure not building"
+  - "FP not coming up"
+  - "feed pipe not charging"
+  - "feed pipe pressure not charging"
+  - "no FP pressure"
+  - "FP not charging to 6"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "FP pressure does not charge to 6 kg/cm2 in the loco"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # Note 1 — after attaching on to the formation (stated-only)
+  - id: check_formation_fp_leakage_if_not_charging_after_attaching
+    text: >-
+      If FP pressure does not charge AFTER ATTACHING on to the FORMATION, check for any
+      leakage on the FP line on the formation and arrest the same; ensure all AR drain cocks
+      are closed. If FP charges, work with twin pipe brake; otherwise close FP angle COC of
+      loco and work onwards with single pipe air brake system.
+    gate: null
+    applies_when: {fp_not_charging_after_attaching: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§9.05 Note 1, p158"
+
+  # (a)
+  - id: ensure_mr_9_5_and_fp_feed_valve_cocs_open
+    text: >-
+      Ensure MR pressure is 9.5 kg/cm2 and FP feed valve COC/COCs are opened. If FP feed
+      valve COC is closed, open the same and charge FP pressure.
+    gate: null
+    source: "§9.05(a), p158"
+
+  # (b)
+  - id: check_fp_angle_cocs_either_side_close_if_open
+    text: >-
+      If FP COC is open, check the angle COCs of FP line on either side of the loco. If
+      anyone is opened, close it and charge FP pressure.
+    gate: null
+    source: "§9.05(b), p158"
+
+  # (c)
+  - id: check_fp_line_leakage_and_arrest
+    text: >-
+      If both end angle COCs are closed, check for any air leakage. If there is any leakage,
+      arrest the same.
+    gate: null
+    source: "§9.05(c), p158"
+
+  # (d)
+  - id: close_fp_feed_valve_coc_and_work_single_pipe
+    text: >-
+      If no air leakage is traced in FP line, close the FP feed valve COC and work onwards
+      with single pipe air brake system.
+    gate: null
+    completes: true
+    source: "§9.05(d), p158"
+
+terminal_actions:
+  resolved: >-
+    If FP was isolated, work onwards with single pipe air brake system: the speed of air
+    suspension bogie formation is to be restricted to 60 kmph when working with single pipe;
+    in twin pipe provided rakes, if FP is isolated the entire formation should work with
+    single pipe only.
+  unresolved: "contact TLC for advice"          # engine default: §9.05 ends without a TLC line
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.05, p.158"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -1,0 +1,74 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Alarm chain pulling (ACP) — sudden BP drop on run
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.04.4, p.156 (a, a.a, b, c, d).
+# Mechanism: plain ladder — stop (a), find the coach and reset / isolate the clappet valve
+# (a.a), release the coach brakes (b), BPC entry (c, completes); (d) RS-5 register at the
+# destination is the resolved guidance. No TLC line → unresolved is the engine default.
+# Reached from the sudden-BP-drop hub / the AFI-overshoot procedure (cause = ACP), or directly.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Alarm_chain_pulling
+aliases:
+  - "alarm chain pulling"
+  - "alarm chain pulled"
+  - "chain pulling"
+  - "chain pulled"
+  - "ACP"
+  - "ACP occurred"
+  - "ACP action"
+  - "someone pulled the chain"
+  - "passenger pulled the chain"
+  - "pulled the chain"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Alarm chain pulled — auto flasher light, AFI deviates, BP drops, hooter and red indication lamp on the concerned coach"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: mp_to_0_and_stop_with_a9_uniformly
+    text: >-
+      Bring MP to 0. Apply brakes by moving automatic brake valve A9 handle uniformly to
+      stop the train.
+    gate: null
+    source: "§9.04.4(a), p156"
+
+  # (a) a.
+  - id: find_acp_coach_reset_or_isolate_clappet_valve
+    text: >-
+      When alarm chain is pulled, the Loco Pilot will get indications of auto flasher
+      light, AFI deviates, BP drops; in the concerned coach the hooter will sound and the
+      red indication lamp will glow, provided outside of the coach. Find out the coach in
+      which ACP occurred. Reset the clappet valve manually or with the help of key (ACP
+      resetting of LHB coaches is dealt in Ch. 19.09). If resetting is not possible, close
+      ACP isolation cock and inform the passengers of the coach regarding the same and
+      advise them to pull the chain from adjacent coach/coaches if required.
+    gate: null
+    source: "§9.04.4(a) a., p156"
+
+  # (b)
+  - id: release_coach_brakes_by_qrv_of_dv
+    text: "Now release the coach brakes by releasing of QRV of DV."
+    gate: null
+    source: "§9.04.4(b), p156"
+
+  # (c)
+  - id: make_entry_in_bpc
+    text: "Make an entry in BPC."
+    gate: null
+    completes: true
+    source: "§9.04.4(c), p156"
+
+terminal_actions:
+  resolved: "resume; mention remarks in RS-5 register at destination, if required"     # §9.04.4(d)
+  unresolved: "contact TLC for advice"          # engine default: §9.04.4 ends without a TLC line
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.04.4, p.156"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

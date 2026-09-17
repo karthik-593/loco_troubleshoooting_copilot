@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Air leaking through A9 exhaust port — sudden BP drop on run
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.04.5, pp.156–157 (a–d).
+# Mechanism: plain ladder — A9 emergency → clear the section from the rear cab → try from
+# the leading cab → (d) TLC as the unresolved terminal.
+# Reached from the sudden-BP-drop hub (bp_drop_cause == a9_exhaust_leak), or directly.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: A9_exhaust_port_leaking
+aliases:
+  - "A9 exhaust port leaking"
+  - "air leaking through A9 exhaust port"
+  - "A9 exhaust leaking"
+  - "leak through A9 exhaust"
+  - "A9 exhaust port leak"
+  - "air leaking through A9"
+  - "A9 exhaust leak"
+  - "leaking through A9 exhaust"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BP dropped suddenly on run with air leaking through the A9 exhaust port"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: apply_a9_to_emergency_and_try
+    text: "Apply A9 to emergency and try."
+    gate: null
+    source: "§9.04.5(a), p156"
+
+  # (b)
+  - id: clear_section_from_rear_cab
+    text: "If unsuccessful, clear the section from rear cab."
+    gate: null
+    source: "§9.04.5(b), p156"
+
+  # (c)
+  - id: try_from_leading_cab_after_clearing_section
+    text: "After clearing the section, try from leading cab."
+    gate: null
+    source: "§9.04.5(c), p157"
+
+terminal_actions:
+  unresolved: "contact TLC and act as per his instructions"       # §9.04.5(d)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.04.5, pp.156–157"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

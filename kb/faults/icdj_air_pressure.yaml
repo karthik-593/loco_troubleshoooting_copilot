@@ -3,8 +3,9 @@
 # SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
 #         Chapter 7, §7.01.2 "Less air pressure", p.104 (a–c).
 # Reached from the ICDJ hub (air_pressure_low == yes), or directly. (c) hands over to
-# §9.1 (MCPA not building up air pressure in RS) — a later batch.
-# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16.
+# §9.01 (CPA unable to build up pressure in RS): route rule on `rs_still_not_building`
+# → RS_pressure_not_building (batch 4, judgement call 7 — cross-reference wired).
+# STATUS: encoded 2026-09-16 (batch 2) — confirmed by the user 2026-09-16; §9.01 route added 2026-09-17 (batch 4), confirmed by the user 2026-09-17.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: ICDJ_air_pressure
 aliases:
@@ -21,7 +22,13 @@ presenting_signs:
   - "DJ does not close and the RS/MR air pressure is below 6.5 kg/cm2"
 
 combination_rules: []
-route_rules: []
+route_rules:
+  - if_fact: rs_still_not_building
+    equals: "yes"
+    route_to: RS_pressure_not_building
+    source: "§7.01.2(c), p104: 'troubleshoot for MCPA not building up air pressure in RS (as explained in §9.1)' → §9.01 pp149–150"
+    phrases: ["still not building", "still not building up", "still no pressure", "pressure still not building",
+              "still not able to build"]
 
 steps:
   # (a)
@@ -49,6 +56,7 @@ steps:
       pressure in RS (as explained in §9.1).
     gate: null
     applies_when: {mcpa_working_but_pressure_not_building: "yes"}
+    elicits: rs_still_not_building
     source: "§7.01.2(c), p104"
 
 terminal_actions:

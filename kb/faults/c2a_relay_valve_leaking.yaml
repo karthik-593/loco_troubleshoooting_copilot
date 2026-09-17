@@ -1,0 +1,48 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Air leaking through C2A relay valve (BP charging) — sudden BP drop on run
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.04.6, p.157 (a–c).
+# Mechanism: plain ladder — A9 emergency → tap C2A gently → (c) TLC as the unresolved terminal.
+# Reached from the sudden-BP-drop hub (bp_drop_cause == c2a_leak), or directly.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: C2A_relay_valve_leaking
+aliases:
+  - "C2A relay valve leaking"
+  - "air leaking from C2A relay valve"
+  - "air leaking through C2A relay valve"
+  - "C2A leaking"
+  - "C2A is leaking"
+  - "leak from C2A"
+  - "air leaking from C2A"
+  - "C2A relay valve leak"
+  - "C2A valve leaking"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BP dropped suddenly on run with air leaking from the C2A relay valve (BP charging)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: apply_a9_to_emergency_and_try
+    text: "Apply A9 to emergency and try."
+    gate: null
+    source: "§9.04.6(a), p157"
+
+  # (b)
+  - id: tap_c2a_relay_valve_gently_and_try
+    text: "If unsuccessful, gently tap the C2A relay valve (BP) and try."
+    gate: null
+    source: "§9.04.6(b), p157"
+
+terminal_actions:
+  unresolved: "contact TLC and act as per his instructions"       # §9.04.6(c)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.04.6, p.157"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

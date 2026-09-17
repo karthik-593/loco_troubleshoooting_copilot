@@ -36,7 +36,9 @@ def test_batch2_files_cite_chapter_7_and_the_intake(kb):
         assert all(("§7." in s.citation) or ("§5.01" in s.citation) or ("Ch.7" in s.citation) or ("ladder" in s.citation)
                    for s in f.steps), fid
     hub = kb.get(HUB)
-    assert {r.equals: r.route_to for r in hub.route_rules} == TRIP_TARGETS
+    assert {r.equals: r.route_to for r in hub.route_rules if r.if_fact == "trip_sign"} == TRIP_TARGETS
+    # batch 4: the Ch.7-intro "RS pressure less → Chapter 9" side-note is wired to §9.01, after the sign rules
+    assert hub.route_rules[-1].if_fact == "rs_pressure_low" and hub.route_rules[-1].route_to == "RS_pressure_not_building"
     assert hub.precedence == -2 and not hub.confirm_before_guidance
     assert all(kb.get(t).confirm_before_guidance for t in TRIP_TARGETS.values() if t != "Reglows_on_release")
     # wedging gates: every wedge step is a hazard_exposure gate with a TSD-stated precondition

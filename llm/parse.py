@@ -111,7 +111,8 @@ def kb_vocabulary(kb: KnowledgeBase) -> str:
                  "work_on_roof = about to climb on to the loco roof (pantograph work); "
                  "enter_HT_compartment = about to open or enter the HT compartment; "
                  "wedge_Q118 / wedge_Q44 / wedge_Q45 = about to wedge that relay (in energised "
-                 "condition); wedge_contactor = about to wedge C105 / C106 / C107. An intent is "
+                 "condition); wedge_contactor = about to wedge C105 / C106 / C107; move_train = about to "
+                 "move / start / resume the train after a stop on the line (cattle run-over). An intent is "
                  "what they are ABOUT to do — a wedge already done is a claimed step, not an intent")
     return "\n".join(lines)
 
@@ -273,6 +274,33 @@ _FACT_HINTS = {
                        "'mp_0_to_n', 'mp_n_to_plus' (taking a notch), 'sixth_notch', 'operating_mps', 'mp_n_to_minus', 'quick_regression' (MP thrown from N to 0), "
                        "'mp_0_to_p' (RB), 'operating_zqwc', 'pressing_bpsw', 'pressing_pvef', 'auto_regression'. Leave unknown if not stated",
     "still_trips_with_hvmt_in_3": "with HVMT-1 & HVMT-2 in '3' and DJ closed: the trouble still exists / DJ still trips on the sixth notch ('yes') or DJ holds ('no')",
+    # ── batch 4 (Ch.9 pneumatic failures) ──
+    "mcpa_working": "MCPA (auxiliary compressor) is working / running ('no' if MCPA is not working)",
+    "attached_to_formation": "the loco is attached on a formation ('no' for a light engine / loco alone)",
+    "air_dryer_leaking": "air is leaking through the air dryer / air drier",
+    "air_spring_burst": "an air spring of the (Duranto / air-spring) rake is found burst",
+    "bp_not_charging_after_attaching": "BP charged on the loco but does not charge to 5 kg/cm2 AFTER ATTACHING on to the formation",
+    "dead_loco_attached": "a dead loco is attached in the formation",
+    "bp_drop_cause": "the cause of the sudden BP drop, if the pilot states it: 'train_parting', 'ip_valve' (IP valve de-energised), "
+                     "'cattle_run_over', 'acp' (alarm chain pulling), 'a9_exhaust_leak' (air leaking through the A9 exhaust port), "
+                     "'c2a_leak' (air leaking from the C2A relay valve), 'fiba' (FIBA action in DD/LHB coaches), 'not_known' (the pilot says the cause is not known). Leave unknown if not addressed",
+    "ip_valve_leaking": "the IP valve is found leaking air ('no' if the IP valve is sound)",
+    "leading_bp_angle_cock_damaged": "the leading brake pipe (BP) angle cock of the loco is damaged",
+    "bp_angle_cock_leak_not_arrested": "the damaged BP angle cock could NOT be arrested by dummying (no additional angle cock)",
+    "leading_fp_cock_damaged": "the leading feed pipe (FP) cock of the loco is damaged",
+    "cattle_passed_below_train": "the run-over cattle also passed below the train (the coaches / wagons)",
+    "brake_gear_damaged": "a part of the locomotive or trailing stock connected with brake application is damaged",
+    "continuity_test_done": "the brake continuity test has been done ('no' if the pilot says it was not / will not be done)",
+    "afi_cause": "the cause of the AFI overshoot if stated: 'acp' (alarm chain pulling), 'bp_leakage' (excess leakage in the BP pipe line), 'defective_afi'. Leave unknown if not stated",
+    "bp_leakage_found": "a leakage was found in the loco or formation BP pipeline ('no' if no leakage found)",
+    "brake_binding_found": "brake binding is found in the formation ('no' if no brake binding)",
+    "fp_not_charging_after_attaching": "FP charged on the loco but does not charge AFTER ATTACHING on to the formation",
+    "light_engine": "the loco is running as a light engine (no formation) ('no' if working a train)",
+    "loco_brakes_apply_with_a9": "with A9 applied, the loco brakes get applied ('no' if they do not apply with A9 either)",
+    "bp_below_5": "the BP pressure is below 5 kg/cm2 ('no' if BP is 5 kg/cm2)",
+    "brakes_release_with_pvef_then_reapply": "the loco brakes release on pressing PVEF and apply again after PVEF is released ('no' if they do not release on PVEF at all)",
+    "banker_loco": "this loco is working as a banker",
+    "rs_still_not_building": "with MCPA working and the drain cocks checked, RS air pressure is STILL not building up ('no' if it now builds)",
 }
 
 
@@ -370,7 +398,12 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         elif out.confirms_fault == "no":
             # pilot says it is NOT that fault: drop it; fall through to a model guess
             guess = out.fault_guess if out.fault_guess in kb.fault_ids else None
-            if guess and guess != state.matched_fault:
+            if guess and same_family(kb, guess, state.matched_fault):
+                # the model named the current fault's OWN route / combination target ("only C107
+                # not closing" → Op_II_one_not_closed while on Op_II): not a denial — the KB's
+                # deterministic route rule makes that switch, on the fact, with its confirm line
+                pass
+            elif guess and guess != state.matched_fault:
                 fault_id, confirmed, confidence = guess, False, out.fault_confidence
             else:
                 return _unresolved(out, state, kb)

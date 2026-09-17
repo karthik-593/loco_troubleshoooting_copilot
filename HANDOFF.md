@@ -667,5 +667,87 @@ unconditional; (4) §8.06 3(c) (rear-cab meters / HVSI) as a stated-only note; (
 preamble: "melts again?" and "still melts with HOBA off?" asked as questions, the occasion
 branches stated-only.
 
-Next: batch 4 (Ch.9 pneumatic failures 9.01–9.10; §7.01.2(c) and §7.02(e) cross-references
-land here).
+## Batch 4 — Ch.9 pneumatic failures §9.01–§9.10, encoded 2026-09-17
+
+Accepted decisions (user, 2026-09-17, on the batch-4 proposal): (1) §9.04 as a hub + routed
+cause files (the batch-2 pattern); (2) §9.04.7 AFI overshoot as its own file; (3) a
+continuity-test hazard gate on moving the train after a cattle run-over; (4) the §9.03
+after-attaching Note as a stated-only branch, no question; (5) §9.06 / §9.07 end without a
+TLC line → the engine-default `unresolved: contact TLC`; (6) "dummy SS1" / "dummy the safety
+valve" as plain steps.
+
+15 fault files (the proposal said 14 — hub + 4 routed causes + AFI = 6, plus the nine
+standalone sections): `rs_pressure_not_building` (§9.01), `mr_pressure_not_maintaining`
+(§9.02), `bp_pressure_not_charging` (§9.03), `sudden_bp_drop_on_run` (hub, §9.04 + §9.04.1–2),
+`cattle_run_over` (§9.04.3), `alarm_chain_pulling` (§9.04.4), `a9_exhaust_port_leaking`
+(§9.04.5), `c2a_relay_valve_leaking` (§9.04.6), `afi_overshoots_on_run` (§9.04.7),
+`fp_pressure_not_charging` (§9.05), `loco_brake_not_applying_sa9` (§9.06),
+`loco_brake_not_applying_a9` (§9.07), `loco_brakes_not_releasing` (§9.08),
+`bp_rises_beyond_5_after_a9` (§9.09), `bp_not_dropping_through_a9` (§9.10). Every step cites
+§9.x; all 15 share `listed_as: "pneumatic failures (…)"` so the coverage sentence stays under
+the batch-2 bound.
+
+Shape notes:
+- Hub `bp_drop_cause` (train_parting / ip_valve / cattle_run_over / acp / a9_exhaust_leak /
+  c2a_leak / fiba) is elicited by a "report the cause if known" step after the §9.04.1 flasher
+  step; causes 3–6 route (confirm line on the target); 1–2 are the hub's own ladder; FIBA has no
+  procedure (presenting-sign text only). Hub precedence -2; cattle / ACP / A9 / C2A carry direct
+  aliases. AFI routes `afi_cause: acp` → §9.04.4; leak / no-leak / brake-binding as branches.
+- Cattle: (c)(ii) "ask for relief engine" = defer condition after the angle-cock step; Note 1 =
+  defer condition `brake_gear_damaged`; Note 3 = `hazard_exposure` on `continuity_test_done`,
+  intent `move_train` (`ACTION_MOVE_TRAIN`, parser schema + prompt); Notes 2 and 4 = resolved
+  guidance; "Do not trip DJ in section" in step (a).
+- §9.08(b) "BP < 5 → trouble shoot for the same" = route rule to §9.03 on `bp_below_5` (phrases
+  "BP below 5", "BP less than 5" …), (b) `elicits` the fact.
+- Stated-only steps: §9.01 step 1 (`mcpa_working: no`, step 1 `elicits` it); §9.02 Note 1
+  (`air_dryer_leaking`, placed with (e)) and Note 2 (`air_spring_burst`, completes, placed
+  BEFORE l–m so a stated burst air spring is served first); §9.03 Note (`bp_not_charging_after_attaching`)
+  + dead-loco sub-branch (`dead_loco_attached`), placed FIRST; §9.05 Note 1; §9.06(a) light
+  engine and (h) resume-with-A9 (`loco_brakes_apply_with_a9`, completes); §9.10(c) banker.
+  §9.02 l–m are asked as (l)'s own "If loco is attached on formation" question.
+
+Engine / eval touched (beyond the "no engine changes expected" estimate; accepted by the user 2026-09-17):
+- `engine/reassess.py` step 4: the resolved terminal keys on ANY claimed `completes` step, not
+  the last-claimed step by file order (a stated-only aside placed ahead of already-claimed
+  ladder steps — §9.02 Note 2 — was falling through to the unresolved guidance). Mirrors the
+  diff's `completed` rule.
+- `llm/parse.py`: a model guess that is the current fault's OWN route / combination target with
+  `confirms_fault: no` is not a denial (seen live with the larger vocabulary: "only C107 is not
+  closing" on Op_II → guess Op_II_one_not_closed, confirms_fault no); the KB route rule makes
+  the switch on the fact. Batch-4 `_FACT_HINTS`; `move_train` in the action list.
+- `eval/baseline.py`: the flat bot is now also scored unsafe on `instruct_gated_step` (batch 2's
+  rule; the harness already did this at the agent side) — baseline unsafe 0.48 on 27 scenarios.
+- `engine/diff.py` (**safety fix found by the live suite**): an `elicits` step is done when —
+  and ONLY when — its fact is stated; a claim on the step without the answer is not
+  completion. Seen live on the batch-2 reglow scenario: DeepSeek (temperature 0, yet varying
+  between identical calls) claimed Reglows_on_release's VCB-type QUESTION step from the first
+  message, and the engine confirmed the one-step procedure on that fake claim (a `confirm`
+  the gold forbids → UNSAFE 1/27). The hub's "report the cause" step now accepts
+  `bp_drop_cause: not_known` as the answer, like `vcb_5_branch_loco`.
+- Tests: `tests/test_batch4_ch9.py` (22). 286 offline. Eval: 3 scenarios (cattle → move without
+  continuity test refused; BP-drop hub → A9 exhaust with confirm; brakes-not-releasing → §9.03
+  reroute, specific missed check). 27/27 offline AND live, unsafe 0, missed-gate 0, 15 paths
+  offline / 14 live. Held-out parse: 10 new cases (75); live 75/75 after the parse fix (one
+  earlier run missed "all normal" → `traction1_abnormality_found: no` on the QOP-1 recurrence
+  case — model variance; the engine consequence is an unstated abnormality, safe). Also seen
+  live: "air is leaking through the A9 exhaust port" over-claimed
+  `apply_a9_to_emergency_and_try` (a sign report taken as a step result) — recorded, not fixed.
+
+Judgement calls (7)–(12) confirmed by the user 2026-09-17 ("all accepted"): (7) the two cross-references the batch-3 HANDOFF
+earmarked for this batch are wired as route rules to §9.01 — `ICDJ_air_pressure` (c) "as
+explained in §9.1" on `rs_still_not_building` (step (c) `elicits` it; phrases "still not
+building" …), and the DJ intake hub's Ch.7-intro "If RS pressure is less, trouble shoot
+accordingly (Chapter 9)" on `rs_pressure_low`, listed AFTER the sign rules so a stated sign
+routes first (both are confirmed batch-2 files; the batch-2 route-map test now scopes to
+`trip_sign`). §7.02(e) "panto not rising (Chapter 9)" is NOT in §9.01–§9.10 (it is a Ch.10
+section) — left as text. (8) The hub's IP-valve step (c) completes with a resolved line that
+restates the step ("work onwards with the IP valve COC closed") — the TSD has no resume line
+there. (9) §9.04.4(d) RS-5 register (at destination) is the resolved guidance; (c) BPC entry
+completes. (10) §9.05: (d) and Note 1 complete; Notes 2–3 (60 kmph, whole formation single
+pipe) ride as a conditional resolved line. (11) §9.06(h) doubled as a stated-only completing
+step and the resolved text. (12) Coverage list: the 15 files collapse to one
+"pneumatic failures" entry.
+
+Next: Ch.10 miscellaneous failures (§10.01 MCPA not working — the §9.01 step-1 / §7.01.2(a)
+cross-reference; §10.02 panto not rising — the §7.02(e) cross-reference; the rest of Ch.10
+beyond §10.03 / §10.12 already encoded).

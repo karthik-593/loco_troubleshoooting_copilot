@@ -53,8 +53,12 @@ ACTION_WEDGE_Q118 = "wedge_Q118"
 ACTION_WEDGE_Q44 = "wedge_Q44"
 ACTION_WEDGE_Q45 = "wedge_Q45"
 ACTION_WEDGE_CONTACTOR = "wedge_contactor"
+# Batch 4 (Ch.9, approved decision 3): moving the train after a cattle run-over is gated on the
+# continuity test (§9.04.3 Note 3 "Do not move the train without continuity test").
+ACTION_MOVE_TRAIN = "move_train"
 ACTIONS = (ACTION_RESET_QLM, ACTION_RESET_QLA, ACTION_WORK_ON_ROOF, ACTION_ENTER_HT,
-           ACTION_WEDGE_Q118, ACTION_WEDGE_Q44, ACTION_WEDGE_Q45, ACTION_WEDGE_CONTACTOR)
+           ACTION_WEDGE_Q118, ACTION_WEDGE_Q44, ACTION_WEDGE_Q45, ACTION_WEDGE_CONTACTOR,
+           ACTION_MOVE_TRAIN)
 
 
 @dataclass

@@ -1,0 +1,99 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Loco brake is not applying through SA9
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.06, p.159 (a–h).
+# Mechanism: (a) light-engine emergency stop as a STATED-ONLY step; ladder b–g; (h) "If
+# successful, resume traction duly applying loco brakes with A9 with cautious speed, after
+# clearing section contact TLC" as a stated-only completing step AND the resolved guidance.
+# No TLC line for failure → unresolved is the engine default (batch 4 decision 5, flagged).
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Loco_brake_not_applying_SA9
+aliases:
+  - "loco brake not applying through SA9"
+  - "loco brake not applying with SA9"
+  - "loco brakes not applying through SA9"
+  - "loco brakes not applying with SA9"
+  - "loco brake is not applying through SA9"
+  - "SA9 not applying"
+  - "SA9 not applying loco brake"
+  - "SA9 not working"
+  - "SA9 brake not applying"
+  - "no loco brake with SA9"
+  - "loco brake not coming with SA9"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Loco brake does not apply when SA9 is operated"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a) — light engine only
+  - id: stop_immediately_with_a9_emergency_if_light_engine
+    text: "In case of Light engine, stop the train immediately by applying A9 to emergency."
+    gate: null
+    applies_when: {light_engine: "yes"}
+    requires_stated: true
+    source: "§9.06(a), p159"
+
+  # (b)
+  - id: ensure_sa9_inlet_outlet_cocs_open_working_cab_closed_non_working
+    text: "Ensure SA9 inlet and outlet COCs are opened in working cab and closed in non-working cab."
+    gate: null
+    source: "§9.06(b), p159"
+
+  # (c)
+  - id: ensure_mu2b_lead_operate_trail_and_back
+    text: >-
+      If they are normal, ensure MU2B is in 'LEAD' position. Operate the MU2B to 'TRAIL' and
+      back to 'LEAD' one or two times and try.
+    gate: null
+    source: "§9.06(c), p159"
+
+  # (d)
+  - id: ensure_bc_equalising_pipe_cocs_normal
+    text: "Ensure BC equalising pipes (MU) COCs are normal."
+    gate: null
+    source: "§9.06(d), p159"
+
+  # (e)
+  - id: tap_c2b_relay_valve_gently
+    text: "If they are normal, tap C2B relay valve (loco brake) gently and try."
+    gate: null
+    source: "§9.06(e), p159"
+
+  # (f)
+  - id: ensure_bc1_bc2_cocs_open
+    text: "Ensure BC-1 and BC-2 COCs are in open condition."
+    gate: null
+    source: "§9.06(f), p159"
+
+  # (g)
+  - id: apply_a9_and_check_loco_brakes_apply
+    text: >-
+      If they are open, apply A9 and check whether loco brakes are getting applied or not.
+      Report whether the loco brakes apply with A9.
+    gate: null
+    source: "§9.06(g), p159"
+
+  # (h)
+  - id: resume_with_a9_loco_brakes_cautious_speed_if_applying
+    text: >-
+      If successful, resume traction duly applying loco brakes with the help of A9 with
+      cautious speed; after clearing section contact TLC.
+    gate: null
+    applies_when: {loco_brakes_apply_with_a9: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§9.06(h), p159"
+
+terminal_actions:
+  resolved: "resume traction duly applying loco brakes with the help of A9 with cautious speed; after clearing section contact TLC"   # §9.06(h)
+  unresolved: "contact TLC for advice"          # engine default: §9.06 has no TLC line for failure (flagged)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.06, p.159"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

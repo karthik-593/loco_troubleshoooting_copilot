@@ -1,0 +1,167 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: BP pressure (5 kg/cm2) not charging in loco
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.03, pp.152–154 (causes 1–6, a)–n), Note with (a)–(c)).
+# Mechanism: a–g are the check steps ("If anything is found abnormal, normalize the same,
+# charge the BP pressure and resume traction" rides on (g)); h–n the ladder (m = rear cab,
+# n = de-energise); TLC via the unresolved terminal (m's "otherwise contact TLC").
+# The Note ("AFTER ATTACHING on to the FORMATION") is a STATED-ONLY branch placed FIRST
+# (batch 4 decision 4 — no question asked), with the dead-loco sub-branch stated-only too.
+# Also the route target of §9.08(b) ("If BP < 5, trouble shoot for the same").
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: BP_pressure_not_charging
+aliases:
+  - "BP not charging"
+  - "BP pressure not charging"
+  - "BP not charging in loco"
+  - "BP pressure not charging in loco"
+  - "BP not building"
+  - "BP pressure not building"
+  - "BP not coming up"
+  - "BP not rising"
+  - "unable to charge BP"
+  - "cannot charge BP"
+  - "can't charge BP"
+  - "BP not charging to 5"
+  - "BP not reaching 5"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BP pressure does not charge to 5 kg/cm2 in the loco"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # Note — after attaching on to the formation (stated-only)
+  - id: charge_bp_with_all_compressors_and_isolate_formation_if_after_attaching
+    text: >-
+      If BP pressure does not charge to 5 kg/cm2 AFTER ATTACHING on to the FORMATION, try to
+      charge BP by keeping all compressors working. If successful, resume traction. If
+      failed, close BP and FP angle COCs between loco and formation and check the BP
+      pressure. If BP pressure rises on the loco, it is due to formation trouble. Arrest the
+      formation leakage and charge BP on the formation and resume traction. If BP not
+      charging on formation ensure no leakages in palm ends, angle COCs, DVs, pipe lines, AR
+      drain COCs, guard emergency handles in BV/SLR and ensure no ACP action in coaching
+      train. In Air Spring provided LHB/Double Decker coaches check for FIBA.
+    gate: null
+    applies_when: {bp_not_charging_after_attaching: "yes"}
+    requires_stated: true
+    source: "§9.03 Note, (b), (c), pp153–154"
+
+  - id: dead_loco_checks_if_dead_loco_attached
+    text: >-
+      In case of dead loco attached, ensure the following in the dead loco: IP COC closed;
+      MU2B lead (if BC equalising pipe not connected); A8 closed; if C2N valve is provided
+      for FP, close inlet and outlet COCs of C2N valve. If BP is not creating after
+      attaching the dead loco, close the C3W Distributor valve-isolating handle and treat as
+      piped vehicle.
+    gate: null
+    applies_when: {bp_not_charging_after_attaching: "yes", dead_loco_attached: "yes"}
+    requires_stated: true
+    source: "§9.03 Note (a), pp153–154"
+
+  # a
+  - id: check_mr_pressure_8_to_9_5
+    text: >-
+      Check the MR pressure. If it is below 8.0 kg/cm2, build up MR pressure; it should be
+      8–9.5 kg/cm2.
+    gate: null
+    source: "§9.03(a), p152"
+
+  # b
+  - id: a9_handle_in_release_in_both_cabs
+    text: "A9 handle is in release in both cabs."
+    gate: null
+    source: "§9.03(b), p152"
+
+  # c
+  - id: a9_inlet_outlet_cocs_open_working_cab_closed_non_working
+    text: "A9 inlet and outlet cocs are opened in working cab and closed in non-working cab."
+    gate: null
+    source: "§9.03(c), p152"
+
+  # d
+  - id: a8_cock_open
+    text: "L & T cock (A8) is open."
+    gate: null
+    source: "§9.03(d), p152"
+
+  # e
+  - id: ensure_mu2b_in_lead
+    text: "Check and ensure MU2B in LEAD position."
+    gate: null
+    source: "§9.03(e), p152"
+
+  # f
+  - id: check_bp_angle_cocs_closed_either_side
+    text: "Check BP angle COCs are closed properly on either side of the loco."
+    gate: null
+    source: "§9.03(f), p152"
+
+  # g
+  - id: alp_emergency_valves_closed_both_cabs_normalise_abnormal
+    text: >-
+      ALP emergency valves in closed condition in both cabs. If anything is found abnormal,
+      normalize the same, charge the BP pressure and resume traction.
+    gate: null
+    source: "§9.03(g), p153"
+
+  # h
+  - id: check_bp_pipeline_and_ip_valve_leakage_if_all_normal
+    text: >-
+      If everything is normal, check for any air leakage from BP pipeline and IP valve. If
+      any leakage is found, rectify and resume traction.
+    gate: null
+    source: "§9.03(h), p153"
+
+  # i
+  - id: operate_mu2b_lead_trail_lead_2_3_times
+    text: >-
+      If there is no air leakage, operate MU2B from 'LEAD' to 'TRAIL' and back to 'LEAD' 2
+      or 3 times and try.
+    gate: null
+    source: "§9.03(i), p153"
+
+  # j
+  - id: tap_c2a_relay_valve_gently
+    text: "If unsuccessful, tap the C2A relay valve (BP charging) gently and try."
+    gate: null
+    source: "§9.03(j), p153"
+
+  # k
+  - id: ensure_additional_bp_cocs_open_both_sides
+    text: "Ensure additional BP COCs on both sides are in open condition."
+    gate: null
+    source: "§9.03(k), p153"
+
+  # l
+  - id: mr_above_9_5_a9_release_adjust_feed_valve
+    text: >-
+      If unsuccessful, build up MR pressure above 9.5 kg/cm2 and keep A9 handle in release
+      position. Adjust the A9 feed valve; raise the BP pressure to 5 kg/cm2 and resume
+      traction.
+    gate: null
+    source: "§9.03(l), p153"
+
+  # m
+  - id: try_from_rear_cab
+    text: "If unsuccessful, try to work from rear cab, otherwise contact TLC and act as per his instructions."
+    gate: null
+    source: "§9.03(m), p153"
+
+  # n
+  - id: deenergise_drain_mr_energise_and_try
+    text: "Still not success, de-energise the loco, drain out complete MR and energise the loco and try."
+    gate: null
+    source: "§9.03(n), p153"
+
+terminal_actions:
+  resolved: "charge the BP pressure to 5 kg/cm2 and resume traction"     # §9.03(g)(h)(l)
+  unresolved: "contact TLC and act as per his instructions"               # §9.03(m)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.03, pp.152–154"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

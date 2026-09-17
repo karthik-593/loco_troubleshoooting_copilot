@@ -1,0 +1,134 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Loco brakes not releasing after placing A9 and SA9 handles in release position
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.08, pp.159–160 (causes 1–3, a–l).
+# Mechanism: ladder a–k; (b) "If BP < 5, trouble shoot for the same" is a route rule to
+# §9.03 BP_pressure_not_charging on `bp_below_5: yes`; (d)'s condition (brakes release on
+# PVEF and re-apply after releasing it) is asked as its own "If …" question; (e)'s
+# consequence ("further loco brake will not apply along with A9 … apply through SA9") stays
+# in the step text and the resolved guidance; (l) TLC = unresolved terminal.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Loco_brakes_not_releasing
+aliases:
+  - "loco brakes not releasing"
+  - "loco brake not releasing"
+  - "loco brakes not released"
+  - "loco brake not released"
+  - "loco brakes are not releasing"
+  - "loco brakes stuck"
+  - "loco brake stuck"
+  - "brake cylinder not releasing"
+  - "BC not releasing"
+  - "loco brake binding"
+  - "loco brakes binding"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Loco brakes do not release after placing the A9 and SA9 handles in release position"
+
+combination_rules: []
+route_rules:
+  - if_fact: bp_below_5
+    equals: "yes"
+    route_to: BP_pressure_not_charging
+    source: "§9.08(b), p160: 'If it is less than 5 kg/cm2, trouble shoot for the same' → §9.03"
+    phrases: ["BP is below 5", "BP below 5", "BP less than 5", "BP is less than 5", "BP under 5", "BP only 4"]
+
+steps:
+  # (a)
+  - id: ensure_a9_sa9_in_release_tap_c2b
+    text: "Ensure the A9/SA9 handles are in release position, tap C2B and try."
+    gate: null
+    source: "§9.08(a), p160"
+
+  # (b)
+  - id: check_bp_pressure_5
+    text: >-
+      If it is normal, check the BP pressure. If it is less than 5 kg/cm2, trouble shoot for
+      the same. Report whether BP is 5 kg/cm2 or below 5.
+    gate: null
+    elicits: bp_below_5
+    source: "§9.08(b), p160"
+
+  # (c)
+  - id: press_pvef_and_observe_release
+    text: >-
+      If BP pressure is 5 kg/cm2, press PVEF and observe the loco brakes are released. If
+      released, resume traction.
+    gate: null
+    source: "§9.08(c), p160"
+
+  # (d)
+  - id: operate_c3w_release_handle_if_brakes_reapply_after_pvef
+    text: >-
+      If brakes are releasing on pressing PVEF and again applied after releasing PVEF,
+      operate C3W distributor valve release handle. If loco brake is released, resume
+      traction.
+    gate: null
+    applies_when: {brakes_release_with_pvef_then_reapply: "yes"}
+    source: "§9.08(d), p160"
+
+  # (e)
+  - id: isolate_c3w_and_operate_qrv
+    text: >-
+      If unsuccessful, place C3W distributor valve isolation cock on isolation side and
+      operate QRV. If loco brake is released, resume traction. But further loco brake will
+      not apply along with A9 application, so apply loco brake through SA9 when required.
+    gate: null
+    source: "§9.08(e), p160"
+
+  # (f)
+  - id: operate_sa9_1_2_times
+    text: "If brakes are not released, operate SA9 one or two times and try."
+    gate: null
+    source: "§9.08(f), p160"
+
+  # (g)
+  - id: operate_mu2b_lead_trail_lead_and_observe
+    text: >-
+      Operate MU2B from LEAD to TRAIL position and back to LEAD and observe the loco brake.
+      If released, resume traction.
+    gate: null
+    source: "§9.08(g), p160"
+
+  # (h)
+  - id: swap_sa9_inlet_outlet_cocs_to_trailing_cab
+    text: >-
+      If unsuccessful, close leading cab SA9 inlet / outlet COCs and open trailing cab SA9
+      inlet / outlet COCs & try.
+    gate: null
+    source: "§9.08(h), p160"
+
+  # (i)
+  - id: close_brake_cylinder_cocs_both_trucks_check_release
+    text: >-
+      If unsuccessful, close loco brake cylinder COCs on both trucks and check the brakes are
+      released; if so, normalise COCs.
+    gate: null
+    source: "§9.08(i), p160"
+
+  # (j)
+  - id: deenergise_drain_air_to_0_ensure_release
+    text: >-
+      If unsuccessful, de-energise the loco and drain out the air completely to '0' and
+      ensure the loco brake is released. If successful, resume traction.
+    gate: null
+    source: "§9.08(j), p160"
+
+  # (k)
+  - id: puncture_flexible_pipe_and_try
+    text: "Puncture the flexible pipe and try."
+    gate: null
+    source: "§9.08(k), p160"
+
+terminal_actions:
+  resolved: >-
+    resume traction (if the C3W distributor valve was isolated, further loco brake will not
+    apply along with A9 application — apply loco brake through SA9 when required)
+  unresolved: "contact TLC"                     # §9.08(l)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.08, pp.159–160"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

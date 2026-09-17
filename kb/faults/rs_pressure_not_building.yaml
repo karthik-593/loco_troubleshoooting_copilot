@@ -1,0 +1,138 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: CPA unable to build up pressure in RS
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9 "Pneumatic Failures", §9.01, pp.149–150 (causes 1–5, trouble shooting 1–13).
+# Mechanism: plain 13-step ladder. Step 1's "If MCPA is not working" is a STATED-ONLY branch
+# (mcpa_working: no); "dummy SS1" is an ordinary step (no stated precondition — batch 4
+# decision 6). Step 13 "If still unsuccessful contact TLC" is the unresolved terminal.
+# Reached directly, or from §7.01.2(c) ("as explained in §9.1") / the §5.01 intake ("If RS
+# pressure is less, trouble shoot accordingly (Chapter 9)").
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: RS_pressure_not_building
+aliases:
+  - "CPA unable to build up pressure"
+  - "CPA not building pressure"
+  - "CPA not building up pressure"
+  - "CPA not building pressure in RS"
+  - "RS pressure not building"
+  - "RS pressure not building up"
+  - "pressure not building in RS"
+  - "no pressure in RS"
+  - "RS not charging"
+  - "MCPA not building pressure"
+  - "MCPA not building up pressure"
+  - "MCPA running but no pressure"
+  - "auxiliary compressor not building pressure"
+precedence: 1
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "CPA is unable to build up pressure at the rate of 1 kg/cm2 per minute in the RS reservoir"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # 1
+  - id: ensure_mcpa_working
+    text: "Ensure MCPA is working. Report whether MCPA is working."
+    gate: null
+    elicits: mcpa_working
+    source: "§9.01 trouble shooting 1, p149"
+
+  - id: check_ccba_zcpa_terminals_if_mcpa_not_working
+    text: >-
+      If MCPA is not working: check CCBA, operate ZCPA 2 or 3 times, check MCPA & ZCPA
+      terminals. In modified HCHBA locos, place HCHBA on 3 and try.
+    gate: null
+    applies_when: {mcpa_working: "no"}
+    requires_stated: true
+    source: "§9.01 trouble shooting 1, p150"
+
+  # 2
+  - id: ensure_ral_cock_open
+    text: "Ensure RAL cock is open."
+    gate: null
+    source: "§9.01 trouble shooting 2, p150"
+
+  # 3
+  - id: ensure_ss1_not_stuck_open_tap_or_dummy
+    text: >-
+      Ensure SS1 is not stuck up in open position (if malfunctioning, close SS1 cock if
+      provided); tap SS1 safety valve; if not success, dummy it.
+    gate: null
+    source: "§9.01 trouble shooting 3, p150"
+
+  # 4
+  - id: ensure_rs_pressure_gauge_working
+    text: "Ensure RS pressure gauge is working."
+    gate: null
+    source: "§9.01 trouble shooting 4, p150"
+
+  # 5
+  - id: ensure_drain_cocks_closed
+    text: >-
+      Ensure CPA drain coc, RS drain coc, RDJ drain coc, panto pipe line drain coc and DJ oil
+      separator drain cocs are in closed position.
+    gate: null
+    source: "§9.01 trouble shooting 5, p150"
+
+  # 6
+  - id: check_panto_dj_pipeline_leakages
+    text: "Check for any air leakages in pipeline leading to panto and DJ and arrest if found."
+    gate: null
+    source: "§9.01 trouble shooting 6, p150"
+
+  # 7
+  - id: check_cpa_intake_strainer
+    text: "Check CPA intake strainer for any blockage, clean if blocked."
+    gate: null
+    source: "§9.01 trouble shooting 7, p150"
+
+  # 8
+  - id: tap_nrv_run_mcpa_10_min_observe_ss1
+    text: "Tap NRV, run MCPA for 10 minutes and observe SS1."
+    gate: null
+    source: "§9.01 trouble shooting 8, p150"
+
+  # 9
+  - id: close_ral_cock_and_create_pressure_in_panto_dj_pipelines
+    text: >-
+      If still pressure is not creating, close RAL cock and create pressure in panto and DJ
+      pipelines until SS1 blows. If pressure is created, raise panto, close DJ and close
+      BLCP. After creating pressure in MR then switch off MCPA. If pressure is not creating
+      after closing RAL cock, open RAL cock.
+    gate: null
+    source: "§9.01 trouble shooting 9, p150"
+
+  # 10
+  - id: close_r1_and_try
+    text: >-
+      If still pressure is not created, close R1 and try. If pressure is created, raise
+      panto, close DJ and close BLCP. After creating pressure in MR then open R1 cock.
+    gate: null
+    source: "§9.01 trouble shooting 10, p150"
+
+  # 11
+  - id: zpt_in_hom_7_oclock_and_start_mcpa
+    text: >-
+      If still pressure is not creating, place ZPT in HOM and turn to 7 O clock position and
+      start MCPA. If successful raise panto, close DJ, immediately start MCP. Stop MCPA only
+      after MR pressure is raised to 7 kg/cm2.
+    gate: null
+    source: "§9.01 trouble shooting 11, p150"
+
+  # 12
+  - id: close_vept1_vept2_cocs_and_try
+    text: "Close VEPT1 and VEPT2 COCs and try."
+    gate: null
+    source: "§9.01 trouble shooting 12, p150"
+
+terminal_actions:
+  resolved: "with pressure created: raise panto, close DJ and close BLCP; after creating pressure in MR switch off MCPA"   # §9.01 9–11
+  unresolved: "contact TLC"                                                                                              # §9.01 13
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.01, pp.149–150"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

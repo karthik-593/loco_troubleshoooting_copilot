@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Intake: Sudden drop of BP on run (air brake train)  — HUB
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.04, p.154 (causes 1–7); §9.04.1 "Train Parting" p.154; §9.04.2 "IP valve
+#         de-energise" pp.154–155.
+# Mechanism: HUB (batch 4 decision 1, the batch-2 pattern). Its own ladder is §9.04.1–§9.04.2
+# — what to do when no cause is known: flasher + check the formation, then stop and check
+# the loco's leakages / IP valve. The cause the pilot reports (fact `bp_drop_cause`) routes
+# to §9.04.3 cattle run over, §9.04.4 alarm chain pulling, §9.04.5 A9 exhaust port,
+# §9.04.6 C2A relay valve — each confirmed in one line before guidance. Cause 7 (FIBA action
+# in DD/LHB coaches) has no procedure of its own: presenting-sign text only. Cattle / ACP
+# also have direct aliases so they match without the hub.
+# precedence -2: a cause named in the same message ("BP dropped, chain pulled") wins.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Sudden_BP_drop_on_run
+aliases:
+  - "sudden drop of BP"
+  - "sudden drop in BP"
+  - "sudden BP drop"
+  - "BP dropped suddenly"
+  - "BP suddenly dropped"
+  - "BP dropping on run"
+  - "BP dropped on run"
+  - "BP fell suddenly"
+  - "BP suddenly fell"
+  - "sudden drop of BP on run"
+precedence: -2
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BP pressure dropped suddenly on run (air brake train) — train parting, IP valve de-energised, cattle run over, alarm chain pulling, air leaking through the A9 exhaust port, air leaking from the C2A relay valve, or FIBA action in DD/LHB coaches"
+
+combination_rules: []
+route_rules:                        # §9.04 causes 3–6 → their procedures
+  - if_fact: bp_drop_cause
+    equals: cattle_run_over
+    route_to: Cattle_run_over
+    source: "§9.04 cause 3 → §9.04.3, p155"
+    phrases: ["cattle run over", "ran over cattle", "run over cattle", "cattle ran over", "cattle runover",
+              "hit cattle", "hit a cow", "hit a buffalo", "cow run over", "buffalo run over", "ran over a cow",
+              "ran over a buffalo"]
+  - if_fact: bp_drop_cause
+    equals: acp
+    route_to: Alarm_chain_pulling
+    source: "§9.04 cause 4 → §9.04.4, p156"
+    phrases: ["alarm chain", "chain pulling", "chain pulled", "ACP", "pulled the chain"]
+  - if_fact: bp_drop_cause
+    equals: a9_exhaust_leak
+    route_to: A9_exhaust_port_leaking
+    source: "§9.04 cause 5 → §9.04.5, pp156–157"
+    phrases: ["A9 exhaust port", "A9 exhaust", "leaking through A9", "air leaking through A9", "leak through A9"]
+  - if_fact: bp_drop_cause
+    equals: c2a_leak
+    route_to: C2A_relay_valve_leaking
+    source: "§9.04 cause 6 → §9.04.6, p157"
+    phrases: ["C2A leaking", "leaking from C2A", "C2A relay valve leaking", "air leaking from C2A", "leak from C2A",
+              "C2A relay valve leak", "C2A valve leaking", "C2A is leaking"]
+
+steps:
+  # §9.04.1
+  - id: flasher_on_and_check_formation_for_derailment
+    text: >-
+      Switch ON flasher light immediately and check the formation for derailment or
+      infringing with adjacent line; if it is there, follow G&SR.
+    gate: null
+    source: "§9.04.1, p154"
+
+  # the cause, if known — §9.04 causes 1–7
+  - id: report_cause_of_bp_drop
+    text: >-
+      Report the cause of the BP drop if it is known: train parting, IP valve de-energised,
+      cattle run over, alarm chain pulling, air leaking through the A9 exhaust port, air
+      leaking from the C2A relay valve (BP charging), or FIBA action in DD/LHB coaches — or
+      say that the cause is not known.
+    gate: null
+    elicits: bp_drop_cause
+    source: "§9.04 causes 1–7, p154"
+
+  # §9.04.2 (a)
+  - id: stop_and_check_loco_leakages_if_no_derailment
+    text: "If there is no derailment or infringements, stop the train and check the leakages in the locomotive."
+    gate: null
+    source: "§9.04.2(a), p154"
+
+  # §9.04.2 (b)
+  - id: check_ip_valve_and_loco_bp_angle_cocks
+    text: "Check IP valve, loco BP angle cocs. Report whether the IP valve is leaking air."
+    gate: null
+    source: "§9.04.2(b), p154"
+
+  # §9.04.2 (c)
+  - id: close_ip_valve_coc_if_leaking
+    text: "Close the IP valve COC, if IP valve is having air leaking."
+    gate: null
+    applies_when: {ip_valve_leaking: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§9.04.2(c), p155"
+
+terminal_actions:
+  resolved: "the BP drop is attributed to the IP valve — work onwards with the IP valve COC closed"   # §9.04.2(c)
+  unresolved: "contact TLC for advice"        # engine default: §9.04.1–9.04.2 end without a TLC line
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.04 p.154; §9.04.1 p.154; §9.04.2 pp.154–155"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

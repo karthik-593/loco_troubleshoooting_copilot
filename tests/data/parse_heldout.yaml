@@ -291,3 +291,40 @@
   fault: First_notch_auto_regression_without_LSP
   claimed: [press_bpt_ensure_lsp_glowing_rear_cab, ensure_qvcd_deenergised_manual_gr_if_station_near, try_from_rear_cab]
   facts: {qvcd_energised: "no", notches_from_rear_cab: "no"}
+# --- batch 4: Ch.9 pneumatic failures ---
+- text: "BP dropped suddenly on run, we ran over cattle. km noted, flasher on, stopped with A9, did not trip DJ"
+  fault: Cattle_run_over
+  claimed: [note_km_flasher_on_stop_with_a9_do_not_trip_dj]
+- text: "angle cocks ok, hoses fine, cattle guard intact, under gear checked, no obstruction. no time for continuity test, moving the train now"
+  state_fault: Cattle_run_over
+  fault: Cattle_run_over
+  intended_action: move_train
+  facts: {continuity_test_done: "no"}
+- text: "sudden drop of BP on run. flasher on, formation checked no derailment. air is leaking through the A9 exhaust port"
+  # the hub alias yields to the specific fault the model names (INTAKE_PRECEDENCE); either identity is right
+  fault_any_of: [Sudden_BP_drop_on_run, A9_exhaust_port_leaking]
+- text: "chain pulled in the 5th coach. MP zero, stopped with A9, found the coach and reset the clappet valve"
+  fault: Alarm_chain_pulling
+  claimed: [mp_to_0_and_stop_with_a9_uniformly, find_acp_coach_reset_or_isolate_clappet_valve]
+- text: "RS pressure not building, MCPA is not working at all"
+  fault: RS_pressure_not_building
+  facts: {mcpa_working: "no"}
+- text: "MR pressure dropping gradually. MCPs working, closed BLCPD, HCP increased, VEAD coc closed. light engine"
+  fault: MR_pressure_not_maintaining
+  claimed: [ensure_mcps_working_close_blcpd, increase_cps_by_hcp, close_vead_coc]
+  facts: {attached_to_formation: "no"}
+- text: "BP not charging to 5 after attaching to the formation, dead loco is attached in the rake"
+  fault: BP_pressure_not_charging
+  facts: {bp_not_charging_after_attaching: "yes", dead_loco_attached: "yes"}
+- text: "loco brakes not releasing. both handles in release, tapped C2B. BP is below 5, only 4"
+  fault: Loco_brakes_not_releasing
+  claimed: [ensure_a9_sa9_in_release_tap_c2b, check_bp_pressure_5]
+  facts: {bp_below_5: "yes"}
+- text: "AFI overshooting on run. flasher on, no derailment. stopped and checked, no leak in loco or formation, no brake binding either"
+  fault: AFI_overshoots_on_run
+  claimed: [flasher_on_and_ensure_no_abnormality, stop_and_check_bp_leakage_in_loco_and_formation, ensure_no_brake_binding_if_no_leakage]
+  facts: {bp_leakage_found: "no", brake_binding_found: "no"}
+- text: "SA9 not applying loco brake, light engine. stopped with A9 emergency, SA9 cocs correct in both cabs"
+  fault: Loco_brake_not_applying_SA9
+  claimed: [stop_immediately_with_a9_emergency_if_light_engine, ensure_sa9_inlet_outlet_cocs_open_working_cab_closed_non_working]
+  facts: {light_engine: "yes"}

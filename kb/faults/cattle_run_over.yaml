@@ -1,0 +1,161 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Cattle run over (sudden BP drop on run)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 9, §9.04.3, pp.155–156 (preamble, a–i, Notes 1–4).
+# Mechanism: ladder a–i with the cock-damage consequences as STATED-ONLY steps (c, d); the
+# relief-engine clause of (c)(ii) as a defer condition. Safety (batch 4 decision 3):
+# Note 3 "Do not move the train without continuity test" is a stated BEFORE precondition on
+# moving → the final move step is a hazard_exposure gate on `continuity_test_done` (intent
+# `move_train`); Note 1 (brake gear damaged → TLC) is a defer condition; Notes 2 and 4 are
+# the resolved guidance; "Do not trip DJ in section" stays in step (a)'s text.
+# Reached from the sudden-BP-drop hub (bp_drop_cause == cattle_run_over), or directly.
+# STATUS: encoded 2026-09-17 (batch 4) — structure accepted and judgement calls confirmed by the user 2026-09-17.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Cattle_run_over
+aliases:
+  - "cattle run over"
+  - "ran over cattle"
+  - "run over cattle"
+  - "cattle ran over"
+  - "cattle runover"
+  - "hit cattle"
+  - "hit a cow"
+  - "hit a buffalo"
+  - "cow run over"
+  - "buffalo run over"
+  - "ran over a cow"
+  - "ran over a buffalo"
+precedence: 1
+confirm_before_guidance: true
+listed_as: "pneumatic failures (RS / MR / BP / FP / BP drop / AFI / loco brakes)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BP dropped suddenly on run after running over cattle"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  # (c)(ii) "if not possible ask for relief engine in rear side"
+  - fact: bp_angle_cock_leak_not_arrested
+    after_any: [close_additional_angle_cock_or_dummy_if_bp_angle_cock_damaged]
+    text: >-
+      The damaged leading brake pipe angle cock could not be arrested by dummying: ask for a
+      relief engine in the rear side.
+    source: "§9.04.3(c)(ii), p155"
+  # Note 1
+  - fact: brake_gear_damaged
+    text: >-
+      Do not move the train if any part of locomotive and trailing stock connected with
+      brake application is damaged. Contact TLC for further instructions.
+    source: "§9.04.3 Note 1, p156"
+
+steps:
+  # preamble + (a)
+  - id: note_km_flasher_on_stop_with_a9_do_not_trip_dj
+    text: >-
+      Note down the KM No. and switch on flasher light. Do not trip DJ in section. Apply
+      brake through A9 brake valve to stop the train.
+    gate: null
+    source: "§9.04.3 preamble and (a), p155"
+
+  # (b)
+  - id: check_leading_bp_and_fp_angle_cocks
+    text: >-
+      Check leading angle cocs of brake pipe and feed pipe to ensure that they are in proper
+      condition. Report whether the leading brake pipe angle cock or the feed pipe leading
+      cock is damaged.
+    gate: null
+    source: "§9.04.3(b), p155"
+
+  # (c) i / ii — leading BP angle cock damaged
+  - id: close_additional_angle_cock_or_dummy_if_bp_angle_cock_damaged
+    text: >-
+      In case of leading brake pipe angle cock is damaged then: (i) if additional angle cock
+      is provided on the loco, close the additional angle cock on leading side of the loco;
+      (ii) if additional angle cock has not been provided, try to arrest by dummying; if not
+      possible, ask for relief engine in rear side.
+    gate: null
+    applies_when: {leading_bp_angle_cock_damaged: "yes"}
+    requires_stated: true
+    source: "§9.04.3(c), p155"
+
+  # (d) — FP leading cock damaged
+  - id: close_fp_cocks_and_work_single_pipe_if_fp_cock_damaged
+    text: >-
+      In case feed pipe leading cock is damaged, close the additional cock, if provided, or
+      close the cut out cock before feed valve and rear feed pipe angle cocs and work train
+      as single pipe.
+    gate: null
+    applies_when: {leading_fp_cock_damaged: "yes"}
+    requires_stated: true
+    source: "§9.04.3(d), p155"
+
+  # (e)
+  - id: check_hoses_on_formation_side
+    text: "Check for any disconnection of hoses on formation side."
+    gate: null
+    source: "§9.04.3(e), p155"
+
+  # (f)
+  - id: ensure_cattle_guard_intact_no_infringement
+    text: >-
+      Ensure that cattle guard is intact and there is no infringement with the track or with
+      any part of locomotive.
+    gate: null
+    source: "§9.04.3(f), p155"
+
+  # (g)
+  - id: check_loco_under_gear_and_rectify
+    text: >-
+      Check loco under gear items like cattle guard, rail guard, sand pipes, battery boxes
+      and their covers, SL's, leakage of air from any pipeline, TM inspection covers and
+      rectify if any abnormality is found.
+    gate: null
+    source: "§9.04.3(g), p155"
+
+  # (h)
+  - id: check_train_under_gear_if_cattle_passed_below_train
+    text: >-
+      In case the run over cattle has also passed below the train, check the under gear of
+      the effected train coach/wagon. Any hanging parts shall be secured or removed and there
+      should not be any infringement to track.
+    gate: null
+    applies_when: {cattle_passed_below_train: "yes"}
+    source: "§9.04.3(h), p155"
+
+  # (i)
+  - id: ascertain_obstruction_to_subsequent_trains
+    text: >-
+      Ascertain whether there is any obstruction to subsequent trains. If so, follow the
+      G&SR 6.07, report conditions likely to affect running of trains to controller.
+    gate: null
+    source: "§9.04.3(i), pp155–156"
+
+  # Note 3 — HAZARD-EXPOSURE gate on moving the train; Note 4 rides after it
+  - id: move_train_after_continuity_test
+    text: >-
+      Move the train only after the continuity test. After clearing block section trip DJ
+      and check battery voltage.
+    gate:
+      type: hazard_exposure
+      rule: "Do not move the train without continuity test."
+      action: move_train
+      preconditions:
+        - continuity_test_done                  # §9.04.3 Note 3, p156
+      on_precondition_unmet: "Do not move the train without continuity test."
+      precondition_question: "Before moving the train, was the continuity test done?"
+      source: "§9.04.3 Note 3, p156"
+    completes: true
+    source: "§9.04.3 Notes 3 and 4, p156"
+
+terminal_actions:
+  resolved: >-
+    Do not leave the train with only loco brake (SA9) applied — after stopping, both loco and
+    train brake should be applied by automatic brake valve (A9). After clearing block section
+    trip DJ and check battery voltage.
+  unresolved: "contact TLC for further instructions"      # §9.04.3 Note 1
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.9, §9.04.3, pp.155–156"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

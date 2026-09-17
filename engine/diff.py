@@ -96,10 +96,15 @@ def diff_steps(state: DiagnosisState, fault: Fault) -> StepDelta:
                          unrecognised=tuple(state.tool_results.get("unrecognised_claims", ())))
     chosen_keys = _chosen_route_keys(state, fault)
     for s in fault.steps:
-        if s.id in claimed:
+        if s.elicits:
+            # An observation step exists to elicit ONE fact: it is done when — and only when —
+            # that fact is stated. A claim without the answer is not completion (seen live
+            # 2026-09-17: the parser claimed the VCB-type QUESTION step from a first message
+            # describing the sign, and the engine confirmed the procedure on that fake claim).
+            if _fact(state, fault, s.elicits) is not None:
+                continue
+        elif s.id in claimed:
             continue
-        if s.elicits and _fact(state, fault, s.elicits) is not None:
-            continue                # the fact this step asks for is already stated
         # a conditional branch is skipped only when a STATED fact contradicts it — or, for a
         # side-note step (requires_stated), unless every fact is stated as required
         contradicted = False

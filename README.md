@@ -58,7 +58,7 @@ five showcase conversations, run live, are in [docs/walkthrough.md](docs/walkthr
   list of faults it *can* verify; a vague message is clarified once, and the engine defers
   on the next unresolved turn rather than repeat the question (BUILD_PLAN §5.6).
 
-Gate mechanisms encoded so far (46 fault files): **reset-limit** (QLM: once only; a stated prior reset *or*
+Gate mechanisms encoded so far (61 fault files): **reset-limit** (QLM: once only; a stated prior reset *or*
 a re-lock after the permitted reset — both refuse, and the recurrence is detected by the
 engine itself, not the parser), **isolate-then-reset** (QLM with QOP/QRSI or QLA/QOA),
 **hazard-exposure** (pantograph roof work gated on the OHE power block + earthing and
@@ -68,27 +68,31 @@ efficiency test for Q44, no Operation 'A' ending trouble for Q45, the concerned 
 for C105/C106/C107), the gate-free **isolate-and-retest** and **isolate-by-elimination**
 ladders (QRSI-1/2, Operations B-I / O / I), **hub-and-route intake** ("DJ tripped" → the
 §5.01 precheck and observation drill → the tripping failure the sign names, confirmed in one
-line before any guidance), and the general **smoke/fire response** procedure.
+line before any guidance; "BP dropped suddenly" → §9.04.1–2 → the cause the pilot names),
+the **continuity-test gate** on moving the train after a cattle run-over (§9.04.3 Note 3), the
+Ch.9 **pneumatic ladders** (RS / MR / BP / FP pressure, loco brakes, BP not dropping / rising)
+with their stated-only after-attaching / light-engine / banker branches, and the general
+**smoke/fire response** procedure.
 
 ## Evaluation
 
-24 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
+27 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
 step, pilot's next move is unsafe, ambiguous intake, combination fault, config axis —
 scored against a **flat-retrieval baseline that has the same KB content** and only
 recites it. Live run (DeepSeek parse/decide, Claude phrase):
 
 | Metric | Agent | Flat baseline |
 |---|---|---|
-| Unsafe-instruction rate (target 0) | **0.00** | 0.33 |
+| Unsafe-instruction rate (target 0) | **0.00** | 0.48 |
 | Missed-gate rate (target 0) | **0.00** | 1.00 |
 | Specific-miss detection | 1.00 | 0.00 |
 | Correct-terminal rate | 1.00 | 0.00 |
-| Distinct tool paths (proof of agency) | 12 | 1 |
+| Distinct tool paths (proof of agency) | 14 | 1 |
 
 The baseline's unsafe rate is not a strawman: it prints the correct procedure, which says
 "reset QLM" / "climb on the roof" unconditionally and can never ask about the log book or
 the power block. Where the agent merely ties it (the baseline recites the right step
-somewhere, 31%), the report says so. Clean linear faults take a one-tool path; the agency
+somewhere, 19%), the report says so. Clean linear faults take a one-tool path; the agency
 is load-bearing in the branching cases, as the distinct-paths count shows.
 
 **Safety as a CI gate:** every push replays the suite offline (scripted parses, no
@@ -145,7 +149,7 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Streamlit chat client showing the engine trace | `client/` |
 | Scenario suite, harness, baseline, report | `eval/` |
 | Showcase walkthrough generator | `scripts/demo.py` |
-| Tests — 264 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 65 live parse cases | `tests/` |
+| Tests — 286 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 75 live parse cases | `tests/` |
 
 Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 

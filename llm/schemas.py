@@ -66,13 +66,16 @@ class ParseOutput(BaseModel):
     loco_config: Optional[Literal["siv", "arno"]] = Field(
         default=None, description="Auxiliary configuration if the pilot states it (SIV or ARNO fitted).")
     intended_action: Optional[Literal["reset_QLM", "reset_QLA", "work_on_roof", "enter_HT_compartment",
-                                      "wedge_Q118", "wedge_Q44", "wedge_Q45", "wedge_contactor"]] = Field(
+                                      "wedge_Q118", "wedge_Q44", "wedge_Q45", "wedge_contactor",
+                                      "move_train"]] = Field(
         default=None,
         description="The pilot's stated NEXT move, from the provided action list, or null. "
                     "'work_on_roof' = about to climb on to the loco roof (pantograph work); "
                     "'enter_HT_compartment' = about to open / go into the HT compartment; "
                     "'wedge_Q118' / 'wedge_Q44' / 'wedge_Q45' = about to wedge that relay; "
-                    "'wedge_contactor' = about to wedge C105 / C106 / C107.")
+                    "'wedge_contactor' = about to wedge C105 / C106 / C107; "
+                    "'move_train' = about to move / start / resume the train after a stop on the "
+                    "line (e.g. after a cattle run-over).")
     loco_rb: Optional[Literal["fitted", "not_fitted"]] = Field(
         default=None,
         description="Only if the pilot states whether the loco has rheostatic braking (RB) "
