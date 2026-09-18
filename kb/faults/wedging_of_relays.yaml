@@ -13,7 +13,7 @@
 # block states a BEFORE-check ("Ensure LSC145 is extinguished before wedging Q50") that §8.01
 # does not — §8.01's Q50 wedge is still an ordinary step per the confirmed batch-3 decision;
 # raised for the user in the batch-6 report.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Wedging_of_relays
 aliases:

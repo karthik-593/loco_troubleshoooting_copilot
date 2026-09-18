@@ -9,7 +9,7 @@
 # carries a HAZARD-EXPOSURE gate on it (intent `work_on_relay`); precaution 4 (speed not
 # above 30 kmph) and precaution 7 (the ALP is responsible for the manual operation) ride
 # with the procedure and the resolved terminal.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Manual_operation_of_GR
 aliases:

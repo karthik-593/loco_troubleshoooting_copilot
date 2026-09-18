@@ -5,7 +5,7 @@
 #         items 1–3).
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — three steps, used from §13.06 / §13.10 and
 # §10.03 (contacting TPC for an emergency power block).
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Emergency_telephone
 aliases:

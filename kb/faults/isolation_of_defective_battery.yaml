@@ -6,7 +6,7 @@
 # Mechanism: a REFERENCE PROCEDURE (batch 6) with a diagnostic head: the signal lamps decide
 # whether the trouble is with UBA / ZUBA or with HBA / Addl. CCBA / the battery. The route
 # target of §10.01(b) and §10.02(f) ("trouble shoots as per 11.6").
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Isolation_of_defective_battery
 aliases:

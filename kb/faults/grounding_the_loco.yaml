@@ -7,7 +7,7 @@
 # exposure step (attending the repairs inside the HT compartment) keeps the same
 # HAZARD-EXPOSURE gate and the same intent (`enter_HT_compartment`), so claiming the repair
 # without the grounding is refused here too.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Grounding_the_loco
 aliases:

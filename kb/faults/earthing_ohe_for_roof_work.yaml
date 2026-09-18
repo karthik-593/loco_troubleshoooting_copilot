@@ -7,7 +7,7 @@
 # same HAZARD-EXPOSURE gate and the same intent (`work_on_roof`) and the same two facts
 # (`ohe_power_block_obtained_and_earthed`, `loco_grounded`), so a roof claim made before the
 # power block is refused here too.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Earthing_OHE_for_roof_work
 aliases:

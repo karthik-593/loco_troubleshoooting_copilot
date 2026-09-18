@@ -7,7 +7,7 @@
 # encoded (the "encode facts, not verbatim tables" rule, BUILD_PLAN §11) — the step names it
 # and points to the TSD. The two actionable parts are the memory freeze and the
 # speedometer-not-working ladder.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Speedometer_instructions
 aliases:

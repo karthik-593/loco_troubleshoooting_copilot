@@ -5,7 +5,7 @@
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — the fuller form of the "Obtaining emergency
 # power block" block already encoded inside §10.03 (pantograph damaged). Roof work keeps the
 # same HAZARD-EXPOSURE gate, intent and facts as §10.03 / §11.04 / §13.06.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Emergency_power_block
 aliases:

@@ -4,7 +4,7 @@
 #         Chapter 13, §13.04, pp.199–200 (items 1–10).
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — the standing instructions behind §10.04(c)(d)
 # ("work without pilot lamps, observing other visible and audible signs") and §13.12 9(c).
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Working_without_pilot_lamps
 aliases:

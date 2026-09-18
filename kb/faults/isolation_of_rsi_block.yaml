@@ -7,7 +7,7 @@
 # melted tell-tale fuse carries the same HAZARD-EXPOSURE gate as §10.08 (intent `remove_fuse`),
 # with §11.01's own stated precondition (DJ open, the concerned switches on '0').
 # precedence -1: a fault named in the same message outranks the how-to alias.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Isolation_of_RSI_block
 aliases:

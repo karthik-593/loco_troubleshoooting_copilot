@@ -5,7 +5,7 @@
 # Mechanism: a REFERENCE PROCEDURE (batch 6). Ordered, verbatim; no gate — the whole section
 # IS the safety instruction, and item 3 ("never touch the body with a bare hand") is carried
 # in the step that removes the person from the live wire.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: First_aid_electrical_shock
 aliases:

@@ -81,6 +81,13 @@ the isolations, wedgings and special instructions the fault files have been citi
 GR, VCD) — carrying the same gates and the same intents as the faults that point at them, at a
 lower precedence so a reported fault always outranks a how-to.
 
+The knowledge base is **closed at Chapters 5–13** of the TSD (intake, safety relays, tripping
+failures, traction failures, pneumatic failures, miscellaneous failures, and the isolation /
+wedging / special-instruction reference procedures). The microprocessor and 3-phase locos, the
+SIV's internal fault tree, MU / double-head / banker working and the circuit diagrams are out of
+scope by design (BUILD_PLAN §15); Ch.19 (air brake train troubles) was offered and deliberately
+left out.
+
 ## Evaluation
 
 30 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a

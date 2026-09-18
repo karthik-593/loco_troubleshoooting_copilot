@@ -8,7 +8,7 @@
 # §10.08 and §11.01. Item 9(a)–(e) — what to do when the same fuse melts a third time — are
 # branches on `fuse_that_melts` (KB phrases), 9(c)'s QRS2 wedge being an ordinary step
 # (§10.04(c) / §8.02 precedent).
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Renewing_a_fuse
 aliases:

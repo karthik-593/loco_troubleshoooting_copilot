@@ -5,7 +5,7 @@
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — a standing checklist, not a fault ladder.
 # Items 5–8 are the standing rules behind the Ch.6 HQOP / HQOA isolations.
 # precedence -1: `fire_on_loco` (the live emergency) outranks this checklist.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Precautions_to_prevent_fire
 aliases:

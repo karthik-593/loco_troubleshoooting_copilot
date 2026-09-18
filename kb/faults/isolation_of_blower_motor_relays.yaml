@@ -5,7 +5,7 @@
 # Mechanism: a REFERENCE PROCEDURE (batch 6). Items 5–8 are the ways of checking each blower
 # on run; they are carried in one "check the concerned blower" step rather than four steps,
 # since the pilot checks only the blower they isolated.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Isolation_of_blower_motor_relays
 aliases:

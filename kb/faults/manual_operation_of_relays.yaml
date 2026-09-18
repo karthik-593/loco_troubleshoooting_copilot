@@ -11,7 +11,7 @@
 # are ordinary ordered steps (the §12.03 "not with Operation A ending trouble" rule belongs
 # to WEDGING Q45, which keeps its own gate in §7.06 / §7.04).
 # precedence -1: a reported symptom ("Q118 not energising") outranks this how-to.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Manual_operation_of_relays
 aliases:

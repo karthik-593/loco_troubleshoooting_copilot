@@ -7,7 +7,7 @@
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — the procedure behind "isolate VCD" in
 # §10.04(c) and §13.12 9(c) and behind §8.05's HVCD step. The reset ladder and the
 # malfunction ladder are branches on `vcd_situation` (KB phrases).
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: VCD_operation_and_reset
 aliases:

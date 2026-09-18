@@ -7,7 +7,7 @@
 # section from the rear cab" lines in Ch.7, §9.04.5, §9.09 and §10.02. The two arrangements
 # are branches on `rear_cab_arrangement` (who sits where), which decides the speed limit —
 # 40 kmph with the LP in the leading cab, 15 kmph with the LP in the trailing cab.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Working_from_rear_cab
 aliases:

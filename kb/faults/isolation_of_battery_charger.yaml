@@ -5,7 +5,7 @@
 # Mechanism: a REFERENCE PROCEDURE (batch 6). Item 3's "if it is less than 90 V, contact
 # TLC" and item 8's "if it drops below 90 V contact TLC" are DEFER CONDITIONS.
 # Reached directly, or from §10.06 (LSCHBA glowing with CHBA defective).
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Isolation_of_battery_charger
 aliases:

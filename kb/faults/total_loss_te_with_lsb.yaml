@@ -3,10 +3,13 @@
 # SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
 #         Chapter 8, §8.01, pp.128–131 (abnormal sign, reason, trouble shooting 1–10,
 #         reverser-tapping photographs pp.129–131, "Precautions to be followed after wedging Q50" a–e).
-# Mechanism: a 10-step ladder ending in "wedge Q50 in energised position" — an ORDINARY step
-# (approved 2026-09-16, batch 3 decision 1: the TSD states only AFTER-precautions, which ride in
-# the step text and the resolved terminal). Steps 5–8 (reversers / CTFs / C145) precede it in
-# TSD order.
+# Mechanism: a 10-step ladder ending in "wedge Q50 in energised position" — a GATED step: its
+# after-precautions ride in the step text and the resolved terminal, and its BEFORE-conditions
+# come from §12.03 (see the ruling below). Steps 5–8 (reversers / CTFs / C145) precede it in
+# TSD order and are exactly what the gate's precondition asks about.
+# 2026-09-18 (user ruling): the Q50 wedge is GATED after all — §12.03's Q50 block states a
+# BEFORE-check (J1/J2 set, CTF 1-2-3 up, C145 open, LSC145 extinguished) that §8.01 alone
+# does not; §12.03 A item 3's de-energising applies to every relay wedging.
 # STATUS: encoded 2026-09-16 (batch 3) — confirmed by the user 2026-09-16.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Total_loss_TE_with_LSB
@@ -91,8 +94,25 @@ steps:
       the proper setting of the reversers for every operation of MPJ; RB should not be
       used; when DJ is tripped on notches, keep MP on 'O' to bring GR to 'O'; write remarks
       in the loco log-book and inform TLC at the first opportunity.
-    gate: null
     completes: true
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q50 until the loco is de-energised for the wedging (DJ tripped, panto
+        lowered, HBA off) and J1 / J2 are set for the leading cab with CTF 1-2-3 up, C145
+        open and LSC145 extinguished.
+      action: wedge_relay
+      preconditions:
+        - loco_de_energised_for_wedging
+        - j1_j2_ctf_c145_set_for_q50
+      on_precondition_unmet: >-
+        Do not wedge Q50 yet: trip DJ, lower the panto and switch off HBA, and ensure J1 and
+        J2 are set as per the leading cab direction, CTF 1-2-3 are up, C145 is open and
+        LSC145 is extinguished.
+      precondition_question: >-
+        Before wedging Q50: is the loco de-energised, and are J1 / J2 set for the leading cab
+        with CTF 1-2-3 up, C145 open and LSC145 extinguished?
+      source: "§12.03 A item 3 p187 and 'Wedging of relay Q50' item 2, p192"
     source: "§8.01 item 10, p128; Precautions to be followed after wedging Q50 (a)–(e), p131"
 
 terminal_actions:

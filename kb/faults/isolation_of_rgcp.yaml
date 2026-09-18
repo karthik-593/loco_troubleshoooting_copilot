@@ -4,7 +4,7 @@
 #         Chapter 11, §11.07, p.182 (items 1–4 and the Note).
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — four ordered instructions; the Duranto note
 # rides with the BLCPD step.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Isolation_of_RGCP
 aliases:

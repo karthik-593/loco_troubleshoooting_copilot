@@ -5,7 +5,7 @@
 #         the Loco" 1–4 and the Note).
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — what BPEMS does and how to reset it; the
 # §10.02 "check BPEMS, if it is in pressed condition" branch points here.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: BPEMS_operation_and_reset
 aliases:

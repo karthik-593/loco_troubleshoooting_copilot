@@ -9,7 +9,7 @@
 # concerned switch on 3, §7.09.2 Note 1) is carried here by A item 9 / B as ordinary steps.
 # The per-contactor precautions are branches on `contactor_to_wedge` (compressor group /
 # blower group), set by KB phrases.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Wedging_of_EM_contactors
 aliases:

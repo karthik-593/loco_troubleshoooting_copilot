@@ -789,14 +789,17 @@ out in words in §6.03.3(j) / §6.03.4(i) (batch 1, user-confirmed) and corrobor
 the rb axis is asked lazily. §13.11's ready-reckoner speed table is NOT encoded (the
 "facts, not verbatim tables" rule) — the step names it and points at the TSD.
 
-Judgement calls to confirm: (1) §12.01's Q118 press gated on C-118 fully opened and the Q44
-press on Q118 energised (both stated BEFORE-checks); Q45's conditions left as ordinary steps.
-(2) §12.03's Q50 block states a BEFORE-check ("ensure LSC145 is extinguished before wedging
-Q50") that §8.01 does not — the reference file gates it, while §8.01's Q50 wedge stays an
-ordinary step per the confirmed batch-3 decision. Worth a ruling: should §8.01 gate it too?
+Judgement calls, ALL CONFIRMED by the user 2026-09-18: (1) §12.01's Q118 press gated on C-118
+fully opened and the Q44 press on Q118 energised (both stated BEFORE-checks); Q45's conditions
+left as ordinary steps. (2) §12.03's Q50 BEFORE-check ("ensure LSC145 is extinguished before
+wedging Q50") — RULED: §8.01's Q50 wedge is gated too, on `loco_de_energised_for_wedging` +
+`j1_j2_ctf_c145_set_for_q50`, citing §12.03; this supersedes batch-3 decision 1, which read
+§8.01 alone. The ladder's own items 5–8 are exactly what the precondition asks about, so no new
+procedure content was introduced. The §8.02 QRS and §8.05 Q46 / QVCD wedges KEEP batch-3
+decision 2 (their before-checks are asked as ordinary steps) — the user ruled on Q50 only.
 (3) §13.05 / §13.06 / §13.10 keep their hazard gates, so a pilot who opens with "going into the
 HT compartment" is cautioned on every turn until they state the loco is grounded, rather than
-being walked through steps 1–9 first — safe, but the caution repeats.
+being walked through steps 1–9 first — ACCEPTED as-is (safe; the caution repeats).
 (4) §13.08 (first aid) and §13.07 (fire precautions) are encoded as ordered procedures even
 though they are not fault ladders.
 
@@ -825,8 +828,20 @@ New engine / LLM work in batches 5–6:
   miss; §12.03 Q45 wedge refused on Operation 'A' ending trouble). 30/30 offline AND live,
   unsafe 0, missed-gate 0, 16 paths offline / 15 live.
 
-Next: the TSD's remaining chapters are OUT of BUILD_PLAN §15 scope (Ch.14 SIV internal fault
-tree, Ch.15–16 microprocessor / 3-phase and MU locos, Ch.17–18 double-head and banker, Ch.20
-circuit diagrams). Ch.19 (troubles on air brake trains — BP / FP on the formation, brake
-binding, LHB bogie isolation, ACP, air spring) is conventional-loco adjacent and the one
-arguably-in-scope chapter left: a batch-7 candidate if the user wants it.
+## KB SCOPE CLOSED at Ch.5–13 (user, 2026-09-18: "lets keep the scope till this")
+
+The knowledge base is complete as a deliverable: Ch.5 intake, Ch.6 safety relays, Ch.7 tripping
+failures, Ch.8 traction failures, Ch.9 pneumatic failures, Ch.10 miscellaneous failures and the
+Ch.11–13 reference procedures — 101 fault files, every step citing its TSD section.
+
+Deliberately NOT encoded, and not to be added without a new decision:
+- Ch.14 SIV internal fault tree, Ch.15–16 microprocessor / 3-phase and MU locos, Ch.17–18
+  double-head and banker, Ch.20 circuit diagrams — all OUT by BUILD_PLAN §15.
+- Ch.19 troubles on air brake trains — in the TSD's conventional-loco territory and offered as
+  a batch-7 candidate; the user closed scope instead. If it is ever picked up, it is a clean
+  standalone batch (§19.01–19.10: BP / FP on the formation, brake binding, LHB bogie isolation,
+  BP pipe / hose / angle cock, ACP on the train, air spring failure).
+- §13.11's ready-reckoner speed table and §11.02's photographs stay in the TSD by the
+  "facts, not verbatim tables" rule.
+
+Any further work is engine / product work on a frozen KB, not more encoding.

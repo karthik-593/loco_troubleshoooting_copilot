@@ -10,7 +10,7 @@
 # negative side = the reverser bit on J1 (TMs 1–3) or J2 (TMs 4–6). The bit numbers differ
 # for WAP4 locos WITHOUT RB, so the file declares the rb axis — asked lazily, only when the
 # negative-side step is reached (the batch-1 pattern).
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Isolation_of_traction_motors
 aliases:

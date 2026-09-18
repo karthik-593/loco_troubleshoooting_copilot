@@ -7,7 +7,7 @@
 # Q50 / Q51 / Q52 interlocks". A item 3 states the BEFORE-condition (open DJ, lower the panto,
 # open HBA), so the cleaning step carries a HAZARD-EXPOSURE gate with intent `work_on_relay`.
 # The two cleaning drills are branches on `interlock_type` (normally open / normally closed).
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Cleaning_relay_interlocks
 aliases:

@@ -20,8 +20,13 @@ def test_batch3_files_cite_chapter_8_and_wedges_are_ordinary(kb):
         f = kb.get(fid)
         assert all("§8." in s.citation or "§7.01" in s.citation for s in f.steps), fid
     assert {r.equals: r.route_to for r in kb.get(HUB).route_rules} == TE
-    assert kb.get(TE["lsb_glowing"]).step("wedge_q50_energised").gate is None                 # decision 1
-    assert "MPJ should not be operated" in kb.get(TE["lsb_glowing"]).step("wedge_q50_energised").text
+    # 2026-09-18 ruling: §12.03's Q50 block states a BEFORE-check, so this wedge IS gated —
+    # the other Ch.8 wedges keep batch-3 decision 2 (their before-checks are asked as steps).
+    q50 = kb.get(TE["lsb_glowing"]).step("wedge_q50_energised")
+    assert q50.gate.action == "wedge_relay"
+    assert q50.gate.preconditions == ["loco_de_energised_for_wedging", "j1_j2_ctf_c145_set_for_q50"]
+    assert "§12.03" in q50.gate.source
+    assert "MPJ should not be operated" in q50.text
     for sid in ("wedge_q52_deenergised_if_still_energised", "wedge_qrs_energised_if_still_not"):
         assert kb.get(TE["lsgr_not_extinguished_no_lsb"]).step(sid).gate is None               # decision 2
     assert kb.get(AR1).step("wedge_q46_deenergised_and_eec_non_modified_zsms").gate is None
@@ -45,12 +50,20 @@ def test_te_hub_routes_on_the_lamp_sign_with_confirm(kb):
     assert r.update.fault_id == HUB and r.update.history.get("te_sign") == "lsb_glowing"
 
 
-def test_q50_ladder_ends_in_an_ordinary_wedge_with_after_precautions(kb):
+def test_q50_ladder_ends_in_a_gated_wedge_with_after_precautions(kb):
+    """2026-09-18 ruling: the ladder's own items 5-8 ARE the gate's precondition, so the wedge
+    is cautioned until the pilot states them, refused if they say no, and only then instructed —
+    the after-precautions still ride with the step and the resolved terminal."""
     d = DiagnosisState()
     f = kb.get(TE["lsb_glowing"])
-    run_turn(d, StateUpdate(fault_id=f.fault_id, fault_confirmed=True, claimed_steps=tuple(s.id for s in f.ordinary_steps[:-1])), kb)
+    run_turn(d, StateUpdate(fault_id=f.fault_id, fault_confirmed=True, claimed_steps=tuple(s.id for s in f.ordinary_steps)), kb)
     t = run_turn(d, StateUpdate(), kb)
-    assert t.terminal.kind == "ask_step" and t.terminal.step_id == "wedge_q50_energised" and not t.verdict_after_update.fired
+    assert t.terminal.kind == "caution" and t.terminal.step_id == "wedge_q50_energised"
+    t = run_turn(d, StateUpdate(history={"j1_j2_ctf_c145_set_for_q50": "no"}, intended_action="wedge_relay"), kb)
+    assert t.terminal.kind == "refuse" and "LSC145" in t.terminal.message
+    t = run_turn(d, StateUpdate(history={"j1_j2_ctf_c145_set_for_q50": "yes",
+                                         "loco_de_energised_for_wedging": "yes"}), kb)
+    assert t.terminal.kind == "ask_step" and t.terminal.step_id == "wedge_q50_energised"
     t = run_turn(d, StateUpdate(claimed_steps=("wedge_q50_energised",)), kb)
     assert t.terminal.kind == "confirm" and any("shunting" in g for g in t.terminal.guidance)
 

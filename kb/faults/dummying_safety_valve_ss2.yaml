@@ -4,7 +4,7 @@
 #         Chapter 13, §13.14, pp.210–211 (items 1–10).
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — the ladder behind §9.02(f) ("tap / close COC /
 # dummy the concerned safety valve") and §9.01 item 3 (SS1). Item 10 is the deferral.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Dummying_safety_valve_SS2
 aliases:

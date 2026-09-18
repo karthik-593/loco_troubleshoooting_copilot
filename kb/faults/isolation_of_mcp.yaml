@@ -3,7 +3,7 @@
 # SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
 #         Chapter 11, §11.03, p.178 (the HCP position list).
 # Mechanism: a REFERENCE PROCEDURE (batch 6) — one action plus the HCP position list.
-# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# STATUS: encoded 2026-09-18 (batch 6) — confirmed by the user 2026-09-18.
 # ─────────────────────────────────────────────────────────────────────────────
 fault_id: Isolation_of_MCP
 aliases:
