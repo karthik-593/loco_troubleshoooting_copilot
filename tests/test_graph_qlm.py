@@ -126,7 +126,7 @@ def test_unknown_fault_defers():
     cp = Copilot(_prov([ParseOutput(fault_guess="wipers_not_working", fault_confidence=0.95)], []))
     r = cp.turn(DiagnosisState(), "wipers dead")
     assert r.terminal.kind == "defer_to_TLC" and r.stop_reason == "out_of_scope"   # never a guessed procedure
-    assert "isn't in my procedure set" in r.terminal.message and "QLM dropped" in r.terminal.message
+    assert "isn't in my procedure set" in r.terminal.message and "safety relay trips" in r.terminal.message
     assert r.reflex_runs == 0 and r.tool_path == ()
 
 

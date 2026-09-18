@@ -20,6 +20,7 @@ aliases:
   - "QLA tripped"
   - "QLA drops on run"
   - "QLA locked"
+listed_as: "safety relay trips (QLM / QOP-1 / QOP-2 / QOA / QLA / QRSI)"
 config_dependency: none            # §6.05 lists the ARNO-build equipment; no SIV/ARNO branch stated
 type_dependency: none
 presenting_signs:

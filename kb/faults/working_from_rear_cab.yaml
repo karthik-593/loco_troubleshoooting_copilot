@@ -1,0 +1,118 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Working the train by energising the loco from the rear cab
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.03, pp.197–199 (I "LP in leading cab, ALP in trailing cab" A 1–4 /
+#         B 1–7, and II "LP in trailing cab, ALP in leading cab" 1–4).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the procedure behind the many "clear the
+# section from the rear cab" lines in Ch.7, §9.04.5, §9.09 and §10.02. The two arrangements
+# are branches on `rear_cab_arrangement` (who sits where), which decides the speed limit —
+# 40 kmph with the LP in the leading cab, 15 kmph with the LP in the trailing cab.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Working_from_rear_cab
+aliases:
+  - "working the train from rear cab"
+  - "work from the rear cab"
+  - "working from rear cab"
+  - "energise the loco from rear cab"
+  - "how to work from the rear cab"
+  - "drive from the rear cab"
+  - "rear cab working"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The train has to be worked by energising the loco from the rear cab"
+
+combination_rules: []
+route_rules: []
+
+fact_phrases:
+  - fact: rear_cab_arrangement
+    equals: lp_in_leading_cab
+    phrases: ["LP in leading cab", "loco pilot in the leading cab", "I am in the leading cab",
+              "ALP in the trailing cab", "ALP in rear cab"]
+    source: "§13.03 I, p198"
+  - fact: rear_cab_arrangement
+    equals: lp_in_trailing_cab
+    phrases: ["LP in trailing cab", "loco pilot in the trailing cab", "I am in the rear cab",
+              "I am in the trailing cab", "ALP in the leading cab"]
+    source: "§13.03 II, p199"
+
+steps:
+  - id: identify_who_is_in_which_cab
+    text: >-
+      Report the arrangement: is the Loco Pilot in the leading cab with the Assistant Loco
+      Pilot in the trailing cab, or the Loco Pilot in the trailing cab with the Assistant Loco
+      Pilot in the leading cab?
+    gate: null
+    elicits: rear_cab_arrangement
+    source: "§13.03 I and II, pp198–199"
+
+  # I — LP in leading cab, ALP in trailing (rear) cab
+  - id: rear_cab_raise_panto_on_zpt_2_and_close_dj
+    text: >-
+      In the rear cab: place ZPT on position '2' and raise the panto, close DJ and switch on
+      BLCP and BLVMT, keep A9 in the release position, and ensure the SA9 supply and apply cut
+      out cocs and the A9 inlet and outlet cocs are in the closed position.
+    gate: null
+    applies_when: {rear_cab_arrangement: lp_in_leading_cab}
+    source: "§13.03 I A items 1–4, p198"
+
+  - id: leading_cab_keep_a9_running_and_cocks_open
+    text: >-
+      In the leading cab: keep the A9 handle in the running position and do not change the
+      supply and apply cut out cocks (open position); do not change the SA9 supply and apply
+      cut out cocks, so that the loco brakes can be applied when required.
+    gate: null
+    applies_when: {rear_cab_arrangement: lp_in_leading_cab}
+    source: "§13.03 I B items 1–2, pp198–199"
+
+  - id: operate_by_alp_from_rear_cab_with_signal_exchange
+    text: >-
+      The loco shall be operated by the Assistant Loco Pilot from the rear cab as per G&SR
+      17.09.12, by exchange of signals between the Loco Pilot and the Assistant Loco Pilot;
+      the Loco Pilot remains in the leading cab and controls the train as and when required,
+      and if necessary can operate A9 to the emergency position to regress GR to '0'. At a
+      neutral section the Assistant Loco Pilot shall open DJ and lower the panto if necessary.
+    gate: null
+    applies_when: {rear_cab_arrangement: lp_in_leading_cab}
+    source: "§13.03 I B items 3–6, p199"
+
+  - id: speed_not_to_exceed_40_kmph
+    text: >-
+      The speed of the train shall not exceed 40 kmph, as the Loco Pilot is in the leading
+      cab.
+    gate: null
+    applies_when: {rear_cab_arrangement: lp_in_leading_cab}
+    completes: true
+    source: "§13.03 I B item 7, p199"
+
+  # II — LP in trailing cab, ALP in leading cab
+  - id: lp_drives_from_trailing_cab_at_15_kmph
+    text: >-
+      If the Loco Pilot is in the trailing cab and the Assistant Loco Pilot is in the leading
+      cab, the speed is restricted to 15 kmph. The Loco Pilot will energise, drive and control
+      the train from the trailing cab; the Assistant Loco Pilot will exchange signals with the
+      Loco Pilot, use the horns properly and, in an emergency, operate the ALP emergency brake
+      valve to stop the train.
+    gate: null
+    applies_when: {rear_cab_arrangement: lp_in_trailing_cab}
+    source: "§13.03 II items 1–3, p199"
+
+  - id: inform_tlc_and_enter_in_logbook_for_rear_cab_working
+    text: >-
+      Inform TLC and enter in the loco log book, stating the place from where TLC has been
+      informed.
+    gate: null
+    applies_when: {rear_cab_arrangement: lp_in_trailing_cab}
+    completes: true
+    source: "§13.03 II item 4, p199"
+
+terminal_actions:
+  resolved: "work the train from the rear cab within the stated speed restriction"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.03, pp.197–199"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

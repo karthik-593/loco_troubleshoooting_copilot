@@ -1,0 +1,86 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: LSDJ does not glow when BLDJ is opened
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.05, pp.167–168 (causes 1–2, a–c,
+#         "Instructions: In case of Mechanical locking of VCB" 1–2).
+# Mechanism: ladder a–c; (b) ELICITS `other_pilot_lamps_glowing` and its "trouble shoot for
+# all pilot lamps not glowing" is a ROUTE RULE to §10.04. The mechanical-locking instructions
+# are a STATED-ONLY branch that completes on the clear-the-section instruction.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: LSDJ_not_glowing_when_BLDJ_opened
+aliases:
+  - "LSDJ does not glow when BLDJ is opened"
+  - "LSDJ not glowing when BLDJ is opened"
+  - "LSDJ does not glow"
+  - "LSDJ not glowing"
+  - "LSDJ is not glowing"
+  - "LSDJ did not glow after opening BLDJ"
+  - "LSDJ not coming when BLDJ opened"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "LSDJ does not glow when BLDJ is opened (DJ not opened due to BLDJ switch trouble, or DJ not opened due to mechanical locking)"
+
+combination_rules: []
+route_rules:
+  - if_fact: other_pilot_lamps_glowing
+    equals: "no"
+    route_to: All_pilot_lamps_not_glowing
+    source: "§10.05(b), p168: 'If other pilot lamps are also not glowing, trouble shoot for all pilot lamps not glowing'"
+    phrases: ["other pilot lamps are also not glowing", "other pilot lamps not glowing",
+              "no other pilot lamps are glowing", "none of the pilot lamps are glowing",
+              "other lamps also not glowing"]
+
+steps:
+  # (a)
+  - id: lower_panto_on_zpt_zero_and_observe_lsdj
+    text: >-
+      Lower the pantograph immediately by placing ZPT on the '0' position and observe LSDJ.
+      If LSDJ glows, resume traction, duly operating BP1DJ or operating the ZPT key to '0'
+      for opening DJ. (After opening BLDJ, if the UA meter needle drops to '0' and LSDJ is
+      still not glowing, it indicates LSDJ is defective.)
+    gate: null
+    source: "§10.05(a), pp167–168"
+
+  # (b)
+  - id: check_whether_other_pilot_lamps_glow
+    text: >-
+      If LSDJ does not re-glow, check whether the other pilot lamps are glowing. Report
+      whether the other pilot lamps are glowing.
+    gate: null
+    elicits: other_pilot_lamps_glowing
+    source: "§10.05(b), p168"
+
+  # (c)
+  - id: work_with_other_indications_if_dj_trips
+    text: "If DJ trips, work with the other indications if they are normal."
+    gate: null
+    applies_when: {dj_tripped_meanwhile: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§10.05(c), p168"
+
+  # Instructions — mechanical locking of VCB (stated-only)
+  - id: haul_to_clear_section_if_vcb_mechanically_locked
+    text: >-
+      In case of mechanical locking of VCB: continue hauling the train to clear the block
+      section by lowering the pantographs every time it is necessary to de-energise the loco.
+      To energise the loco, close BLDJ, keep BLRDJ pressed and then place ZPT on position
+      '1'; release BLRDJ after LSCHBA extinguishes (to get the starting phase before closing
+      of DJ in ARNO provided locos). After clearing the block section, contact TLC for
+      advice.
+    gate: null
+    applies_when: {vcb_mechanically_locked: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§10.05 Instructions 1–2, p168"
+
+terminal_actions:
+  resolved: "resume traction"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.05, pp.167–168"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

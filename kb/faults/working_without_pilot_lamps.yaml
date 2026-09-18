@@ -1,0 +1,79 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Working without pilot lamps
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.04, pp.199–200 (items 1–10).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the standing instructions behind §10.04(c)(d)
+# ("work without pilot lamps, observing other visible and audible signs") and §13.12 9(c).
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Working_without_pilot_lamps
+aliases:
+  - "working without pilot lamps"
+  - "work without pilot lamps"
+  - "how to work without pilot lamps"
+  - "running without pilot lamps"
+  - "working with no pilot lamps"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The loco has to be worked without pilot lamps, using the UA needle and the sound of the auxiliaries as the indications"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: release_blrdj_after_4_seconds_when_ua_deviates
+    text: >-
+      While closing DJ, release BLRDJ after 4 seconds, when the UA needle deviates.
+    gate: null
+    source: "§13.04 item 1, p199"
+
+  - id: watch_ua_needle_and_auxiliary_noise_for_tripping
+    text: >-
+      Keep a good watch on the UA needle and the noise of the auxiliaries to get the correct
+      indication of tripping: the deflection of the UA needle and the noise of the auxiliaries
+      are the only checking signs for closing DJ and for trouble shooting.
+    gate: null
+    source: "§13.04 items 2–3, p199"
+
+  - id: watch_battery_voltage_and_charger_ammeter
+    text: "Keep a watch on the battery voltage and the battery charger ammeter."
+    gate: null
+    source: "§13.04 item 4, p200"
+
+  - id: check_telltale_fuses_on_rsi_blocks_frequently
+    text: >-
+      Frequently check the tell-tale fuses / LEDs on the RSI blocks. If any fuse projects out
+      or an LED glows, follow the instructions for that.
+    gate: null
+    source: "§13.04 item 5, p200"
+
+  - id: watch_nr_for_auto_regression_with_qd
+    text: >-
+      Watch NR for auto regression with QD. Whenever MP is placed on '0', observe the notch
+      repeater needle coming to '0'; both ammeter needles and the traction motor voltmeter
+      needle should also come to '0'.
+    gate: null
+    source: "§13.04 items 7–8, p200"
+
+  - id: continue_hauling_to_next_relief_point
+    text: "Continue hauling the train up to the next locomotive relief point."
+    gate: null
+    source: "§13.04 item 6, p200"
+
+  - id: inform_tlc_at_first_normal_stop_and_enter_logbook
+    text: >-
+      Inform TLC at the first normal stop and enter in the loco log book, stating the place
+      from where TLC has been informed.
+    gate: null
+    completes: true
+    source: "§13.04 items 9–10, p200"
+
+terminal_actions:
+  resolved: "haul the train to the next locomotive relief point on the audible and visible indications"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.04, pp.199–200"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

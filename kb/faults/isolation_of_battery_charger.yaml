@@ -1,0 +1,94 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Isolating the battery charger (CHBA)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 11, §11.05, pp.179–180 (items 1–8).
+# Mechanism: a REFERENCE PROCEDURE (batch 6). Item 3's "if it is less than 90 V, contact
+# TLC" and item 8's "if it drops below 90 V contact TLC" are DEFER CONDITIONS.
+# Reached directly, or from §10.06 (LSCHBA glowing with CHBA defective).
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Isolation_of_battery_charger
+aliases:
+  - "isolating the battery charger"
+  - "isolation of battery charger"
+  - "isolate the battery charger"
+  - "isolate battery charger"
+  - "isolate CHBA"
+  - "how to isolate the battery charger"
+  - "CHBA isolation"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The battery charger (CHBA) has failed and is to be isolated, the loco working onwards on batteries"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: battery_voltage_below_90
+    equals: "yes"
+    after_any: [check_battery_voltage_above_90]
+    text: "The battery voltage is less than 90 V: contact TLC."
+    source: "§11.05 items 3 and 8, pp179–180"
+
+steps:
+  - id: stop_at_a_station_and_open_dj
+    text: "Stop the train at a station and open DJ."
+    gate: null
+    source: "§11.05 item 1, p179"
+
+  - id: place_hchba_on_zero
+    text: "Place HCHBA on position '0'."
+    gate: null
+    source: "§11.05 item 2, p179"
+
+  - id: check_battery_voltage_above_90
+    text: >-
+      Check that the battery voltage is above 90 V. Report the battery voltage.
+    gate: null
+    elicits: battery_voltage_below_90
+    source: "§11.05 item 3, p179"
+
+  - id: inform_tlc_and_section_controller_about_chba_failure
+    text: >-
+      If the battery voltage is above 90 V, inform TLC and the section controller about the
+      CHBA failure to avoid detention en route.
+    gate: null
+    source: "§11.05 item 4, p180"
+
+  - id: close_dj_and_work_on_batteries
+    text: >-
+      Close DJ and work onwards on batteries — 6 hours during day time and 4 hours during
+      night time — without notch repeater indication.
+    gate: null
+    source: "§11.05 item 5, p180"
+
+  - id: use_minimum_lights_and_avoid_frequent_operations
+    text: >-
+      Use minimum lights on the loco and try to avoid frequent operation of MP, MPJ, MPS,
+      PSA and PVEF.
+    gate: null
+    source: "§11.05 item 6, p180"
+
+  - id: release_blrdj_after_4_seconds_with_lschba_glowing
+    text: >-
+      Lamp LSCHBA will glow continuously. While closing DJ, release BLRDJ promptly after 4
+      seconds or after deviation of the UA meter needle.
+    gate: null
+    source: "§11.05 item 7, p180"
+
+  - id: watch_battery_voltage_frequently
+    text: >-
+      Watch the battery voltage frequently; if it drops below 90 V, contact TLC.
+    gate: null
+    completes: true
+    source: "§11.05 item 8, p180"
+
+terminal_actions:
+  resolved: "work onwards on batteries within the stated hours, watching the battery voltage"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.11, §11.05, pp.179–180"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

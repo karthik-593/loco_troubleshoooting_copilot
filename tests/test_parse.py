@@ -59,7 +59,7 @@ def test_unknown_fault_guess_is_dropped(kb):
 
 def test_described_problem_with_no_listed_fault_is_out_of_scope(kb):
     p = _fake(ParseOutput(fault_guess=None, fault_confidence=0.0, problem_outside_list="yes"))
-    r = parse_turn("headlight not working", DiagnosisState(), kb, p)
+    r = parse_turn("the cab air conditioner is not cooling", DiagnosisState(), kb, p)
     assert r.update is None and r.out_of_scope
 
 

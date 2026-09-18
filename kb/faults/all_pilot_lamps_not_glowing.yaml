@@ -1,0 +1,104 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: All pilot lamps not glowing
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.04, pp.166–167 (causes 1–4, a–d, Note).
+# Mechanism: ladder a–d. The repeated-melting clause inside (c) is a STATED-ONLY branch
+# (`ccls_melting_repeatedly`) that completes on the work-without-pilot-lamps instruction —
+# the QRS wedge there is an ORDINARY step (no stated precondition; the Q100 / Q50 rule,
+# and the same call as §8.02's QRS wedge in batch 3). The Note's LSAF / CCLSA and MU-loco
+# clauses are stated-only asides.
+# Reached directly, or from §10.05(b) / §10.07(c) ("trouble shoot for all pilot lamps not
+# glowing") as a route on `other_pilot_lamps_glowing`.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: All_pilot_lamps_not_glowing
+aliases:
+  - "all pilot lamps not glowing"
+  - "pilot lamps not glowing"
+  - "pilot lamps are not glowing"
+  - "no pilot lamps glowing"
+  - "none of the pilot lamps are glowing"
+  - "all pilot lamps off"
+  - "pilot lamps not coming"
+  - "no pilot lamps"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "None of the pilot lamps glow (CCLS blown, ZLS OFF, poor contact of BL interlock, or the 'A' conk slackened — if DJ trips and the panto lowers)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: ensure_hba_closed_voltage_above_90_and_cycle_bl
+    text: >-
+      Ensure HBA is closed, the battery voltage is above 90 volts and BL is unlocked. Lock
+      and unlock BL 2 or 3 times and check the pilot lamps. If they are glowing, resume
+      traction.
+    gate: null
+    source: "§10.04(a), p166"
+
+  # (b)
+  - id: ensure_zls_on
+    text: "If they are not glowing, ensure ZLS is in the 'ON' position (provided in the switch panel)."
+    gate: null
+    source: "§10.04(b), p167"
+
+  # (c)
+  - id: check_and_renew_ccls
+    text: "Check the fuse CCLS. If it is melted, renew the same and resume traction."
+    gate: null
+    source: "§10.04(c), p167"
+
+  # (c) continued — stated-only: repeatedly melting even with HOBA OFF
+  - id: work_without_pilot_lamps_if_ccls_melts_repeatedly
+    text: >-
+      If the fuse is repeatedly melting even after placing HOBA in OFF position, work without
+      pilot lamps, observing other audible signs; use sand by pouring manually if required.
+      Wedge QRS in energised condition to get notches. In modified locos (where a 10 amp CCLS
+      is provided) close the IP coc and isolate VCD, clear the section and contact TLC for
+      advice.
+    gate: null
+    applies_when: {ccls_melting_repeatedly: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§10.04(c), p167"
+
+  # (d)
+  - id: check_a_conk_below_switch_panel
+    text: >-
+      If CCLS is in good condition with DJ tripping, check the 'A' conk connection below the
+      switch panel for any slackness or disconnection. If any abnormality is noticed, attend
+      it and resume traction. Otherwise work without pilot lamps, observing other visible and
+      audible signs.
+    gate: null
+    completes: true
+    source: "§10.04(d), p167"
+
+  # Note — stated-only asides
+  - id: check_cclsa_if_lsaf_alone_not_glowing
+    text: "If LSAF alone does not glow and AFL is not functioning, check the fuse CCLSA."
+    gate: null
+    applies_when: {lsaf_alone_not_glowing: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§10.04 Note, p167"
+
+  - id: watch_rear_loco_battery_voltage_on_mu
+    text: >-
+      In modified CCLS (10 A) provided MU locos with CCMUBA provision, ensure the rear loco
+      battery voltage is checked regularly if BLSN is in the ON position.
+    gate: null
+    applies_when: {mu_operation: "yes"}
+    requires_stated: true
+    source: "§10.04 Note, p167"
+
+terminal_actions:
+  resolved: "resume traction"
+  unresolved: "contact TLC"                     # engine default: §10.04 ends without a TLC line
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.04, pp.166–167"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

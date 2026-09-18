@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Flasher light is not glowing
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.11, p.172 (causes 1–2, a–e, Note).
+# Mechanism: plain ladder a–e; (e) is the unresolved terminal (contact TLC).
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Flasher_light_not_glowing
+aliases:
+  - "flasher light is not glowing"
+  - "flasher light not glowing"
+  - "flasher light not working"
+  - "flasher not glowing"
+  - "flasher not working"
+  - "FL not glowing"
+  - "flasher light does not glow"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The flasher light does not glow (flasher light bulb fused, or the CCFL fuse blown)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: ensure_flasher_light_switch_closed
+    text: >-
+      Ensure the flasher light switch (ZFL and the FL unit ON / OFF switch provided in the
+      unit itself) is closed. (In some locos LEDs are provided for the flasher light.)
+    gate: null
+    source: "§10.11(a), p172; §10.11 Note, p172"
+
+  # (b)
+  - id: check_and_replace_ccfl_fuse
+    text: >-
+      If it does not glow, check the fuse CCFL. If it is melted, replace the fuse (if
+      provided) and resume traction.
+    gate: null
+    source: "§10.11(b), p172"
+
+  # (c)
+  - id: change_main_or_standby_supply_switch
+    text: >-
+      If the fuse is in good condition and a main / stand-by supply switch is provided,
+      change its position and try.
+    gate: null
+    source: "§10.11(c), p172"
+
+  # (d)
+  - id: check_rear_cab_flasher_and_replace_bulb
+    text: >-
+      Check the working of the rear cab flasher light. If it glows, replace the bulb in the
+      leading cab and resume traction.
+    gate: null
+    source: "§10.11(d), p172"
+
+terminal_actions:
+  resolved: "resume traction"
+  unresolved: "contact TLC"                     # §10.11(e)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.11, p.172"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

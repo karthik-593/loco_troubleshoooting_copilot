@@ -1,0 +1,330 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Wedging of relays Q100, Q50, Q45, Q118 and QRS
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 12, §12.03 A "General Instructions" items 1–6, B "Procedure for wedging"
+#         items 1–2, the wedging-type notes (BBC / ABB / EEC / WOAMA), and the per-relay
+#         precautions for Q100 / QTD100 / QTDX, Q50, Q118, Q45 and QRS, pp.187–193.
+# Mechanism: a REFERENCE PROCEDURE (batch 6). The relay is a fact (`relay_to_wedge`) set by
+# KB phrases or asked; each relay has its OWN gated wedge step carrying that relay's stated
+# BEFORE-conditions, followed by its after-precautions. The general A item 3 precondition
+# (trip DJ, lower panto, switch off HBA) applies to every relay.
+# NOTE for the fault files: §12.03's Q118 and Q45 preconditions are the same facts the Ch.7
+# gates already use (`all_em_contactors_open`, `no_operation_a_ending_trouble`). §12.03's Q50
+# block states a BEFORE-check ("Ensure LSC145 is extinguished before wedging Q50") that §8.01
+# does not — §8.01's Q50 wedge is still an ordinary step per the confirmed batch-3 decision;
+# raised for the user in the batch-6 report.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Wedging_of_relays
+aliases:
+  - "wedging of relays"
+  - "wedge a relay"
+  - "wedge the relay"
+  - "how to wedge a relay"
+  - "relay wedging procedure"
+  - "procedure for wedging"
+  - "how do I wedge"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "A relay (Q100, Q50, Q45, Q118 or QRS) is to be wedged, in energised or de-energised condition"
+
+combination_rules: []
+route_rules: []
+
+fact_phrases:
+  - fact: relay_to_wedge
+    equals: q100
+    phrases: ["Q100", "Q-100", "QTD100", "QTDX"]
+    source: "§12.03 PRECAUTIONS 'When 100/QTD100/QTDX relay is wedged', p191"
+  - fact: relay_to_wedge
+    equals: q50
+    phrases: ["Q50", "Q-50"]
+    source: "§12.03 'Wedging of relay Q50', p192"
+  - fact: relay_to_wedge
+    equals: q118
+    phrases: ["Q118", "Q-118"]
+    source: "§12.03 'Wedging of relay Q118', p192"
+  - fact: relay_to_wedge
+    equals: q45
+    phrases: ["Q45", "Q-45"]
+    source: "§12.03 'Wedging of relay Q45', p193"
+  - fact: relay_to_wedge
+    equals: qrs
+    phrases: ["QRS", "QRS2", "QRS relay"]
+    source: "§12.03 'Wedging of QRS relay', p193"
+
+steps:
+  - id: identify_which_relay_is_to_be_wedged
+    text: "Report which relay is to be wedged — Q100, Q50, Q45, Q118 or QRS."
+    gate: null
+    elicits: relay_to_wedge
+    source: "§12.03, p187"
+
+  # A — general instructions
+  - id: stop_at_a_station_or_convenient_place
+    text: "Stop the train at a station or at a convenient place."
+    gate: null
+    source: "§12.03 A item 1, p187"
+
+  - id: build_up_maximum_air_pressure_in_rs_and_mr
+    text: "Build up maximum air pressure in RS and MR."
+    gate: null
+    source: "§12.03 A item 2, p187"
+
+  - id: trip_dj_lower_panto_and_switch_off_hba
+    text: "Trip DJ, lower the panto and switch off HBA."
+    gate: null
+    elicits: loco_de_energised_for_wedging
+    source: "§12.03 A item 3, p187"
+
+  - id: break_the_seal_and_remove_the_relay_cover
+    text: "Break the seal and remove the relay cover."
+    gate: null
+    source: "§12.03 A item 4, p187"
+
+  - id: examine_the_relay_and_check_its_flexibility
+    text: >-
+      Examine the relay for any abnormality and check its flexibility. If there is any
+      abnormality, try to rectify it or contact TLC for advice.
+    gate: null
+    source: "§12.03 A items 5–6, p187"
+
+  # B — procedure for wedging
+  - id: press_the_actuating_rod_and_check_the_interlocks
+    text: >-
+      Press the actuating rod or pallet and ensure that the interlocks are closing and
+      opening properly.
+    gate: null
+    source: "§12.03 B item 1, p187"
+
+  - id: use_a_thin_tapered_wooden_wedge
+    text: >-
+      Use a thin tapered wooden wedge. For a BBC type relay, press the actuating rod, insert
+      the wedge at the front end from the top and release the actuating rod; for an EEC type
+      relay, press the pallet and insert the wooden wedge between the pallet and the outer
+      bracket. Check and ensure that the relay interlocks are closed or opened fully. (In
+      some locos WOAMA type relays are provided with a screw for wedging: break the seal and
+      rotate the screw clockwise, without removing the cover; in some WOAMA type relays a
+      toggle switch is provided for wedging.)
+    gate: null
+    source: "§12.03 B item 2 and the wedging-type notes, pp187–189"
+
+  # Q100 / QTD100 / QTDX
+  - id: q100_wedge
+    text: "Wedge relay Q100 (or QTD100 / QTDX) as described."
+    applies_when: {relay_to_wedge: q100}
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge a relay until the loco is de-energised: DJ tripped, panto lowered and
+        HBA switched off.
+      action: wedge_relay
+      preconditions:
+        - loco_de_energised_for_wedging
+      on_precondition_unmet: >-
+        Do not wedge the relay yet: trip DJ, lower the panto and switch off HBA first.
+      precondition_question: >-
+        Before wedging: is DJ tripped, the panto lowered and HBA switched off?
+      source: "§12.03 A item 3, p187"
+    source: "§12.03 PRECAUTIONS 'When 100/QTD100/QTDX relay is wedged', p191"
+
+  - id: q100_precautions_after_wedging
+    text: >-
+      With Q100 wedged: while closing DJ every time, ensure BLCP and BLVMT are kept opened;
+      after closing DJ and LSCHBA extinguishing, close BLCP and BLVMT one after the other
+      with a 5 second interval to avoid overloading of ARNO. In WAG5, WAG7 and WAP4 locos,
+      whenever DJ trips, before reclosing DJ bring MPJ to '0' and back to forward to enable
+      the opening of contactors C107, C105 and C106, otherwise ICDJ is experienced. If C105,
+      C106 and C107 are not opened, remove the Q100 wedge and, after the contactors open,
+      wedge Q100 again.
+    gate: null
+    applies_when: {relay_to_wedge: q100}
+    completes: true
+    source: "§12.03 PRECAUTIONS items 1–4, pp191–192"
+
+  # Q50
+  - id: q50_inform_tlc_and_set_j1_j2_ctf_c145
+    text: >-
+      Inform TLC immediately. Ensure the correct setting of J1 and J2 as per the direction of
+      the leading cab, CTF 1-2-3 on the 'UP' position and C145 in the open position, and
+      ensure LSC145 is extinguished. Report whether these are set.
+    gate: null
+    applies_when: {relay_to_wedge: q50}
+    elicits: j1_j2_ctf_c145_set_for_q50
+    source: "§12.03 'Wedging of relay Q50' items 1–2, p192"
+
+  - id: q50_wedge
+    text: "Wedge relay Q50 as described."
+    applies_when: {relay_to_wedge: q50}
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q50 until the loco is de-energised and J1 / J2 are set for the leading
+        cab with CTF 1-2-3 up, C145 open and LSC145 extinguished.
+      action: wedge_relay
+      preconditions:
+        - loco_de_energised_for_wedging
+        - j1_j2_ctf_c145_set_for_q50
+      on_precondition_unmet: >-
+        Do not wedge Q50 yet: trip DJ, lower the panto and switch off HBA, and ensure J1 and
+        J2 are set as per the leading cab direction, CTF 1-2-3 are up, C145 is open and
+        LSC145 is extinguished.
+      precondition_question: >-
+        Before wedging Q50: is the loco de-energised, and are J1 / J2 set for the leading
+        cab with CTF 1-2-3 up, C145 open and LSC145 extinguished?
+      source: "§12.03 A item 3 p187; 'Wedging of relay Q50' item 2, p192"
+    source: "§12.03 'Wedging of relay Q50', p192"
+
+  - id: q50_precautions_after_wedging
+    text: >-
+      With Q50 wedged: do not operate MPJ till the train reaches the relief point; when DJ is
+      tripped on notches, bring MP to '0' for GR to regress to '0'; do not use RB; shunting
+      is restricted — if compulsory, ensure J1 and J2 are set properly for the movement
+      (direction changing).
+    gate: null
+    applies_when: {relay_to_wedge: q50}
+    completes: true
+    source: "§12.03 'Wedging of relay Q50' items 3–6, p192"
+
+  # Q118
+  - id: q118_ensure_all_contactors_opened_before_wedging
+    text: >-
+      Before wedging Q118, ensure C118, C101, C102, C103, C105, C106 and C107 are opened
+      fully. Report whether all these contactors are fully opened.
+    gate: null
+    applies_when: {relay_to_wedge: q118}
+    elicits: all_em_contactors_open
+    source: "§12.03 'Wedging of relay Q118' item 1, p192"
+
+  - id: q118_wedge
+    text: "Wedge relay Q118 as described."
+    applies_when: {relay_to_wedge: q118}
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge Q118 unless C118, C101, C102, C103, C105, C106 and C107 are all fully
+        opened, with the loco de-energised.
+      action: wedge_Q118
+      preconditions:
+        - loco_de_energised_for_wedging
+        - all_em_contactors_open
+      on_precondition_unmet: >-
+        Do not wedge Q118 yet: trip DJ, lower the panto and switch off HBA, and ensure C118,
+        C101, C102, C103, C105, C106 and C107 are opened fully.
+      precondition_question: >-
+        Before wedging Q118: is the loco de-energised and are C118, C101, C102, C103, C105,
+        C106 and C107 all fully opened?
+      source: "§12.03 A item 3 p187; 'Wedging of relay Q118' item 1, p192"
+    source: "§12.03 'Wedging of relay Q118', p192"
+
+  - id: q118_precautions_after_wedging
+    text: >-
+      With Q118 wedged: while closing DJ, release BLRDJ promptly 4 seconds after LSDJ
+      extinguishes, irrespective of LSCHBA extinguishing; after closing DJ, check that C118
+      is fully opened; check that MVSL-1, MVSL-2 and ARNO are working properly; close BLVMT
+      and check that MVRH, MVMT-1 and MVMT-2 have started and are working properly, and on
+      run check ARNO, VSL-1, VSL-2, VMT-1, VMT-2, VRH and the transformer oil level at
+      regular intervals; avoid quick regression of GR. If any blower is not working properly
+      or the transformer oil level increases abnormally, open DJ immediately and contact TLC
+      for advice.
+    gate: null
+    applies_when: {relay_to_wedge: q118}
+    completes: true
+    source: "§12.03 'Wedging of relay Q118' items 2–7, pp192–193"
+
+  # Q45
+  - id: q45_ensure_conditions_before_wedging
+    text: >-
+      Q-45 should not be wedged if there is Operation 'A' ending trouble on the loco. Before
+      wedging, ensure BLDJ is opened, GR is on '0' through the SMGR drum and both HVSIs are
+      on position '1'. Report whether there is any Operation 'A' ending trouble.
+    gate: null
+    applies_when: {relay_to_wedge: q45}
+    elicits: no_operation_a_ending_trouble
+    source: "§12.03 'Wedging of relay Q45' items 1–4, p193"
+
+  - id: q45_wedge
+    text: "Wedge relay Q45 as described."
+    applies_when: {relay_to_wedge: q45}
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Q-45 must not be wedged if there is Operation 'A' ending trouble on the loco, and not
+        until the loco is de-energised.
+      action: wedge_Q45
+      preconditions:
+        - loco_de_energised_for_wedging
+        - no_operation_a_ending_trouble
+      on_precondition_unmet: >-
+        Do not wedge Q45: it must not be wedged if there is Operation 'A' ending trouble on
+        the loco. Trip DJ, lower the panto and switch off HBA before wedging.
+      precondition_question: >-
+        Before wedging Q45: is the loco de-energised, and is Operation 'A' ending trouble
+        ruled out?
+      source: "§12.03 'Wedging of relay Q45' item 1 and the heading rule, p193"
+    source: "§12.03 'Wedging of relay Q45', p193"
+
+  - id: q45_precautions_after_wedging
+    text: >-
+      With Q45 wedged: when HBA is closed, relays Q44 and Q118 will chatter until DJ is
+      closed, so close DJ without delay — for closing DJ, close BLDJ only, BLRDJ need not be
+      pressed. Before starting the train, ensure VSI-1 and VSI-2 are working properly and
+      check them at regular intervals. Keep watching the OHE voltage: if it drops below 17.5
+      kV or to '0', open DJ and trouble shoot according to the abnormal sign. If DJ is to be
+      kept open for a long time, remove the wedge from Q45 or place HBA on '0' to avoid
+      chattering of Q44 and Q118. Whenever DJ trips on run, open BLDJ immediately.
+    gate: null
+    applies_when: {relay_to_wedge: q45}
+    completes: true
+    source: "§12.03 'Wedging of relay Q45' items 5–9, p193"
+
+  # QRS
+  - id: qrs_ensure_bp_5_and_train_running_safely
+    text: >-
+      Before wedging QRS, ensure the BP pressure is 5.0 kg/cm2 and the train is running
+      safely. Report whether BP is 5.0 kg/cm2.
+    gate: null
+    applies_when: {relay_to_wedge: qrs}
+    elicits: bp_5_and_train_safe_for_qrs
+    source: "§12.03 'Wedging of QRS relay' item 1, p193"
+
+  - id: qrs_wedge
+    text: "Wedge the QRS relay as described."
+    applies_when: {relay_to_wedge: qrs}
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge QRS unless the BP pressure is 5.0 kg/cm2 and the train is running
+        safely, with the loco de-energised for the wedging itself.
+      action: wedge_relay
+      preconditions:
+        - loco_de_energised_for_wedging
+        - bp_5_and_train_safe_for_qrs
+      on_precondition_unmet: >-
+        Do not wedge QRS yet: ensure the BP pressure is 5.0 kg/cm2 and the train is running
+        safely, and trip DJ, lower the panto and switch off HBA before wedging.
+      precondition_question: >-
+        Before wedging QRS: is the BP pressure 5.0 kg/cm2 with the train running safely, and
+        is the loco de-energised?
+      source: "§12.03 A item 3 p187; 'Wedging of QRS relay' item 1, p193"
+    source: "§12.03 'Wedging of QRS relay', p193"
+
+  - id: qrs_precautions_after_wedging
+    text: >-
+      With QRS wedged: while working the train, whenever the air flow indicator reading shoots
+      up, bring MP to '0' and ensure GR comes to '0'. When RS is opened and A9 is brought to
+      application, bring MP to '0' and ensure GR comes to '0'.
+    gate: null
+    applies_when: {relay_to_wedge: qrs}
+    completes: true
+    source: "§12.03 'Wedging of QRS relay' items 2–3, p193"
+
+terminal_actions:
+  resolved: "work onwards with the relay wedged, observing that relay's precautions"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.12, §12.03, pp.187–193"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

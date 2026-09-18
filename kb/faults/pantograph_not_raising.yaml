@@ -1,0 +1,175 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Pantograph not raising
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.02, pp.162–164 (causes 1–4, trouble
+#         shooting a–f, "Addl. CCBA, CCBA, CCPT fuses blown out" a–c, "If both CCBA and
+#         CCPT are good" a–f).
+# Mechanism (approved batch 5 decision 2): ONE file. The main ladder a–f runs first; step (e)
+# ELICITS `ccba_ccpt_fuse_melted` and the TSD's two sub-blocks are branches on it (yes = the
+# fuse block, no = the "both good" block). The QEMS wedge is an ORDINARY step (no stated
+# precondition — the Q100 / Q50 rule). (f) "trouble shoots as per 11.6" is a route to §11.06.
+# Reached directly, or from §7.02(e) ("try with the other panto or trouble shoot for panto
+# not rising" — that cross-reference is §10.02, not Ch.9).
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Pantograph_not_raising
+aliases:
+  - "pantograph not raising"
+  - "pantograph not rising"
+  - "panto not raising"
+  - "panto not rising"
+  - "pantograph does not rise"
+  - "panto does not rise"
+  - "pantograph is not rising"
+  - "panto is not rising"
+  - "pantograph not going up"
+  - "panto not coming up"
+  - "unable to raise the panto"
+  - "cannot raise the pantograph"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Pantograph does not rise (less air pressure or battery voltage, panto isolating COCs not opened, CCBA / Addl. CCBA / CCPT fuses blown, or BPEMS in pressed condition)"
+
+combination_rules: []
+route_rules:
+  - if_fact: battery_voltage_too_low
+    equals: "yes"
+    route_to: Isolation_of_defective_battery
+    source: "§10.02(f), p163: 'If battery voltage is less/showing 0 V trouble shoots as per 11.6'"
+    phrases: ["battery voltage is low", "battery voltage is less", "BA voltage is zero",
+              "battery voltage showing 0", "battery voltage reads 0"]
+
+steps:
+  # (a)
+  - id: check_rs_mr_pressure_and_raise_with_mcpa
+    text: >-
+      Check the RS / MR pressure. If the pressure is less than 6.5 kg/cm2, start MCPA and
+      raise the RS pressure; then raise the pantograph and resume traction.
+    gate: null
+    source: "§10.02(a), p163"
+
+  # (b)
+  - id: try_with_other_pantograph
+    text: "If the pressure is more than 6.5 kg/cm2, try with the other pantograph."
+    gate: null
+    source: "§10.02(b), p163"
+
+  # (c)
+  - id: check_pt1_pt2_isolating_cocs
+    text: >-
+      If both pantos are not rising, check the position of both panto isolating COCs (PT1 and
+      PT2 COCs). If they are closed, open them and resume traction.
+    gate: null
+    source: "§10.02(c), p163"
+
+  # (d)
+  - id: operate_hom_two_or_three_times
+    text: "Operate HOM 2 or 3 times and try."
+    gate: null
+    source: "§10.02(d), p163"
+
+  # (e)
+  - id: raise_other_panto_on_zpt_2_and_check_ccba_ccpt
+    text: >-
+      If unsuccessful, raise the other pantograph by moving ZPT to the 2 position and resume
+      traction. If the other pantograph is also not rising, check the fuses CCBA / CCPT.
+      Report whether Addl. CCBA, CCBA or CCPT is blown.
+    gate: null
+    elicits: ccba_ccpt_fuse_melted
+    source: "§10.02(e), p163"
+
+  # (f)
+  - id: check_battery_voltage_if_less_or_zero
+    text: >-
+      If the battery voltage is less or showing '0' V, trouble shoot for a defective battery.
+      Report whether the battery voltage is low.
+    gate: null
+    elicits: battery_voltage_too_low
+    source: "§10.02(f), p163"
+
+  # "Addl. CCBA, CCBA, CCPT fuses blown out" (a)
+  - id: fuse_block_change_addl_ccba_and_check_ltba_mov
+    text: >-
+      If BA voltage is '0' — pilot lamps not glowing and UBA reads '0' volts when ZUBA is
+      pressed — change the Addl. CCBA and ensure the 'A' conk. If BA voltage is above 90 V
+      and CCBA and CCPT melt, check LTBA / MOV for any abnormality.
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "yes"}
+    source: "§10.02 'Addl. CCBA, CCBA, CCPT fuses blown out' (a), p163"
+
+  # (b)
+  - id: fuse_block_replace_fuse_hoba_off_then_zpt_2
+    text: >-
+      Replace the fuse and try. If it fails, check the fuse; if it is melted a second time,
+      place HOBA in OFF position and renew the fuse. If it melts once again even in HOBA OFF
+      position, first place ZPT on 2, replace the fuse and try to raise the pantograph. If
+      successful, resume traction.
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "yes"}
+    source: "§10.02 'Addl. CCBA, CCBA, CCPT fuses blown out' (b), pp163–164"
+
+  # (c)
+  - id: fuse_block_raise_panto_from_rear_cab
+    text: >-
+      If unsuccessful, check the fuses once again; if it is melted, lock BL of the leading
+      cab, place ZPT on '0' and HOBA in ON position, replace the fuse again and try to raise
+      the pantograph from the rear cab. If successful, resume traction from the rear cab.
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "yes"}
+    completes: true
+    source: "§10.02 'Addl. CCBA, CCBA, CCPT fuses blown out' (c), p164"
+
+  # "If both CCBA and CCPT are good" (a)
+  - id: good_fuses_check_vept_and_recycle_zpt
+    text: >-
+      Check the electro valve VEPT. If it is not energised, place ZPT on '0', then place ZPT
+      on the 1 or 2 position and see whether the pantograph rises. If it rises, resume
+      traction.
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "no"}
+    source: "§10.02 'If both CCBA and CCPT are good' (a), p164"
+
+  # (b)
+  - id: good_fuses_release_bpems
+    text: >-
+      Check BPEMS: if it is in pressed condition, put ZPT on '0' and rotate the BPEMS knob in
+      the clockwise direction to release it.
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "no"}
+    source: "§10.02 'If both CCBA and CCPT are good' (b), p164"
+
+  # (c)
+  - id: good_fuses_wedge_qems_de_energised
+    text: >-
+      Ensure the QEMS relay is in de-energised condition. If it is energised, wedge the same
+      in de-energised condition.
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "no"}
+    source: "§10.02 'If both CCBA and CCPT are good' (c), p164"
+
+  # (d)
+  - id: good_fuses_energise_loco_regular_procedure
+    text: "Energise the loco as per the regular procedure."
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "no"}
+    source: "§10.02 'If both CCBA and CCPT are good' (d), p164"
+
+  # (e)
+  - id: good_fuses_try_to_raise_from_rear_cab
+    text: >-
+      If the pantograph does not rise, try to raise it from the rear cab. If successful,
+      resume traction.
+    gate: null
+    applies_when: {ccba_ccpt_fuse_melted: "no"}
+    completes: true
+    source: "§10.02 'If both CCBA and CCPT are good' (e), p164"
+
+terminal_actions:
+  resolved: "raise the pantograph and resume traction"
+  unresolved: "contact TLC"                     # §10.02 'If both CCBA and CCPT are good' (f)
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.02, pp.162–164"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

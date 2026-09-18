@@ -1,0 +1,116 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Grounding the loco for entering into the HT compartment
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.05, pp.199–201 (items 1–13); General Instructions item 7, p.77.
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the procedure that SATISFIES the
+# `loco_grounded` precondition the HT-compartment gates in §6.03.3 / §6.03.4 enforce. The
+# exposure step (attending the repairs inside the HT compartment) keeps the same
+# HAZARD-EXPOSURE gate and the same intent (`enter_HT_compartment`), so claiming the repair
+# without the grounding is refused here too.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Grounding_the_loco
+aliases:
+  - "grounding the loco"
+  - "ground the loco"
+  - "how to ground the loco"
+  - "grounding procedure"
+  - "entering the HT compartment"
+  - "enter the HT compartment"
+  - "how to enter the HT compartment"
+  - "open the HT compartment"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The loco is to be grounded so that the HT compartment can be entered for repairs"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: stop_near_a_station_gate_lodge_or_telephone_tap
+    text: >-
+      Try to stop the train at a station or at a convenient place near a gate lodge, at a
+      telephone tap or at a flag station.
+    gate: null
+    source: "§13.05 item 1, p199"
+
+  - id: apply_train_and_loco_brakes_and_secure
+    text: "Apply the train and loco brakes and secure the train as per instructions."
+    gate: null
+    source: "§13.05 item 2, p199"
+
+  - id: protect_the_train_and_inform_tlc
+    text: "Protect the train as per GR & SR 6.03, duly informing TLC."
+    gate: null
+    source: "§13.05 item 3, p199"
+
+  - id: build_up_pressure_and_close_ral_coc
+    text: "Build up maximum pressure in MR and RS and close the RAL coc."
+    gate: null
+    source: "§13.05 item 4, p199"
+
+  - id: open_dj_lower_both_pantos_and_check_lsdj
+    text: >-
+      Open DJ, lower the pantographs and ensure both pantos are fully lowered and LSDJ is
+      glowing.
+    gate: null
+    source: "§13.05 item 5, p200"
+
+  - id: transfer_zpt_key_to_bv_box_and_turn_it
+    text: >-
+      Remove the ZPT key and insert it in the BV box (HOM) at the 5 o'clock position, then
+      turn it clockwise to the 7 o'clock position.
+    gate: null
+    source: "§13.05 item 6, p200"
+
+  - id: operate_hom_handle_upwards
+    text: "Operate the HOM handle upwards gently."
+    gate: null
+    source: "§13.05 item 7, p200"
+
+  - id: remove_the_two_fitchet_keys
+    text: >-
+      Remove the two fitchet keys by turning them anticlockwise. Keep one key in personal
+      custody and with the other open the HT compartment door. Report whether the loco is
+      grounded.
+    gate: null
+    elicits: loco_grounded
+    source: "§13.05 items 8–9, p200"
+
+  - id: attend_the_repairs_in_ht_compartment
+    text: "Attend the repairs in the HT compartment."
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not enter the HT compartment unless the loco is grounded: DJ open, both
+        pantographs lowered, ZPT key transferred to the BV box and HOM operated, fitchet
+        keys removed.
+      action: enter_HT_compartment
+      preconditions:
+        - loco_grounded
+      on_precondition_unmet: >-
+        Do not enter the HT compartment until the loco is grounded: open DJ, lower both
+        pantographs and confirm LSDJ glowing, put the ZPT key in the BV box (HOM) and turn
+        it, operate the HOM handle upwards, then remove the fitchet keys and open the HT
+        compartment door.
+      source: "General Instructions item 7, p77; §13.05 items 5–9, pp199–200"
+    source: "§13.05 item 10, p200"
+
+  - id: lock_the_door_replace_the_keys_and_unground
+    text: >-
+      Ensure that no tool is left in the HT compartment, lock the door and remove the fitchet
+      key; replace both keys in the BV box and turn them clockwise; then un-ground the loco as
+      per procedure.
+    gate: null
+    completes: true
+    source: "§13.05 items 11–13, p201"
+
+terminal_actions:
+  resolved: "un-ground the loco and resume traction"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.05, pp.199–201; General Instructions item 7, p.77"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

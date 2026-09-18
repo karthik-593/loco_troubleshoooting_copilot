@@ -56,9 +56,16 @@ ACTION_WEDGE_CONTACTOR = "wedge_contactor"
 # Batch 4 (Ch.9, approved decision 3): moving the train after a cattle run-over is gated on the
 # continuity test (§9.04.3 Note 3 "Do not move the train without continuity test").
 ACTION_MOVE_TRAIN = "move_train"
+# Batch 5 / 6 (Ch.10 and the Ch.11-13 reference procedures): handling a fuse in its socket
+# (§10.08(c)(d)(e), §11.01 A 3, §13.12 item 3) and working inside a relay — pressing it by
+# hand (§12.01), wedging it (§12.03) or cleaning its interlocks (§13.13) — are each gated on
+# the de-energising the TSD states BEFORE the action.
+ACTION_REMOVE_FUSE = "remove_fuse"
+ACTION_WORK_ON_RELAY = "work_on_relay"
+ACTION_WEDGE_RELAY = "wedge_relay"
 ACTIONS = (ACTION_RESET_QLM, ACTION_RESET_QLA, ACTION_WORK_ON_ROOF, ACTION_ENTER_HT,
            ACTION_WEDGE_Q118, ACTION_WEDGE_Q44, ACTION_WEDGE_Q45, ACTION_WEDGE_CONTACTOR,
-           ACTION_MOVE_TRAIN)
+           ACTION_MOVE_TRAIN, ACTION_REMOVE_FUSE, ACTION_WORK_ON_RELAY, ACTION_WEDGE_RELAY)
 
 
 @dataclass

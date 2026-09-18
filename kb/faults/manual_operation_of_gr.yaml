@@ -1,0 +1,102 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Manual operation of GR (by the ZSMGR handle)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.02, pp.194–197 ("Conditions to be fulfilled" 1–6, "Procedure for
+#         doing the manual operation" 1–2, "Precautions" 1–7).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the procedure the Ch.8 ladders reach with
+# "cleared the section on manual GR". Condition 2 / precaution 3 ("Q44 should not be in
+# wedged / packed condition") is a stated BEFORE-condition, so the manual-operation step
+# carries a HAZARD-EXPOSURE gate on it (intent `work_on_relay`); precaution 4 (speed not
+# above 30 kmph) and precaution 7 (the ALP is responsible for the manual operation) ride
+# with the procedure and the resolved terminal.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Manual_operation_of_GR
+aliases:
+  - "manual operation of GR"
+  - "operate GR manually"
+  - "manual GR"
+  - "manual GR operation"
+  - "how to operate GR manually"
+  - "GR manual operation by ZSMGR"
+  - "work on manual GR"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "GR cannot be operated electrically with MP or EEC and has to be operated manually by the ZSMGR handle to clear the block section"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: keep_mp_on_n_to_close_line_contactors
+    text: "Keep MP on the 'N' position to close the line contactors."
+    gate: null
+    source: "§13.02 Conditions item 1, p194"
+
+  - id: ensure_q44_is_not_wedged
+    text: >-
+      Ensure relay Q44 is not in wedged condition. Report whether Q44 is wedged.
+    gate: null
+    elicits: q44_not_wedged
+    source: "§13.02 Conditions item 2, p194; Precautions item 3, p195"
+
+  - id: rotate_zsmgr_to_3_oclock_to_cut_off_smgr
+    text: >-
+      Rotate the ZSMGR handle from the 6 o'clock to the 3 o'clock position in the
+      anticlockwise direction. The Pacco switch is then pressed, the electrical and pneumatic
+      connections to SMGR are cut off and the existing pressure in the SMGR is exhausted.
+    gate: null
+    source: "§13.02 Conditions item 3, p195"
+
+  - id: extract_and_reinsert_the_zsmgr_handle_at_6_oclock
+    text: >-
+      Extract the ZSMGR handle from the 3 o'clock position and insert it on the SMGR shaft at
+      the 6 o'clock position.
+    gate: null
+    source: "§13.02 Conditions items 4–5, p195"
+
+  - id: establish_communication_between_lp_and_alp
+    text: >-
+      Establish communication between the Loco Pilot and the Assistant Loco Pilot. The
+      Assistant Loco Pilot alone is responsible for doing the manual operation of GR, and has
+      to observe the RGR carefully from the corridor for any smell, smoke or fire.
+    gate: null
+    source: "§13.02 Conditions item 6, p195; Precautions items 2 and 7, pp195–196"
+
+  - id: rotate_zsmgr_handle_within_half_a_second_per_notch
+    text: >-
+      For one notch progression, rotate the ZSMGR handle clockwise from 6 o'clock to 6
+      o'clock within 0.5 second; for one notch regression, rotate it anticlockwise from 6
+      o'clock to 6 o'clock within 0.5 second. The handle must be rotated within 0.5 second,
+      otherwise DJ will trip.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        GR must not be operated manually while relay Q44 is in wedged (packed) condition.
+      action: work_on_relay
+      preconditions:
+        - q44_not_wedged
+      on_precondition_unmet: >-
+        Do not operate GR manually while Q44 is wedged: remove the Q44 wedge first.
+      precondition_question: "Before operating GR manually: is relay Q44 free of any wedge?"
+      source: "§13.02 Conditions item 2, p194; Precautions item 3, p195"
+    source: "§13.02 Procedure items 1–2, p195; Precautions item 1, p195"
+
+  - id: keep_speed_within_30_kmph_and_trip_dj_in_emergency
+    text: >-
+      During the manual operation of GR the speed should not exceed 30 kmph. In an emergency
+      the Loco Pilot has to trip DJ to control or stop the train; to reclose DJ, the Assistant
+      Loco Pilot has to bring GR to '0' manually.
+    gate: null
+    completes: true
+    source: "§13.02 Precautions items 4–6, pp195–196"
+
+terminal_actions:
+  resolved: "clear the block section on manual GR with the speed not exceeding 30 kmph"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.02, pp.194–197"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

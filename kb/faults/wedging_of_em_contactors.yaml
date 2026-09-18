@@ -1,0 +1,151 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Wedging of electromagnetic contactors C101, C102, C103, C105, C106, C107
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 12, §12.02 A "General instructions" items 1–10, the Note items 1–2, and
+#         B "Precautions" for C101 / C102 / C103 and for C105 / C106 / C107, pp.185–186.
+# Mechanism: a REFERENCE PROCEDURE (batch 6). The wedge itself is a HAZARD-EXPOSURE gate on
+# §12.02 A item 3's stated before-condition (DJ open, panto lowered, HBA OFF) — the same
+# intent as the batch-2 contactor gate (`wedge_contactor`), whose own precondition (the
+# concerned switch on 3, §7.09.2 Note 1) is carried here by A item 9 / B as ordinary steps.
+# The per-contactor precautions are branches on `contactor_to_wedge` (compressor group /
+# blower group), set by KB phrases.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Wedging_of_EM_contactors
+aliases:
+  - "wedging of electromagnetic contactors"
+  - "wedging of EM contactors"
+  - "wedge an EM contactor"
+  - "wedge the contactor"
+  - "how to wedge a contactor"
+  - "wedging a contactor"
+  - "contactor wedging procedure"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "An electromagnetic contactor (C101, C102, C103, C105, C106 or C107) is to be wedged closed"
+
+combination_rules: []
+route_rules: []
+
+fact_phrases:
+  - fact: contactor_to_wedge
+    equals: compressor_group
+    phrases: ["C101", "C102", "C103", "C-101", "C-102", "C-103", "compressor contactor"]
+    source: "§12.02 B 'While wedging contactor C101 or C102 or C103', pp185–186"
+  - fact: contactor_to_wedge
+    equals: blower_group
+    phrases: ["C105", "C106", "C107", "C-105", "C-106", "C-107", "blower contactor"]
+    source: "§12.02 B 'While wedging contactor C105 or C106 or C107', p186"
+
+steps:
+  # A — general instructions
+  - id: clear_section_by_coasting_or_stop_at_a_convenient_place
+    text: >-
+      Try to clear the block section by coasting or with lower notches, or stop the train at
+      a convenient place.
+    gate: null
+    source: "§12.02 A item 1, p185"
+
+  - id: build_up_maximum_pressure_in_mr_and_rs
+    text: "Build up maximum pressure in MR and RS, if possible."
+    gate: null
+    source: "§12.02 A item 2, p185"
+
+  - id: open_dj_lower_panto_and_switch_off_hba
+    text: "Open DJ, lower the panto and switch OFF HBA."
+    gate: null
+    elicits: loco_de_energised_for_wedging
+    source: "§12.02 A item 3, p185"
+
+  - id: check_contactor_flexibility_and_flexible_shunts
+    text: >-
+      Check the flexibility of the contactor and ensure that the flexible shunts are intact
+      and fixed properly.
+    gate: null
+    source: "§12.02 A item 4, p185"
+
+  - id: remove_arc_chutes_and_examine_the_contacts
+    text: >-
+      Remove the arc chutes and check the surface of the fixed and mobile contacts for any
+      pit, burnt mark, globules or welding mark.
+    gate: null
+    source: "§12.02 A item 5, p185"
+
+  - id: clean_the_contacts_if_abnormality_noticed
+    text: >-
+      If any such abnormality is noticed, try to clean the contacts with a cloth or a smooth
+      emery sheet.
+    gate: null
+    source: "§12.02 A item 6, p185"
+
+  - id: wedge_the_contactor_with_a_suitable_wedge
+    text: >-
+      Wedge the contactor with a suitable wedge, with safety measures. Do not wedge more than
+      two electromagnetic contactors at a time.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not wedge an electromagnetic contactor until the loco is de-energised: DJ opened,
+        panto lowered and HBA switched OFF.
+      action: wedge_contactor
+      preconditions:
+        - loco_de_energised_for_wedging
+      on_precondition_unmet: >-
+        Do not wedge the contactor yet: open DJ, lower the panto and switch OFF HBA first.
+      precondition_question: >-
+        Before wedging the contactor: is DJ opened, the panto lowered and HBA switched OFF?
+      source: "§12.02 A items 3 and 7, p185; §12.02 Note item 1, p185"
+    source: "§12.02 A item 7, p185; Note item 1, p185"
+
+  - id: ensure_all_three_contacts_closed_and_motor_working
+    text: >-
+      After wedging, ensure that all three contacts are closed fully and that the concerned
+      motor is working. While closing DJ, the Assistant Loco Pilot should ensure the
+      concerned auxiliary motor is working along with ARNO.
+    gate: null
+    source: "§12.02 A item 8, p185; Note item 2, p185"
+
+  - id: keep_concerned_switches_on_3_for_initial_path
+    text: >-
+      If C105, C106 or C107 contactors are wedged, keep the concerned switches in the 3
+      position to ensure the initial path. Work up to 5 notches only if C107 is wedged; if
+      higher notches are required, relay Q-118 also has to be wedged.
+    gate: null
+    applies_when: {contactor_to_wedge: blower_group}
+    source: "§12.02 A item 9, p185"
+
+  # B — precautions, compressor group
+  - id: compressor_group_check_ss2_and_maintain_pressure
+    text: >-
+      While wedging C101, C102 or C103: energise the loco, check and ensure the proper
+      working of safety valve SS-2, and create sufficient leakage through the MR drain cock
+      so as to maintain the air pressure between 8.0 and 9.5 kg/cm2.
+    gate: null
+    applies_when: {contactor_to_wedge: compressor_group}
+    source: "§12.02 B items 2–3, p186"
+
+  # B — precautions, blower group
+  - id: blower_group_keep_isolating_switch_on_3_and_check_blower
+    text: >-
+      While wedging C105, C106 or C107: keep the concerned isolating switch (HVRH, HVMT-1 or
+      HVMT-2) on position 3 to maintain the path for relay Q-118 for closing of DJ, and check
+      the working of the concerned blower at regular intervals.
+    gate: null
+    applies_when: {contactor_to_wedge: blower_group}
+    source: "§12.02 B items 1–2, p186"
+
+  - id: inform_tlc_and_enter_in_loco_logbook
+    text: "Inform TLC and enter the wedging in the loco log book."
+    gate: null
+    completes: true
+    source: "§12.02 A item 10, p185"
+
+terminal_actions:
+  resolved: "work onwards with the contactor wedged, within the stated notch and blower checks"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.12, §12.02, pp.185–186"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

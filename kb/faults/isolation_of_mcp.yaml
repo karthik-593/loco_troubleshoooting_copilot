@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Isolation of an MCP (locos with 2 or 3 compressors)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 11, §11.03, p.178 (the HCP position list).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — one action plus the HCP position list.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Isolation_of_MCP
+aliases:
+  - "isolation of MCP"
+  - "isolate the MCP"
+  - "isolate MCP"
+  - "isolate a compressor"
+  - "isolate the defective compressor"
+  - "how to isolate an MCP"
+  - "MCP isolation"
+  - "compressor isolation"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "A defective MCP has to be isolated on a loco provided with 2 or 3 compressors"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: change_hcp_position_to_isolate_the_defective_mcp
+    text: >-
+      Change the HCP position so that the defective MCP is isolated, ensure that its
+      electromagnetic contactor is fully opened, and resume traction with the good MCP. HCP
+      on 1 — MCP-1 in service, MCP-2 and 3 isolated; HCP on 2 — MCP-2 in service, MCP-1 and
+      3 isolated; HCP on 3 — MCP-3 in service, MCP-1 and 2 isolated; HCP on 1 and 2 — MCP-1
+      and 2 in service, MCP-3 isolated; HCP on 2 and 3 — MCP-2 and 3 in service, MCP-1
+      isolated; HCP on 1 and 3 — MCP-1 and 3 in service, MCP-2 isolated; HCP on '0' — MCP-1,
+      2 and 3 all isolated.
+    gate: null
+    completes: true
+    source: "§11.03, p178"
+
+terminal_actions:
+  resolved: "resume traction with the good MCP"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.11, §11.03, p.178"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

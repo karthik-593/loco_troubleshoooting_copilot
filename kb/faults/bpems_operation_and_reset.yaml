@@ -1,0 +1,62 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: BPEMS (emergency push button switch) — indications and resetting
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.15, p.211 (the indications 1–4, "For resetting BPEMS & to energize
+#         the Loco" 1–4 and the Note).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — what BPEMS does and how to reset it; the
+# §10.02 "check BPEMS, if it is in pressed condition" branch points here.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: BPEMS_operation_and_reset
+aliases:
+  - "BPEMS"
+  - "BPEMS pressed"
+  - "BPEMS is in pressed condition"
+  - "how to reset BPEMS"
+  - "resetting BPEMS"
+  - "emergency push button switch"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "BPEMS has been pressed (BP drops through the IP valve, DJ trips and the panto lowers, GR comes to '0' and AFL starts functioning) and the loco is to be re-energised"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: note_what_bpems_does_when_pressed
+    text: >-
+      In an emergency the Loco Pilot or Assistant Loco Pilot has to press BPEMS. When BPEMS is
+      pressed, BP drops through the IP valve (which de-energises), DJ trips and the pantograph
+      lowers, GR comes to '0' and AFL starts functioning.
+    gate: null
+    source: "§13.15 indications 1–4, p211"
+
+  - id: keep_mp_on_zero_and_a9_in_emergency_before_resetting
+    text: >-
+      To reset BPEMS: keep MP on '0' and keep A9 in the emergency position to avoid MR
+      dropping.
+    gate: null
+    source: "§13.15 resetting items 1–2, p211"
+
+  - id: rotate_the_bpems_knob_clockwise_to_release
+    text: "Rotate the BPEMS knob in the clockwise direction to release it."
+    gate: null
+    source: "§13.15 resetting item 3, p211"
+
+  - id: energise_the_loco_as_per_regular_procedure_after_bpems
+    text: >-
+      Energise the loco as per the regular procedure. Ensure the IP coc (A-15) is in the open
+      position during running of the loco.
+    gate: null
+    completes: true
+    source: "§13.15 resetting item 4 and Note, p211"
+
+terminal_actions:
+  resolved: "re-energise the loco and resume traction with the IP coc open"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.15, p.211"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

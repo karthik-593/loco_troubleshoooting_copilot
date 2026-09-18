@@ -1,0 +1,74 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Horns are not sounding
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.13, pp.173–174 (causes 1–2, a–d).
+# Mechanism: plain ladder a–d; (b), (c) and (d) are each a sanctioned way onward (complete).
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Horns_not_sounding
+aliases:
+  - "horns are not sounding"
+  - "horns not sounding"
+  - "horn is not sounding"
+  - "horn not sounding"
+  - "horns not working"
+  - "horn not working"
+  - "no horn"
+  - "horns are not blowing"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The horns do not sound (horn COCs closed, or leakage in the horn pipe line)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: check_air_pressure_and_horn_cocs
+    text: >-
+      Check the air pressure and the position of the low tone (LT) and high tone (HT) horn
+      COCs. If the air pressure is less, build up the same. If the COCs are closed, open them
+      and resume traction.
+    gate: null
+    source: "§10.13(a), pp173–174"
+
+  # (b)
+  - id: sound_horns_from_alp_side
+    text: >-
+      Try to sound the horns from the Assistant Loco Pilot's side. If they are sounding,
+      instruct the Assistant Loco Pilot to sound the horns wherever necessary and resume
+      traction.
+    gate: null
+    completes: true
+    source: "§10.13(b), p174"
+
+  # (c)
+  - id: sound_horns_from_rear_cab_by_alp
+    text: >-
+      If they are not sounding, try to sound the horns from the rear cab through the
+      Assistant Loco Pilot. If successful, depute the Assistant Loco Pilot to sound the horns
+      from the rear cab whenever necessary. After clearing the section, contact TLC for
+      advice.
+    gate: null
+    completes: true
+    source: "§10.13(c), p174"
+
+  # (d)
+  - id: proceed_cautiously_without_horns
+    text: >-
+      If unsuccessful, reduce the speed and proceed very cautiously. Be extra vigilant while
+      approaching unmanned level crossings. Ensure that the head light and marker lights are
+      glowing during night. On clearing the section, contact TLC for advice.
+    gate: null
+    completes: true
+    source: "§10.13(d), p174"
+
+terminal_actions:
+  resolved: "resume traction and contact TLC for advice after clearing the section"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.13, pp.173–174"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

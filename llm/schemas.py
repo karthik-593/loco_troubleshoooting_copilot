@@ -13,7 +13,11 @@ YesNoUnknown = Literal["yes", "no", "unknown"]
 
 class ParseOutput(BaseModel):
     """parse: pilot free text → structured update (+ confidence)."""
-    model_config = ConfigDict(extra="forbid")
+    # 'allow', not 'forbid': the model occasionally emits an enumerated fact as a TOP-LEVEL
+    # key instead of inside `facts` (seen live 2026-09-18). `fold_stray_facts` moves those
+    # into `facts`, where KB-key validation still applies; forbidding them lost the whole
+    # parse instead. Unknown keys never reach the engine by any other path.
+    model_config = ConfigDict(extra="allow")
 
     fault_guess: Optional[str] = Field(
         default=None,
@@ -67,7 +71,8 @@ class ParseOutput(BaseModel):
         default=None, description="Auxiliary configuration if the pilot states it (SIV or ARNO fitted).")
     intended_action: Optional[Literal["reset_QLM", "reset_QLA", "work_on_roof", "enter_HT_compartment",
                                       "wedge_Q118", "wedge_Q44", "wedge_Q45", "wedge_contactor",
-                                      "move_train"]] = Field(
+                                      "move_train", "remove_fuse", "work_on_relay",
+                                      "wedge_relay"]] = Field(
         default=None,
         description="The pilot's stated NEXT move, from the provided action list, or null. "
                     "'work_on_roof' = about to climb on to the loco roof (pantograph work); "
@@ -75,7 +80,11 @@ class ParseOutput(BaseModel):
                     "'wedge_Q118' / 'wedge_Q44' / 'wedge_Q45' = about to wedge that relay; "
                     "'wedge_contactor' = about to wedge C105 / C106 / C107; "
                     "'move_train' = about to move / start / resume the train after a stop on the "
-                    "line (e.g. after a cattle run-over).")
+                    "line (e.g. after a cattle run-over); "
+                    "'remove_fuse' = about to remove / replace / renew a fuse (a tell-tale fuse "
+                    "on an RSI block, or any fuse in its socket); "
+                    "'work_on_relay' = about to press a relay by hand or clean its interlocks; "
+                    "'wedge_relay' = about to wedge a relay other than Q118 / Q45 / Q44.")
     loco_rb: Optional[Literal["fitted", "not_fitted"]] = Field(
         default=None,
         description="Only if the pilot states whether the loco has rheostatic braking (RB) "
@@ -99,6 +108,18 @@ class ParseOutput(BaseModel):
         default="unknown",
         description="'yes' only if the pilot says the fault is now cleared / equipment working "
                     "again (e.g. 'sanders working now', 'resumed traction').")
+    def fold_stray_facts(self) -> "ParseOutput":
+        """Move scalar extras into `facts` (they are validated against the KB there)."""
+        extra = dict(self.__pydantic_extra__ or {})
+        if extra:
+            merged = dict(self.facts)
+            for k, v in extra.items():
+                if isinstance(v, (str, bool, int, float)) and k not in merged:
+                    merged[k] = str(v).lower() if isinstance(v, bool) else str(v)
+            object.__setattr__(self, "facts", merged)
+            object.__setattr__(self, "__pydantic_extra__", {})
+        return self
+
     facts: dict[str, str] = Field(
         default_factory=dict,
         description="Additional facts listed under 'Fault-specific facts' in the instructions, "

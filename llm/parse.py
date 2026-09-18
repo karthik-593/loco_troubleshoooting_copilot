@@ -111,8 +111,12 @@ def kb_vocabulary(kb: KnowledgeBase) -> str:
                  "work_on_roof = about to climb on to the loco roof (pantograph work); "
                  "enter_HT_compartment = about to open or enter the HT compartment; "
                  "wedge_Q118 / wedge_Q44 / wedge_Q45 = about to wedge that relay (in energised "
-                 "condition); wedge_contactor = about to wedge C105 / C106 / C107; move_train = about to "
-                 "move / start / resume the train after a stop on the line (cattle run-over). An intent is "
+                 "condition); wedge_contactor = about to wedge C105 / C106 / C107; wedge_relay = about "
+                 "to wedge any other relay (Q100 / Q50 / QRS); move_train = about to "
+                 "move / start / resume the train after a stop on the line (cattle run-over); "
+                 "remove_fuse = about to remove / replace / renew a fuse (a tell-tale fuse on an RSI "
+                 "block, or any fuse in its socket); work_on_relay = about to press a relay by hand or "
+                 "clean its interlocks. An intent is "
                  "what they are ABOUT to do — a wedge already done is a claimed step, not an intent")
     return "\n".join(lines)
 
@@ -149,12 +153,58 @@ _CLAIM_HINTS = {
 
 # Plain-language hints for KB-declared fact keys (mapping guidance only, not procedure text).
 _FACT_HINTS = {
-    "traction_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in the TRACTION power circuit equipment",
-    "aux_abnormality_found": "abnormality found in the AUXILIARY power circuit equipment",
+    # Batch 5 (Ch.10 miscellaneous failures)
+    "battery_voltage_zero": "the battery voltage reads '0' (with the pilot lamps not glowing)",
+    "battery_voltage_too_low": "the battery voltage is TOO LOW / very low / less than normal (not merely 'not above 90')",
+    "ccba_ccpt_fuse_melted": "'yes' if the Addl. CCBA, CCBA or CCPT fuse is blown / melted, 'no' if those fuses are good",
+    "ccls_melting_repeatedly": "the CCLS fuse melts again and again, even with HOBA in OFF",
+    "lsaf_alone_not_glowing": "LSAF alone does not glow and the AFL is not functioning",
+    "mu_operation": "the loco is working in MU (multiple unit) with another loco",
+    "other_pilot_lamps_glowing": "whether the OTHER pilot lamps (or LSP and LSRSI on pressing BPT) are glowing",
+    "dj_tripped_meanwhile": "DJ tripped while working on this trouble",
+    "vcb_mechanically_locked": "the VCB / DJ is mechanically locked (it does not open)",
+    "lschba_cause": "set from the HBA-'0' test: 'chba_defective' if DJ trips with HBA on '0', 'qv61_defective' if it does not trip",
+    "chba_ammeter_shunt_suspected": "the CHBA ammeter shunt is suspected open-circuited (ICDJ with cab lights out and MCPA not working, but BA voltage normal)",
+    "telltale_fuses_melted": "how many RSI tell-tale fuses are melted and where: 'one_in_one_block', 'two_or_more_same_block', 'one_in_each_block' or 'none'",
+    "dj_opened": "'yes' if DJ has been opened / tripped; 'no' if DJ is STILL CLOSED or not opened yet",
+    "panto_lowered": "'yes' if the pantograph has been lowered; 'no' if it is STILL UP / not lowered",
+    "hba_off_with_ip_coc_closed": "'yes' if HBA has been switched off (duly closing the IP(M) coc); 'no' if HBA is STILL ON",
+    "auxiliary_sound_decreases_or_lschba_glows": "the auxiliaries' sound decreased or LSCHBA glowed on run",
+    "relay_target_dropped_again": "the same relay target (QF1 / QF2 / QE) dropped AGAIN after being reset",
+    "hand_brake_applied": "whether the loco hand brake is in applied condition",
+    "locked_axle_noticed": "a locked axle is noticed on the locomotive",
+    # Batch 6 (Ch.11-13 reference procedures)
+    "telltale_fuses_melted_here": "tell-tale fuses are melted on the RSI block being isolated",
+    "concerned_switches_on_zero": "the concerned HVSI, HVSL and HVMT switches are on the '0' position",
+    "tm_to_isolate": "which traction motor is to be isolated: 'tm1' .. 'tm6'",
+    "battery_voltage_below_90": "the battery voltage is below 90 V",
+    "battery_voltage_below_90_after_isolation": "the battery voltage is still below 90 V after isolating the defective battery",
+    "signalling_lamps_working": "whether the signal / signalling lamps are working",
+    "manual_relay": "which relay is to be operated manually: 'q118', 'q45' or 'q44'",
+    "relay_to_wedge": "which relay is to be wedged: 'q100', 'q50', 'q118', 'q45' or 'qrs'",
+    "contactor_to_wedge": "which contactor group is to be wedged: 'compressor_group' (C101 / C102 / C103) or 'blower_group' (C105 / C106 / C107)",
+    "c118_fully_opened": "contactor C-118 is fully opened",
+    "q118_energised_for_manual_q44": "relay Q-118 is energised (checked again before pressing Q44)",
+    "dj_closes_with_manual_relay": "DJ closes and HOLDS when the relay is pressed by hand",
+    "rgr_overheating": "overheating is noticed in RGR",
+    "loco_de_energised_for_wedging": "'yes' if the loco is de-energised for the wedging (DJ tripped, panto lowered, HBA off); 'no' if any of them is still live",
+    "loco_de_energised_for_fuse_work": "'yes' if the loco is de-energised for fuse work (stopped, DJ opened, panto lowered, HBA off); 'no' if any of them is still live",
+    "loco_de_energised_for_relay_work": "'yes' if the loco is de-energised for relay work (DJ opened, panto lowered, HBA opened); 'no' if any of them is still live",
+    "j1_j2_ctf_c145_set_for_q50": "J1 / J2 set as per the leading cab, CTF 1-2-3 up, C145 open and LSC145 extinguished",
+    "bp_5_and_train_safe_for_qrs": "BP pressure is 5.0 kg/cm2 and the train is running safely",
+    "q44_not_wedged": "relay Q44 is NOT in wedged / packed condition",
+    "rear_cab_arrangement": "who is where: 'lp_in_leading_cab' (ALP drives from the rear cab) or 'lp_in_trailing_cab'",
+    "memory_freeze_required": "the speedometer memory freeze is to be operated (after an accident)",
+    "fuse_that_melts": "which fuse keeps melting: 'ccba_ccpt_ccdj', 'cca', 'ccls' or 'cclc_ccvt_cclf_ccra'",
+    "interlock_type": "which interlock is being cleaned: 'normally_open' or 'normally_closed'",
+    "leakage_not_arrested": "the leakage from the safety valve could NOT be arrested",
+    "vcd_situation": "'reset_required' if VCD has acted, 'malfunction' if VCD is defective / malfunctioning",
+    "traction_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in the TRACTION power circuit equipment — and 'no' when the pilot reports those checks as normal ('all normal', 'nothing found', 'no smoke or smell')",
+    "aux_abnormality_found": "abnormality found in the AUXILIARY power circuit equipment — and 'no' when the pilot reports those checks as normal ('all normal', 'nothing found', 'no smoke or smell')",
     "isolation_successful": "the pilot tried to isolate the abnormal equipment: 'yes' if isolation succeeded, 'no' if it could not be isolated",
     "arc_chute_terminal_abnormality": "the abnormality (smell/smoke/fire/red-hot/oil leak) was found in the arc chutes, RGR/RPGR, TFR terminals, bushings, HT cable, breathers, drain plug or oil trap box",
     "fault_recurred": "(use the top-level fault_recurred field instead)",
-    "traction1_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-1 equipment (RSI-1, J1, SL-1, L1-L3, TM1-3, AM3 shunt, Q20/RQ20, QD1, SJ1-3, TFR terminals)",
+    "traction1_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-1 equipment (RSI-1, J1, SL-1, L1-L3, TM1-3, AM3 shunt, Q20/RQ20, QD1, SJ1-3, TFR terminals) — and 'no' when the pilot reports those checks as normal ('all normal', 'nothing found', 'no smoke or smell')",
     "ohe_power_block_obtained_and_earthed": "OHE/TRD staff have obtained the emergency power block AND earthed the contact wire on both sides of the loco",
     "loco_grounded": "'yes' if the loco has been grounded (HOM operated); 'no' if the pilot says it is NOT grounded / HOM not operated / grounding not done",
     "pantograph_not_lowered": "the pantograph did NOT lower when ZPT was put on 0 / BPEMS pressed",
@@ -177,7 +227,7 @@ _FACT_HINTS = {
     "target_resets_after_releasing_contactor": "after releasing a welded EM contactor, the QOA target reset ('yes') or not ('no')",
     "not_resetting_with_hqoa_0": "the QOA target is dropping or not resetting even with HQOA on 0",
     "drops_in_all_hmcs2_positions": "with HMCS-2 tried in positions 2, 3, 4: it drops in ALL positions ('no' if only in one)",
-    "traction2_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-2 equipment (RSI-2, J2, SL-2, L4-L6, TM4-6, AM4 shunt, RU5/RU6, QD-2, SJ4-6, TFR terminals)",
+    "traction2_abnormality_found": "abnormality (smoke/smell/fire/heat/damage) found in traction power circuit-2 equipment (RSI-2, J2, SL-2, L4-L6, TM4-6, AM4 shunt, RU5/RU6, QD-2, SJ4-6, TFR terminals) — and 'no' when the pilot reports those checks as normal ('all normal', 'nothing found', 'no smoke or smell')",
     "drops_in_particular_hmcs2_position": "with HMCS-2 tried in positions 2, 3, 4: it drops only in ONE particular position ('no' if in all)",
     "fire_uncontrollable": "the pilot says the fire cannot be put out / is out of control / extinguishers exhausted and still burning",
     # ── batch 2 (Ch.7 tripping failures) ──
@@ -368,16 +418,45 @@ def same_family(kb: KnowledgeBase, a: Optional[str], b: Optional[str]) -> bool:
     return b in routes(a) or a in routes(b)
 
 
+def kb_phrase_facts(fault, text: str) -> dict:
+    """Facts the fault's OWN KB-declared phrases set for this message — route phrases
+    ("not resetting") and fact phrases ("while raising panto"). Deterministic, model-free."""
+    facts: dict = {}
+    if fault is None:
+        return facts
+    low = " ".join(text.lower().split())
+    hit = lambda phrases: any(re.search(rf"(?<![\w-]){re.escape(ph.lower())}(?![\w-])", low)
+                              for ph in phrases)
+    for rr in fault.route_rules:
+        if hit(rr.phrases):
+            facts[rr.if_fact] = rr.equals
+    for fp in fault.fact_phrases:
+        if hit(fp.phrases):
+            facts[fp.fact] = fp.equals
+    return facts
+
+
 def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LLMProvider,
                last_assistant: Optional[str] = None) -> ParseResult:
     # 1. deterministic alias match — no model needed for the fault.
     alias_hit = kb.match_alias(text)
 
     out = provider.structured(system_prompt(kb), user_prompt(text, state, last_assistant), ParseOutput)
+    out.fold_stray_facts()          # a fact emitted at the top level is still a fact claim
 
     # An intake hub's alias ("DJ tripped") is a generic entry phrase: if the model names a
     # specific KB fault in the same message ("DJ tripped, QLM is locked"), that fault wins —
     # unconfirmed, so a hard-gated one is confirmed before guidance (§5.5).
+    # An intake hub's alias is a generic entry phrase, and some of them are also the WORDING
+    # OF AN ANSWER inside another procedure (§10.06 "if DJ trips, CHBA is defective" vs the
+    # §5.01 hub alias "DJ trips"). While the pilot is inside a procedure whose own KB phrases
+    # match this message, the hub never takes the conversation over (batch 5).
+    if (alias_hit is not None and alias_hit.precedence <= INTAKE_PRECEDENCE
+            and state.matched_fault and state.matched_fault != alias_hit.fault_id
+            and state.matched_fault in kb.fault_ids
+            and kb_phrase_facts(kb.get(state.matched_fault), text)):
+        alias_hit = None
+
     yielded_hub_steps: set[str] = set()
     if (alias_hit is not None and alias_hit.precedence <= INTAKE_PRECEDENCE
             and out.fault_guess in kb.fault_ids and out.fault_guess != alias_hit.fault_id
@@ -422,14 +501,7 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
     # KB-declared route phrases ("not resetting", "cannot be reset"): deterministic, like an
     # alias hit — the reroute to the other procedure must not depend on the model.
     fault_obj = kb.get(fault_id) if fault_id in kb.fault_ids else None
-    if fault_obj is not None:
-        low = " ".join(text.lower().split())
-        for rr in fault_obj.route_rules:
-            if any(re.search(rf"(?<![\w-]){re.escape(ph.lower())}(?![\w-])", low) for ph in rr.phrases):
-                history[rr.if_fact] = rr.equals
-        for fp in fault_obj.fact_phrases:
-            if any(re.search(rf"(?<![\w-]){re.escape(ph.lower())}(?![\w-])", low) for ph in fp.phrases):
-                history[fp.fact] = fp.equals
+    history.update(kb_phrase_facts(fault_obj, text))
     if _yn(out.abnormality_found):
         history[HF_ABNORMALITY] = out.abnormality_found
     if _yn(out.was_reset_earlier_this_trip):

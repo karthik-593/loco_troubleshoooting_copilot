@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: UA meter is not deviating or its needle is returning to '0'
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.09, p.171 (cause 1, a–d).
+# Mechanism: short ladder a–b; (c) — auxiliaries' sound decreasing or LSCHBA glowing, i.e.
+# a different trouble — is a STATED-ONLY branch. (d) is the resolved guidance.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: UA_meter_not_deviating
+aliases:
+  - "UA meter is not deviating"
+  - "UA meter not deviating"
+  - "UA meter needle is returning to 0"
+  - "UA meter needle returns to zero"
+  - "UA needle not deviating"
+  - "UA not deviating"
+  - "UA meter not showing"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "With DJ closed and the auxiliaries sounding, the UA meter does not deviate or its needle returns to '0' (defective UA meter)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: check_ua_meter_in_rear_cab
+    text: >-
+      Check the UA meter in the rear cab. If it deviates, resume traction and observe the UA
+      reading from the rear cab.
+    gate: null
+    source: "§10.09(a), p171"
+
+  # (b)
+  - id: ignore_ua_meter_if_both_not_deviating
+    text: "If both UA meters do not deviate, ignore the UA meter and work onwards."
+    gate: null
+    completes: true
+    source: "§10.09(b), p171"
+
+  # (c) — stated-only: this is a different trouble
+  - id: open_dj_if_auxiliary_sound_decreases_or_lschba_glows
+    text: >-
+      If the auxiliaries' sound decreases or LSCHBA glows on run, DJ will trip through Q30;
+      if DJ has not tripped, open DJ immediately and trouble shoot for that particular
+      trouble.
+    gate: null
+    applies_when: {auxiliary_sound_decreases_or_lschba_glows: "yes"}
+    requires_stated: true
+    source: "§10.09(c), p171"
+
+terminal_actions:
+  resolved: "work onwards and contact TLC after clearing the block section, acting as per his instructions"
+  unresolved: "contact TLC and act as per his instructions"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.09, p.171"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

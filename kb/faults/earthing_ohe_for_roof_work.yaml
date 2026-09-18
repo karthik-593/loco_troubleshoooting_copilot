@@ -1,0 +1,114 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Earthing the OHE to climb on the loco roof
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.06, p.201 (items 1–13).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the procedure that SATISFIES the roof-work
+# preconditions the §10.03 / §11.04 pantograph gate enforces. Climbing on the roof keeps the
+# same HAZARD-EXPOSURE gate and the same intent (`work_on_roof`) and the same two facts
+# (`ohe_power_block_obtained_and_earthed`, `loco_grounded`), so a roof claim made before the
+# power block is refused here too.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Earthing_OHE_for_roof_work
+aliases:
+  - "earthing of OHE"
+  - "earthing the OHE"
+  - "instructions for earthing OHE"
+  - "how to climb on the loco roof"
+  - "climb on the loco roof"
+  - "roof work on the loco"
+  - "how to earth the OHE"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The OHE has to be earthed by OHE staff so that the loco roof can be climbed for repairs to the panto or OHE"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: note_time_km_and_nature_of_damage
+    text: >-
+      Note the time, the kilometre number of the occurrence and the nature of the damage to
+      the panto and the OHE.
+    gate: null
+    source: "§13.06 item 1, p201"
+
+  - id: protect_the_train_and_inform_tlc_for_roof_work
+    text: "Protect the train as per GR & SR 6.03 and inform TLC."
+    gate: null
+    source: "§13.06 item 2, p201"
+
+  - id: contact_tpc_through_emergency_telephone_tap
+    text: >-
+      Contact TPC through the emergency telephone tap and give the date, train number, loco
+      number, the stations between which the train is standing, the direction (UP / DOWN), the
+      kilometre, the nature of the damage and the time required for attending the repairs.
+    gate: null
+    source: "§13.06 items 3–4, p201"
+
+  - id: ask_for_ohe_staff_to_obtain_emergency_power_block
+    text: >-
+      Ask for OHE staff to obtain an emergency power block. Report when the power block has
+      been obtained and the OHE has been grounded on either side of the loco by the OHE staff.
+    gate: null
+    elicits: ohe_power_block_obtained_and_earthed
+    source: "§13.06 items 5–6, p201"
+
+  - id: operate_hom_to_ground_the_loco_for_roof_work
+    text: >-
+      Meanwhile operate HOM and ground the loco. Report whether the loco is grounded.
+    gate: null
+    elicits: loco_grounded
+    source: "§13.06 item 7, p201"
+
+  - id: climb_on_the_roof_with_ohe_staff
+    text: >-
+      Climb on the loco roof along with the OHE staff. If the pantograph is damaged, remove
+      the broken pieces, tie up the projecting and hanging parts that cannot be removed with a
+      coir rope, and remove the HPT from the roof insulated clip and fix it in the earthing
+      clip.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not climb on the loco roof until the OHE power block has been obtained and the
+        contact wire earthed on either side of the loco by the OHE staff, and the loco is
+        grounded.
+      action: work_on_roof
+      preconditions:
+        - ohe_power_block_obtained_and_earthed
+        - loco_grounded
+      on_precondition_unmet: >-
+        Do not climb on the roof yet: an emergency power block must be obtained and the OHE
+        earthed on either side of the loco by the OHE staff, and the loco grounded by
+        operating HOM.
+      precondition_question: >-
+        Before climbing on the roof: has the OHE power block been obtained and the contact
+        wire earthed on either side by the OHE staff, and is the loco grounded?
+      source: "§13.06 items 6–8, p201"
+    source: "§13.06 items 7–8, p201"
+
+  - id: clear_the_roof_and_unground_after_the_work
+    text: >-
+      After completion of the work, ensure that no tool is left on the loco roof. After the
+      earthing poles are removed from the contact wire and the power block is cancelled by the
+      OHE staff, un-ground the loco.
+    gate: null
+    source: "§13.06 items 9–10, p201"
+
+  - id: close_damaged_panto_coc_and_resume_on_the_good_panto
+    text: >-
+      Close the damaged pantograph cut out cock, raise the good pantograph and close DJ when
+      the power is restored. Note it down in the log book and inform TLC.
+    gate: null
+    completes: true
+    source: "§13.06 items 11–13, p201"
+
+terminal_actions:
+  resolved: "work onwards on the good pantograph and inform TLC"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.06, p.201"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

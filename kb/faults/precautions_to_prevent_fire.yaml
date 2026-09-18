@@ -1,0 +1,76 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Precautions to prevent fire on an AC loco
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.07, pp.201–202 (items 1–8).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — a standing checklist, not a fault ladder.
+# Items 5–8 are the standing rules behind the Ch.6 HQOP / HQOA isolations.
+# precedence -1: `fire_on_loco` (the live emergency) outranks this checklist.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Precautions_to_prevent_fire
+aliases:
+  - "precautions to prevent fire on AC loco"
+  - "precautions to prevent the fire"
+  - "how to prevent fire on the loco"
+  - "fire prevention precautions"
+  - "fire precautions on loco"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The standing precautions the engine crew take to prevent a fire on an AC loco"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: ensure_arc_chutes_secured
+    text: >-
+      Ensure the arc chutes are properly secured for the EM contactors, the EP (line and
+      shunting) contactors and CGR1, 2 and 3.
+    gate: null
+    source: "§13.07 item 1, pp201–202"
+
+  - id: ensure_no_oil_leakage_in_ht2
+    text: >-
+      Ensure there is no oil leakage from the compressors and the pipe lines in the HT-2
+      compartment.
+    gate: null
+    source: "§13.07 item 2, p202"
+
+  - id: use_rheostatic_or_regenerative_braking_on_down_gradient
+    text: >-
+      Use rheostatic or regenerative braking, if provided on the loco, on down gradient
+      sections — this prevents heavy mechanical braking, which may cause sparks from the brake
+      shoes.
+    gate: null
+    source: "§13.07 item 3, p202"
+
+  - id: do_not_leave_cotton_waste_or_paper_in_ht2
+    text: "Do not leave any cotton waste or paper in the HT-2 compartment."
+    gate: null
+    source: "§13.07 item 4, p202"
+
+  - id: do_not_isolate_hqop_or_hqoa_without_trouble_shooting
+    text: >-
+      Do not put HQOP in the OFF position without proper trouble shooting, and do not put
+      HQOA on the '0' position without proper trouble shooting.
+    gate: null
+    source: "§13.07 items 5 and 7, p202"
+
+  - id: watch_the_circuit_when_hqop_or_hqoa_is_isolated
+    text: >-
+      When HQOP is in the OFF position, carefully watch the power circuit equipment, the SLs
+      and the traction motors at stoppages; when HQOA is placed on '0', carefully watch the
+      auxiliaries.
+    gate: null
+    completes: true
+    source: "§13.07 items 6 and 8, p202"
+
+terminal_actions:
+  resolved: "keep to the standing fire precautions"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.07, pp.201–202"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

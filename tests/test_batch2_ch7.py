@@ -358,7 +358,8 @@ def test_op_ii_interlock_wedge_only_when_still_tripping(kb):
 
 def test_out_of_scope_list_is_collapsed_by_listed_as(kb):
     msg = out_of_scope_reason(kb)
-    assert msg.count(",") < 20 and len(msg) < 600 and "ICDJ (DJ not closing)" in msg and "QLM dropped" in msg
+    assert msg.count(",") < 20 and len(msg) < 600
+    assert "ICDJ (DJ not closing)" in msg and "safety relay trips" in msg
     assert "ICDJ Q118 branch" not in msg and "Op O" not in msg
 
 

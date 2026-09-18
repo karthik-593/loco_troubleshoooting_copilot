@@ -71,6 +71,8 @@ def test_heldout_parse(case, kb, provider):
         assert r.update.denies_asked_step == case["denies_asked_step"]
     if "claimed" in case:
         assert set(r.update.claimed_steps) - set(r.rejected_steps) == set(case["claimed"])
+    if "claimed_min" in case:                    # long procedures: how many of the stated steps
+        assert len(set(r.update.claimed_steps) - set(r.rejected_steps)) >= case["claimed_min"]
     if "abnormality" in case:
         assert r.update.history.get("abnormality_found") == case["abnormality"]
     if "reset_earlier" in case:

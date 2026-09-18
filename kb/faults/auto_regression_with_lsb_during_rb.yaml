@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Auto regression with LSB during RB (rheostatic braking)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.14, pp.174–175 (causes 1–2, a–c, Note).
+# Mechanism: short ladder. NOTE ON THE RESET: unlike the Ch.6 safety relays, §10.14 states
+# the recurrence path itself — (b) resets QF1 / QF2 / QE once, and (c) allows the reset AGAIN
+# after re-checking the equipment, on the condition that rheostatic braking is not used
+# further. So this reset carries NO reset_limit gate; (c) is a stated-only branch on
+# `relay_target_dropped_again` that completes on "do not use RB further".
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Auto_regression_with_LSB_during_RB
+aliases:
+  - "auto regression with LSB during RB"
+  - "auto regression during RB"
+  - "auto regression during rheostatic braking"
+  - "auto regression in RB"
+  - "GR regressing during RB"
+  - "auto regression with LSB during braking"
+  - "regression while using RB"
+precedence: 1
+listed_as: "auto regression (with LSP / 1st notch / during RB)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The GR auto-regresses with LSB glowing while rheostatic braking is in use (current rating exceeded during RB, or defects in the RB equipment)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: check_atfex_c145_tms_and_rfs_for_smoke_or_smell
+    text: >-
+      Check the ATFEX, C145, the traction motors and the RFs for any smoke or burning smell.
+    gate: null
+    source: "§10.14(a), p174"
+
+  # (c) — stated-only: the same target dropped again
+  - id: recheck_equipment_and_stop_using_rb_if_target_drops_again
+    text: >-
+      If the same relay target gets dropped again, check the equipment mentioned above, reset
+      the target and do not use rheostatic braking further.
+    gate: null
+    applies_when: {relay_target_dropped_again: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§10.14(c), p174"
+
+  # (b)
+  - id: reset_relay_target_and_resume_within_current_rating
+    text: >-
+      If QF1 / QF2 or QE has dropped and everything else is normal, reset the relay target
+      and resume traction without exceeding the current rating. (In some locos, if QE, QF1 or
+      QF2 has acted, further progression will be stopped on the braking side.)
+    gate: null
+    completes: true
+    source: "§10.14(b), p174; §10.14 Note, p175"
+
+terminal_actions:
+  resolved: "resume traction without exceeding the current rating"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.14, pp.174–175"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

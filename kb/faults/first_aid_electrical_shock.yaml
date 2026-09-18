@@ -1,0 +1,74 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: First aid in case of electrical shock
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.08, pp.202–203 (items 1–8).
+# Mechanism: a REFERENCE PROCEDURE (batch 6). Ordered, verbatim; no gate — the whole section
+# IS the safety instruction, and item 3 ("never touch the body with a bare hand") is carried
+# in the step that removes the person from the live wire.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: First_aid_electrical_shock
+aliases:
+  - "first aid in case of electrical shock"
+  - "first aid for electric shock"
+  - "electrical shock first aid"
+  - "someone got an electric shock"
+  - "person is in contact with a live wire"
+  - "electric shock"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "A person has come in contact with a live wire and first aid is required"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: switch_off_the_source_of_supply_if_known
+    text: >-
+      Whenever a person comes in contact with a live wire, switch OFF the source of supply if
+      it is known.
+    gate: null
+    source: "§13.08 item 1, p202"
+
+  - id: remove_the_person_with_non_conducting_material
+    text: >-
+      If the source of supply is not known, attempt to remove the person from contact with the
+      live wire using non-conducting material — a dry wooden stick, dry blanket, rubber rod or
+      paper, whichever is readily available on the spot. Never touch the body with a bare hand
+      while the person is in touch with the live wire.
+    gate: null
+    source: "§13.08 items 2–3, p202"
+
+  - id: send_for_the_doctor_and_give_artificial_respiration
+    text: >-
+      After the affected person has been removed from contact with the live wire, send for the
+      doctor at once and meanwhile give artificial respiration — the 'Silver burd method' or
+      the 'Shepherds method', whichever is convenient.
+    gate: null
+    source: "§13.08 item 4, p203"
+
+  - id: check_for_broken_bones_before_artificial_respiration
+    text: >-
+      Before giving artificial respiration, ensure that no bones are broken and that there are
+      no fractures near the lungs. Avoid violent operation during artificial respiration, since
+      it may cause injury to the internal organs.
+    gate: null
+    source: "§13.08 items 5–6, p203"
+
+  - id: take_special_care_of_burn_injuries
+    text: >-
+      Take special care if there is a burn injury: serious burns should be treated with proper
+      oil dressing, and the patient should not be exposed to the cool atmosphere.
+    gate: null
+    completes: true
+    source: "§13.08 items 7–8, p203"
+
+terminal_actions:
+  resolved: "keep the affected person under care until the doctor arrives"
+  unresolved: "send for the doctor at once"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.08, pp.202–203"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

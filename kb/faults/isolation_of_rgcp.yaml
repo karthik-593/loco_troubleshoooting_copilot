@@ -1,0 +1,58 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Isolation of RGCP
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 11, §11.07, p.182 (items 1–4 and the Note).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — four ordered instructions; the Duranto note
+# rides with the BLCPD step.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Isolation_of_RGCP
+aliases:
+  - "isolation of RGCP"
+  - "isolate RGCP"
+  - "isolate the RGCP"
+  - "how to isolate RGCP"
+  - "RGCP isolation"
+  - "RGCP defective"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "RGCP is defective and has to be isolated, the compressors being controlled manually by BLCPD"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: close_rgcp_cut_out_cock
+    text: "Close the RGCP cut out cock."
+    gate: null
+    source: "§11.07 item 1, p182"
+
+  - id: control_compressors_manually_with_blcpd
+    text: >-
+      Close BLCPD when the MR pressure drops below 8.0 kg/cm2 and open it when the pressure
+      rises to 9.5 kg/cm2. (In Duranto fit locos, maintain MR pressure up to 10.0 kg/cm2.)
+    gate: null
+    source: "§11.07 item 2, p182; §11.07 Note, p182"
+
+  - id: ensure_ss2_working_and_its_coc_open
+    text: >-
+      Check and ensure that SS-2 is in proper working order and that its coc is open (if
+      provided).
+    gate: null
+    source: "§11.07 item 3, p182"
+
+  - id: avoid_continuous_blowing_of_ss2_on_run
+    text: "Avoid continuous blowing of SS-2 on run."
+    gate: null
+    completes: true
+    source: "§11.07 item 4, p182"
+
+terminal_actions:
+  resolved: "work onwards controlling the compressors manually with BLCPD"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.11, §11.07, p.182"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

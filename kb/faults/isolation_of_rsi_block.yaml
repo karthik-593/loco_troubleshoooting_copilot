@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Isolation of an RSI block
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 11 "Isolation of Equipment in Conventional Locos", §11.01 A items 1–4, p.178.
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the pilot asks for it, or arrives here from a
+# fault file that says "isolate that RSI block" (§10.08(d), §6.02). Ordered steps; removing a
+# melted tell-tale fuse carries the same HAZARD-EXPOSURE gate as §10.08 (intent `remove_fuse`),
+# with §11.01's own stated precondition (DJ open, the concerned switches on '0').
+# precedence -1: a fault named in the same message outranks the how-to alias.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Isolation_of_RSI_block
+aliases:
+  - "isolation of RSI block"
+  - "isolate the RSI block"
+  - "isolate RSI block"
+  - "isolating the RSI block"
+  - "how to isolate an RSI block"
+  - "RSI block isolation"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "An RSI block has to be isolated (tell-tale fuses melted / RSI block defective)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: stop_the_train_at_a_convenient_place
+    text: "Stop the train at a convenient place."
+    gate: null
+    source: "§11.01 A item 1, p178"
+
+  - id: open_dj_and_place_hvsi_hvsl_hvmt_on_zero
+    text: >-
+      Open DJ and place the concerned HVSI, HVSL and HVMT switches on the '0' position.
+    gate: null
+    source: "§11.01 A item 2, p178"
+
+  - id: remove_melted_fuses_and_isolate_that_rsi_block
+    text: >-
+      In case of tell-tale fuses melting, observe safety precautions, remove the melted fuses
+      from the RSI block and isolate that RSI block.
+    applies_when: {telltale_fuses_melted_here: "yes"}
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not remove melted fuses from an RSI block until DJ is opened and the concerned
+        HVSI, HVSL and HVMT switches are on the '0' position.
+      action: remove_fuse
+      preconditions:
+        - dj_opened
+        - concerned_switches_on_zero
+      on_precondition_unmet: >-
+        Do not remove the melted fuses yet: open DJ and place the concerned HVSI, HVSL and
+        HVMT switches on the '0' position first.
+      precondition_question: >-
+        Before removing the melted fuses: is DJ opened and are the concerned HVSI, HVSL and
+        HVMT switches on the '0' position?
+      source: "§11.01 A items 2–3, p178"
+    source: "§11.01 A item 3, p178"
+
+  - id: work_with_50_percent_load_or_ask_for_assistance
+    text: >-
+      Work with 50% of the maximum permissible load. If the load and the road do not permit,
+      ask for an assisting or banker loco.
+    gate: null
+    completes: true
+    source: "§11.01 A item 4, p178"
+
+terminal_actions:
+  resolved: "work with 50% of the maximum permissible load"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.11, §11.01, p.178"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

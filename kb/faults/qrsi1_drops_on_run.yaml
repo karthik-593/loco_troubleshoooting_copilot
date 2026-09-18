@@ -18,6 +18,7 @@ aliases:
   - "QRSI-1 tripped"
   - "QRSI1 dropped"
   - "QRSI 1 dropped"
+listed_as: "safety relay trips (QLM / QOP-1 / QOP-2 / QOA / QLA / QRSI)"
 config_dependency: none            # §6.02.1 checks are the same on all types; only the TFR terminal
                                    # designations differ by transformer rating (3900 vs 5400 kVA) and
                                    # both are given in the step text. [candidate config axis — HANDOFF]

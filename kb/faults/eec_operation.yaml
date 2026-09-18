@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Emergency Electrical Control (EEC) operation
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13 "Special Instructions", §13.01, p.194 (items 1–8 and Notes 1–3).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — what to do when MP has failed. Already cited
+# as an action inside the Ch.8 ladders ("EEC tried"); this is the procedure itself.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: EEC_operation
+aliases:
+  - "EEC operation"
+  - "emergency electrical control operation"
+  - "how to do EEC operation"
+  - "how to work on EEC"
+  - "EEC procedure"
+  - "MP failed"
+  - "MP has failed"
+  - "master controller failed"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "MP has failed and the GR is to be progressed and regressed through Emergency Electrical Control (EEC)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: place_mp_on_n_and_zsms_on_zero
+    text: >-
+      Place MP on 'N' and the ZSMS switch on '0' (the EEC position). (In microprocessor locos
+      there is no need to change the ZSMS position; in modified locos, notches come through
+      MP irrespective of the ZSMS position.)
+    gate: null
+    source: "§13.01 item 1, p194; §13.01 Notes 1–3, p194"
+
+  - id: press_and_release_bpp_for_progression
+    text: "Press and release BPP for one notch progression of GR."
+    gate: null
+    source: "§13.01 item 2, p194"
+
+  - id: press_and_release_bpr_for_regression
+    text: >-
+      Press and release BPR for one notch regression of GR; press BPR continuously for quick
+      regression of GR.
+    gate: null
+    source: "§13.01 items 3–4, p194"
+
+  - id: ensure_progression_and_regression_before_resuming
+    text: >-
+      Before resuming traction by EEC operation, ensure that progression and regression take
+      place correctly.
+    gate: null
+    source: "§13.01 item 5, p194"
+
+  - id: close_dj_with_mp_on_zero_if_dj_trips
+    text: >-
+      When DJ is tripped, place MP on '0', close DJ and then move MP to 'N' and resume
+      traction. (If MP is moved to the '0' position while GR is stuck up on notches, DJ will
+      trip through the Q46 relay; during EEC operation, placing MP on '0' while taking notches
+      gives one notch auto regression without LSP glowing.)
+    gate: null
+    source: "§13.01 items 6–7, p194; §13.01 Note 1, p194"
+
+  - id: work_with_normal_speed_and_current_rating_upto_destination
+    text: "Work the train with normal speed and current rating up to the destination."
+    gate: null
+    completes: true
+    source: "§13.01 item 8, p194"
+
+terminal_actions:
+  resolved: "work the train on EEC with normal speed and current rating up to the destination"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.01, p.194"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

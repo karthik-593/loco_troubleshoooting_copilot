@@ -1,0 +1,96 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Loco not moving on 1st notch
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.16, pp.176–177 (causes 1–2, a–g).
+# Mechanism: the traction ammeter DOES deviate here — the loco is held by the hand brake or
+# skids, not by a traction failure (that is §8.01–§8.03 / §8.05). (b) ELICITS
+# `hand_brake_applied`; (c)(d) are the applied branch, (f) the released branch, and (g)
+# "if locked axle is noticed, do not move the loco and contact TLC" is a DEFER CONDITION.
+# Batch 5 decision 4: the hand-brake wheel numbers stay as TSD text in (c) — not a
+# `loco_type` branch, since the axis would have to be asked for a locational detail only.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Loco_not_moving_on_first_notch
+aliases:
+  - "loco not moving on 1st notch"
+  - "loco not moving on first notch"
+  - "loco does not move on 1st notch"
+  - "loco is not moving on the first notch"
+  - "not moving on 1st notch"
+  - "loco not moving but ammeter is deviating"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The loco does not move on the 1st notch although the traction ammeter deviates (hand brake still applied, or skids not removed)"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: locked_axle_noticed
+    equals: "yes"
+    after_any: [check_for_locked_axle_if_hand_brake_released]
+    text: "If a locked axle is noticed, do not move the loco and contact TLC."
+    source: "§10.16(g), p177"
+
+steps:
+  # (a)
+  - id: watch_ammeter_and_check_bc_gauge
+    text: >-
+      Watch for the traction ammeter to deviate. If it deviates, ensure the brake cylinder
+      gauge shows zero.
+    gate: null
+    source: "§10.16(a), p176"
+
+  # (b)
+  - id: check_hand_brake_and_skids
+    text: >-
+      If the B/C gauge shows zero, check the hand brake and the skids. Report whether the
+      hand brake is in applied condition.
+    gate: null
+    elicits: hand_brake_applied
+    source: "§10.16(b), p176"
+
+  # (c)
+  - id: release_hand_brake_if_applied
+    text: >-
+      If the hand brake is in applied condition — WAP-4: wheel no. 2 on both sides; WAG-5,
+      WAG-7 and WAM-4: wheel no. 2 on both sides and one side on wheel no. 4 — release the
+      hand brake and try.
+    gate: null
+    applies_when: {hand_brake_applied: "yes"}
+    source: "§10.16(c), p177"
+
+  # (d)
+  - id: remove_split_pin_if_hand_brake_not_releasing
+    text: >-
+      If it is not releasing through the releasing handle, remove the split pin provided for
+      the chain connected to the hand brake 'D' shackle pin.
+    gate: null
+    applies_when: {hand_brake_applied: "yes"}
+    source: "§10.16(d), p177"
+
+  # (e)
+  - id: remove_skids_if_provided
+    text: "If skids are provided, remove the same."
+    gate: null
+    source: "§10.16(e), p177"
+
+  # (f)
+  - id: check_for_locked_axle_if_hand_brake_released
+    text: >-
+      If the hand brake is in released condition, check for a locked axle in the locomotive.
+      Report whether a locked axle is noticed.
+    gate: null
+    applies_when: {hand_brake_applied: "no"}
+    elicits: locked_axle_noticed
+    source: "§10.16(f), p177"
+
+terminal_actions:
+  resolved: "release the hand brake / remove the skids and resume traction"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.16, pp.176–177"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

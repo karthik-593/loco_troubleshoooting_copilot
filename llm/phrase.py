@@ -113,9 +113,19 @@ def render_verbatim(t: Terminal) -> str:
 
 _IF_HEAD = re.compile(r"^\s*If\s+(.+?)[,;:]\s*(.+)$", re.IGNORECASE | re.DOTALL)
 _IDENT = re.compile(r"\b[A-Z][A-Z0-9]*(?:[-/][A-Z0-9]+)*\b")
+# Standalone numeric VALUES in a step — pressures, positions, bit numbers, speeds, seconds,
+# loads. A paraphrase may reword them but must not drop them (seen live 2026-09-18: §11.02's
+# reverser-bit numbers rendered as "the bit positions ... as laid out"). Digits inside an
+# identifier (TM-1, HMCS-2) are not values; _identifiers already covers those.
+_NUM = re.compile(r"(?<![\w\-/])(\d+(?:\.\d+)?)(?:st|nd|rd|th)?(?![\w])")
 LONG_LIST = 6            # a check naming this many components may be spoken in short form
 _SYMPTOM = re.compile(r"\b(smoke|smell|abnormal\w*|fire|heat|hot|temperature|leak\w*|damage\w*)\b", re.I)
 _OFFER = re.compile(r"\b(list|detail|components?|items?)\b[^.?!]*\?", re.I)
+
+
+def _numbers(text: str) -> list[str]:
+    """Numeric values in a KB step's ACTION clause, deduplicated ('5.0', '8', '30')."""
+    return list(dict.fromkeys(_NUM.findall(_substance(text))))
 
 
 def _identifiers(text: str) -> list[str]:
@@ -274,8 +284,11 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         # exact list. Anything else must keep the substance.
         short_form = (len(idents) >= LONG_LIST and len(lost_i) < len(idents)
                       and _SYMPTOM.search(low) and _OFFER.search(s))
+        nums = _numbers(t.message)
+        lost_n = [n for n in nums if n not in set(_NUM.findall(low))]
         if not short_form and ((idents and len(lost_i) / len(idents) > 0.34)
-                               or (words and len(lost_w) / len(words) > 0.6)):
+                               or (words and len(lost_w) / len(words) > 0.6)
+                               or (nums and len(lost_n) / len(nums) > 0.25)):
             v.append("ask_step_lost_substance")           # a paraphrase keeps most; a substitution loses most
         foreign = _foreign_identifiers(t, low)
         if foreign:

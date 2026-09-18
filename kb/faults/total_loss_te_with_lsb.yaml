@@ -19,7 +19,7 @@ aliases:
   - "Q50 not picking up"
 precedence: 1
 confirm_before_guidance: true
-listed_as: "Total loss of tractive effort (LSB glowing / without LSB / with GR progression)"
+listed_as: "total loss of tractive effort"
 config_dependency: none
 type_dependency: none
 presenting_signs:

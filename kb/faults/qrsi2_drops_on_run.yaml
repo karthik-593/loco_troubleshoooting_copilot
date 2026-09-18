@@ -19,6 +19,7 @@ aliases:
   - "QRSI-2 tripped"
   - "QRSI2 dropped"
   - "QRSI 2 dropped"
+listed_as: "safety relay trips (QLM / QOP-1 / QOP-2 / QOA / QLA / QRSI)"
 config_dependency: none            # both TFR terminal designations are in the step text (V1 decision);
                                    # transformer_rating (3900|5400 kVA) is a recorded future axis — HANDOFF
 type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section

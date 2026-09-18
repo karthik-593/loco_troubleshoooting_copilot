@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Isolation of blower motor relays QVRH, QVMT-1 & 2, QVSI-1 & 2, QVSL-1 & 2
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 11, §11.08, p.182 (items 1–8).
+# Mechanism: a REFERENCE PROCEDURE (batch 6). Items 5–8 are the ways of checking each blower
+# on run; they are carried in one "check the concerned blower" step rather than four steps,
+# since the pilot checks only the blower they isolated.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Isolation_of_blower_motor_relays
+aliases:
+  - "isolation of blower motor relays"
+  - "isolate the blower motor relay"
+  - "isolate blower relay"
+  - "isolate QVRH"
+  - "isolate QVMT"
+  - "isolate QVSI"
+  - "isolate QVSL"
+  - "how to isolate a blower motor relay"
+  - "blower relay isolation"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "A blower motor relay (QVRH, QVMT-1 / 2, QVSI-1 / 2 or QVSL-1 / 2) has to be isolated"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: stop_preferably_at_a_station_and_open_dj
+    text: "Stop the train preferably at a station and open DJ."
+    gate: null
+    source: "§11.08 item 1, p182"
+
+  - id: place_concerned_isolating_switch_on_3
+    text: "Place the concerned isolating switch on the '3' position."
+    gate: null
+    source: "§11.08 item 2, p182"
+
+  - id: close_dj_and_check_the_concerned_blower
+    text: "Close DJ and check the working of the concerned blower."
+    gate: null
+    source: "§11.08 item 3, p182"
+
+  - id: resume_and_check_blower_working_on_run
+    text: >-
+      If the air flow is normal, resume traction and check the blower's working on run
+      frequently. To check VSL, look at the rotation of the VSL fan in the HT-2 compartment
+      from the corridor 2 side and check the flow of air from the VSL exhaust whenever the
+      train is stopped. To check VRH, hold a handkerchief in front of the radiator from
+      corridor 2 — if it is sucked towards the radiator, MVRH is working. For MVSI-1 and 2,
+      keep the palm underneath the RSI block from the corridor 1 side and ensure air is being
+      expelled. For MVMT-1 and 2, air sucking can be observed.
+    gate: null
+    completes: true
+    source: "§11.08 items 4–8, p182"
+
+terminal_actions:
+  resolved: "resume traction, checking the concerned blower frequently on run"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.11, §11.08, p.182"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

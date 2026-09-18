@@ -1,0 +1,132 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Cleaning the interlocks of relays Q50, Q51 and QCVAR
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.13, pp.208–210 (A "General" items 1–7, B "To clean relay contacts"
+#         for normally open and for normally closed interlocks).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the procedure behind the Ch.8 ladders' "clean
+# Q50 / Q51 / Q52 interlocks". A item 3 states the BEFORE-condition (open DJ, lower the panto,
+# open HBA), so the cleaning step carries a HAZARD-EXPOSURE gate with intent `work_on_relay`.
+# The two cleaning drills are branches on `interlock_type` (normally open / normally closed).
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Cleaning_relay_interlocks
+aliases:
+  - "instructions for cleaning relay interlocks"
+  - "cleaning relay interlocks"
+  - "clean the relay interlocks"
+  - "how to clean relay contacts"
+  - "clean Q50 interlocks"
+  - "clean Q51 interlocks"
+  - "clean QCVAR interlocks"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The interlocks of relay Q50, Q51 or QCVAR are to be cleaned"
+
+combination_rules: []
+route_rules: []
+
+fact_phrases:
+  - fact: interlock_type
+    equals: normally_open
+    phrases: ["normally open interlock", "N/O interlock", "normally open"]
+    source: "§13.13 B 'For normally open interlock', p209"
+  - fact: interlock_type
+    equals: normally_closed
+    phrases: ["normally closed interlock", "N/C interlock", "normally close interlock", "normally closed"]
+    source: "§13.13 B 'For normally close interlock', p210"
+
+steps:
+  # A — general
+  - id: stop_at_a_station_or_convenient_place_for_cleaning
+    text: >-
+      Stop the train at a station or at a convenient place and build up maximum air pressure
+      in RS and MR.
+    gate: null
+    source: "§13.13 A items 1–2, p208"
+
+  - id: open_dj_lower_panto_and_open_hba_for_cleaning
+    text: >-
+      Open DJ, lower the panto and open HBA. Report whether the loco is de-energised.
+    gate: null
+    elicits: loco_de_energised_for_relay_work
+    source: "§13.13 A item 3, p208"
+
+  - id: break_the_seal_and_remove_the_relay_cover_for_cleaning
+    text: "Break the seal and remove the relay cover."
+    gate: null
+    source: "§13.13 A item 4, p208"
+
+  - id: examine_the_relay_visually_for_abnormality
+    text: >-
+      Examine the relay visually for any welding of contacts, burnt marks, bent or broken
+      contact fingers, obstruction by any foreign body, and the connecting terminals. Operate
+      the actuating rod or pallet gently and check the flexibility of the relay. If any
+      abnormality is noticed, contact TLC for advice.
+    gate: null
+    source: "§13.13 A items 5–7, pp208–209"
+
+  - id: identify_the_interlock_to_be_cleaned
+    text: >-
+      Report whether the interlock to be cleaned is a normally open or a normally closed
+      interlock.
+    gate: null
+    elicits: interlock_type
+    source: "§13.13 B, pp209–210"
+
+  # B — normally open
+  - id: clean_a_normally_open_interlock
+    text: >-
+      For a normally open interlock: insert a thin paper between the contacts, press the
+      actuating rod gently so as to close the contacts, move the paper to and fro a few times,
+      release the actuating rod and take out the paper. Repeat the process 2 or 3 times on
+      each interlock.
+    applies_when: {interlock_type: normally_open}
+    completes: true
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not work inside a relay until the loco is de-energised: DJ opened, panto lowered
+        and HBA opened.
+      action: work_on_relay
+      preconditions:
+        - loco_de_energised_for_relay_work
+      on_precondition_unmet: >-
+        Do not work on the relay yet: open DJ, lower the panto and open HBA first.
+      precondition_question: >-
+        Before cleaning the interlocks: is DJ opened, the panto lowered and HBA opened?
+      source: "§13.13 A item 3, p208"
+    source: "§13.13 B 'For normally open interlock' items 1–5, p209"
+
+  # B — normally closed
+  - id: clean_a_normally_closed_interlock
+    text: >-
+      For a normally closed interlock: press the actuating rod gently, insert a thin paper
+      between the relay contacts, release the actuating rod and move the paper to and fro a
+      few times, then press the actuating rod and remove the paper. Repeat the process 2 or 3
+      times on each interlock.
+    applies_when: {interlock_type: normally_closed}
+    completes: true
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not work inside a relay until the loco is de-energised: DJ opened, panto lowered
+        and HBA opened.
+      action: work_on_relay
+      preconditions:
+        - loco_de_energised_for_relay_work
+      on_precondition_unmet: >-
+        Do not work on the relay yet: open DJ, lower the panto and open HBA first.
+      precondition_question: >-
+        Before cleaning the interlocks: is DJ opened, the panto lowered and HBA opened?
+      source: "§13.13 A item 3, p208"
+    source: "§13.13 B 'For normally close interlock' items 1–5, p210"
+
+terminal_actions:
+  resolved: "replace the relay cover, energise the loco and resume traction"
+  unresolved: "contact TLC for advice"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.13, pp.208–210"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

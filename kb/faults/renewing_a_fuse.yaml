@@ -1,0 +1,159 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Standard instructions for renewing a fuse
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.12, pp.206–208 (items 1–9 with 9(a)–(e) and the Note).
+# Mechanism: a REFERENCE PROCEDURE (batch 6). Item 3 states the BEFORE-condition for handling
+# a fuse in its socket (stop, open DJ, lower the panto, switch off HBA), so the removal /
+# replacement step carries the same HAZARD-EXPOSURE gate and intent (`remove_fuse`) as
+# §10.08 and §11.01. Item 9(a)–(e) — what to do when the same fuse melts a third time — are
+# branches on `fuse_that_melts` (KB phrases), 9(c)'s QRS2 wedge being an ordinary step
+# (§10.04(c) / §8.02 precedent).
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Renewing_a_fuse
+aliases:
+  - "standard instructions for renewing fuse"
+  - "how to renew a fuse"
+  - "renewing a fuse"
+  - "renew the fuse"
+  - "replace a fuse"
+  - "how to replace a fuse"
+  - "fuse renewal procedure"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "A blown fuse is to be renewed on the loco"
+
+combination_rules: []
+route_rules: []
+
+fact_phrases:
+  - fact: fuse_that_melts
+    equals: ccba_ccpt_ccdj
+    phrases: ["CCBA", "CCPT", "CCDJ"]
+    source: "§13.12 item 9(a), p207"
+  - fact: fuse_that_melts
+    equals: cca
+    phrases: ["CCA"]
+    source: "§13.12 item 9(b), p207"
+  - fact: fuse_that_melts
+    equals: ccls
+    phrases: ["CCLS"]
+    source: "§13.12 item 9(c), p207"
+  - fact: fuse_that_melts
+    equals: cclc_ccvt_cclf_ccra
+    phrases: ["CCLC", "CCVT", "CCLF", "CCRA"]
+    source: "§13.12 items 9(d)–(e), pp207–208"
+
+steps:
+  - id: work_to_the_next_stop_if_the_fuse_does_not_open_dj
+    text: >-
+      If CCLC, CCLF 1 and 2, CCRA 1 and 2 or CCVT blows — which does not open DJ — work up to
+      the next normal stop and then renew the fuse. If the fuse is CCPT, CCDJ or CCA, try to
+      coast, clear the block section and then renew the fuse.
+    gate: null
+    source: "§13.12 items 1–2, pp206–207"
+
+  - id: stop_open_dj_lower_panto_and_switch_off_hba_for_fuse_work
+    text: >-
+      Stop the train, open DJ, lower the panto and switch off HBA for removing or replacing
+      the fuse in the fuse socket. Report whether the loco is de-energised.
+    gate: null
+    elicits: loco_de_energised_for_fuse_work
+    source: "§13.12 item 3, p207"
+
+  - id: choose_the_correct_fuse_and_test_it
+    text: >-
+      For replacing, choose the correct fuse, equal in value and shape to the melted one, and
+      check the fuse before replacing with the help of the fuse tester ECC and the LECC lamp
+      (ensure HBA is in the ON position for the test).
+    gate: null
+    source: "§13.12 items 4–5, p207"
+
+  - id: place_the_fuse_in_the_cap_and_insert_it
+    text: >-
+      Switch off HBA, place the fuse in the fuse cap with the tail end upwards, insert it in
+      the socket and tighten the cap properly.
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not remove or replace a fuse in its socket until the train is stopped, DJ opened,
+        the panto lowered and HBA switched off.
+      action: remove_fuse
+      preconditions:
+        - loco_de_energised_for_fuse_work
+      on_precondition_unmet: >-
+        Do not handle the fuse yet: stop the train, open DJ, lower the panto and switch off
+        HBA first.
+      precondition_question: >-
+        Before removing or replacing the fuse: is the train stopped with DJ opened, the panto
+        lowered and HBA switched off?
+      source: "§13.12 items 3 and 6, p207"
+    source: "§13.12 item 6, p207"
+
+  - id: operate_the_switches_one_by_one_to_find_the_faulty_circuit
+    text: >-
+      Operate the switches one by one, duly watching the working of the auxiliaries, to detect
+      any faulty circuit — so as to isolate that circuit, avoid using that control circuit, or
+      wedge that particular contactor. (If CCA melts while closing an auxiliary BL switch,
+      BLCP or BLVMT, isolate the concerned contactor; if required, take safety measures and
+      wedge the concerned contactor, keeping the contactor coil in isolated condition.)
+    gate: null
+    source: "§13.12 item 7, p207; §13.12 Note, p208"
+
+  - id: place_hoba_off_if_the_fuse_melts_a_second_time
+    text: >-
+      If the fuse melts a second time, place HOBA in the OFF position, renew the fuse and try.
+      Report which fuse is melting.
+    gate: null
+    elicits: fuse_that_melts
+    source: "§13.12 item 8, p207"
+
+  # 9(a)–(e) — the fuse melts again
+  - id: try_from_rear_cab_if_ccba_ccpt_or_ccdj_melts_again
+    text: >-
+      If it is CCBA, CCPT or CCDJ, try from the rear cab. If unsuccessful, contact TLC.
+    gate: null
+    applies_when: {fuse_that_melts: ccba_ccpt_ccdj}
+    completes: true
+    source: "§13.12 item 9(a), p207"
+
+  - id: work_within_5_notches_if_cca_melts_again
+    text: >-
+      If it is CCA, work within 5 notches by wedging minimum contactors (2 MCPs) and clear the
+      block section. If the load does not permit, wedge Q118 in energised condition and try to
+      clear the section as far as possible in lower notches, duly observing a current
+      restriction of 500 amps. Contact TLC.
+    gate: null
+    applies_when: {fuse_that_melts: cca}
+    completes: true
+    source: "§13.12 item 9(b), p207"
+
+  - id: work_without_pilot_lamps_if_ccls_melts_again
+    text: >-
+      If it is CCLS, work onwards without pilot lamps, with the other indications, and avoid
+      wheel slipping. Wedge QRS2 in energised condition, close the IP coc and isolate VCD to
+      clear the section, and contact TLC for advice.
+    gate: null
+    applies_when: {fuse_that_melts: ccls}
+    completes: true
+    source: "§13.12 item 9(c), p207"
+
+  - id: work_without_energising_the_circuit_for_control_fuses
+    text: >-
+      If it is CCLC, CCVT, CCLF 1 and 2 or CCRA 1 and 2, work onwards without energising that
+      circuit. For CCRA 1 and 2 and CCVT there is no need to place HOBA in OFF — work onwards
+      by isolating the concerned equipment.
+    gate: null
+    applies_when: {fuse_that_melts: cclc_ccvt_cclf_ccra}
+    completes: true
+    source: "§13.12 items 9(d)–(e), pp207–208"
+
+terminal_actions:
+  resolved: "work onwards as prescribed for that fuse"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.12, pp.206–208"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

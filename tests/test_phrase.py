@@ -19,7 +19,7 @@ def _caution(qlm, conditional=False):
 def test_out_of_scope_defer_keeps_the_covered_list(kb):
     from llm.parse import out_of_scope_reason
     t = T.defer_to_TLC(out_of_scope_reason(kb))
-    assert "I can verify: " in t.message and "QLM dropped" in t.message
+    assert "I can verify: " in t.message and "safety relay trips" in t.message
     assert "out_of_scope_dropped_coverage" in guard(t, "This isn't in my procedure set. Contact TLC.")
     assert not guard(t, t.message)
 

@@ -1,0 +1,119 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Vigilance Control Device (VCD) — acknowledgement, resetting, malfunction
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.16, pp.211–214 (the 60-second operations 1–5, the suppression modes
+#         (a)–(d), the escalation and VCD action, "Resetting of VCD" 1–4 and "If VCD mal
+#         function" 1–6).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the procedure behind "isolate VCD" in
+# §10.04(c) and §13.12 9(c) and behind §8.05's HVCD step. The reset ladder and the
+# malfunction ladder are branches on `vcd_situation` (KB phrases).
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: VCD_operation_and_reset
+aliases:
+  - "vigilance control device"
+  - "VCD"
+  - "VCD acted"
+  - "VCD action"
+  - "how to reset VCD"
+  - "resetting of VCD"
+  - "VCD malfunction"
+  - "VCD is malfunctioning"
+  - "isolate VCD"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "VCD has acted (BP dropped and GR came to '0') and is to be reset, or VCD is malfunctioning and is to be isolated"
+
+combination_rules: []
+route_rules: []
+
+fact_phrases:
+  - fact: vcd_situation
+    equals: reset_required
+    phrases: ["VCD acted", "VCD has acted", "VCD action took place", "BP dropped through VCD",
+              "VCD tripped", "need to reset VCD", "reset VCD"]
+    source: "§13.16 'Resetting of VCD', p213"
+  - fact: vcd_situation
+    equals: malfunction
+    phrases: ["VCD is malfunctioning", "VCD malfunction", "VCD not working", "VCD is defective",
+              "VCD keeps acting", "VCD is faulty"]
+    source: "§13.16 'If VCD mal function', p214"
+
+steps:
+  - id: acknowledge_vcd_every_60_seconds
+    text: >-
+      The Loco Pilot or Assistant Loco Pilot has to do one of the following operations every
+      60 seconds: progression or regression by MP or EEC, application of the sanders,
+      operation of the foot pedal switch, pressing the acknowledgement switch on the LP side
+      (in some locos), or operation of MPS (1st notch). VCD is in suppression mode when SA9 is
+      applied, when A9 is applied, during manual operation of GR, and when the speed is less
+      than 2 kmph (if the speed sensor cable is connected to the VCD unit).
+    gate: null
+    source: "§13.16 items 1–5 and suppression modes (a)–(d), pp211–212"
+
+  - id: note_the_vcd_escalation_and_action
+    text: >-
+      If VCD is not acknowledged within 60 seconds, the VCD warning lamp flickers for the next
+      8 seconds; if it is still not acknowledged, the VCD warning lamp and buzzer come on for
+      the next 8 seconds; if it is still not acknowledged, VCD action takes place — BP drops
+      and GR comes to '0', and AFL action follows the dropping of BP. Report whether VCD has
+      acted or is malfunctioning.
+    gate: null
+    elicits: vcd_situation
+    source: "§13.16 escalation, p212"
+
+  # Resetting
+  - id: keep_mp_on_zero_and_a9_on_emergency_before_vcd_reset
+    text: >-
+      To reset VCD: keep MP on '0' and keep A9 on emergency to avoid MR dropping.
+    gate: null
+    applies_when: {vcd_situation: reset_required}
+    source: "§13.16 'Resetting of VCD' items 1–2, p213"
+
+  - id: wait_32_seconds_then_press_vcd_reset_and_ack
+    text: >-
+      Wait for 32 seconds, then press the VCD reset button and press ACK. Keep A9 on release
+      for charging of BP.
+    gate: null
+    applies_when: {vcd_situation: reset_required}
+    completes: true
+    source: "§13.16 'Resetting of VCD' items 3–4, p213"
+
+  # Malfunction
+  - id: isolate_vcd_with_the_hvcd_bypass_switch
+    text: >-
+      If VCD malfunctions, a bypass switch (HVCD) is provided in the switch panel or near the
+      main unit: isolate the unit by keeping the bypass switch in the '0' position, duly
+      entering it in the log book and informing TLC.
+    gate: null
+    applies_when: {vcd_situation: malfunction}
+    source: "§13.16 'If VCD mal function' item 1, p214"
+
+  - id: try_hba_off_then_disconnect_vcd_main_unit_cables
+    text: >-
+      If it is still not successful, switch HBA off and try. If it is still not successful,
+      disconnect the four cables of the VCD main unit and try.
+    gate: null
+    applies_when: {vcd_situation: malfunction}
+    completes: true
+    source: "§13.16 'If VCD mal function' items 2–3, p214"
+
+  - id: note_the_standing_vcd_rules_on_taking_over
+    text: >-
+      No loco is to be taken over from the main shed or trip shed with VCD in isolated or
+      defective condition. While taking over charge, if VCD is found isolated without any
+      remarks, the Loco Pilot should normalise it and check its healthiness. If the operator
+      isolates VCD when it is healthy, VCD logs the event as 'VCD Bypass but healthy'.
+    gate: null
+    applies_when: {vcd_situation: malfunction}
+    source: "§13.16 'If VCD mal function' items 4–6, p214"
+
+terminal_actions:
+  resolved: "reset or isolate VCD as prescribed, entering it in the log book and informing TLC"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.16, pp.211–214"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Instructions regarding the speedometer
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.11, pp.204–206 (1 "Memory freeze operation" (a)–(f), 2 "Ready
+#         reckoner for speed" and 3 "Speedo meter not working on run" (a)–(b)).
+# Mechanism: a REFERENCE PROCEDURE (batch 6). The ready-reckoner time/speed TABLE is NOT
+# encoded (the "encode facts, not verbatim tables" rule, BUILD_PLAN §11) — the step names it
+# and points to the TSD. The two actionable parts are the memory freeze and the
+# speedometer-not-working ladder.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Speedometer_instructions
+aliases:
+  - "speedo meter not working"
+  - "speedometer not working"
+  - "SPM not working"
+  - "speedometer is not working on run"
+  - "memory freeze"
+  - "memory freeze operation for speedometers"
+  - "instructions regarding speedo meter"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The speedometer is not working on run, or the memory freeze has to be operated after an accident"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # 1 — memory freeze (stated-only: it applies after an accident)
+  - id: operate_the_memory_freeze_switch_after_an_accident
+    text: >-
+      The memory freeze facility allows the loco to be moved after an accident without
+      overwriting the latest data stored in the 'short memory'. The memory freeze switch and
+      its indication are inside a sealed glass cover on the recorder cum indicator unit: the
+      glass has to be broken to operate the switch, and once it is operated the LED will be
+      on. There will be no further recording in the 'short memory' as long as the memory
+      freeze switch is on; the 'long memory' is not affected even if the loco is moved.
+    gate: null
+    applies_when: {memory_freeze_required: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§13.11 item 1(a)–(f), pp204–205"
+
+  # 3 — speedometer not working on run
+  - id: check_pulse_generator_and_reset_the_knob
+    text: >-
+      Ensure the pulse generator is intact, reset the resetting knob provided in the panel and
+      try.
+    gate: null
+    source: "§13.11 item 3(a), p206"
+
+  - id: inform_tlc_and_work_10_percent_below_permissible_speed
+    text: >-
+      If the SPM is still not working, inform TLC and work the train 10% below the permissible
+      speed, estimating the speed with the help of a watch, the kilometre posts and the inter
+      station running times given in the working time table. (The ready reckoner for speed —
+      time in seconds against speed in km/h — is given in §13.11 item 2 of the TSD.)
+    gate: null
+    completes: true
+    source: "§13.11 item 3(b), p206; item 2 ready reckoner, pp205–206"
+
+terminal_actions:
+  resolved: "work the train 10% below the permissible speed, estimating the speed as prescribed"
+  unresolved: "inform TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.11, pp.204–206"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

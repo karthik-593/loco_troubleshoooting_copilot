@@ -58,7 +58,7 @@ five showcase conversations, run live, are in [docs/walkthrough.md](docs/walkthr
   list of faults it *can* verify; a vague message is clarified once, and the engine defers
   on the next unresolved turn rather than repeat the question (BUILD_PLAN §5.6).
 
-Gate mechanisms encoded so far (61 fault files): **reset-limit** (QLM: once only; a stated prior reset *or*
+Gate mechanisms encoded so far (101 fault files): **reset-limit** (QLM: once only; a stated prior reset *or*
 a re-lock after the permitted reset — both refuse, and the recurrence is detected by the
 engine itself, not the parser), **isolate-then-reset** (QLM with QOP/QRSI or QLA/QOA),
 **hazard-exposure** (pantograph roof work gated on the OHE power block + earthing and
@@ -71,28 +71,35 @@ ladders (QRSI-1/2, Operations B-I / O / I), **hub-and-route intake** ("DJ trippe
 line before any guidance; "BP dropped suddenly" → §9.04.1–2 → the cause the pilot names),
 the **continuity-test gate** on moving the train after a cattle run-over (§9.04.3 Note 3), the
 Ch.9 **pneumatic ladders** (RS / MR / BP / FP pressure, loco brakes, BP not dropping / rising)
-with their stated-only after-attaching / light-engine / banker branches, and the general
-**smoke/fire response** procedure.
+with their stated-only after-attaching / light-engine / banker branches, the **fuse-handling
+gate** (a melted RSI tell-tale fuse, or any fuse in its socket, comes out only with DJ open,
+panto down and HBA off — §10.08, §11.01, §13.12), the **relay-work gate** (pressing a relay by
+hand, wedging it, or cleaning its interlocks — §12.01, §12.03, §13.13), and the general
+**smoke/fire response** procedure. Chapters 11–13 are encoded as **reference procedures** —
+the isolations, wedgings and special instructions the fault files have been citing all along
+(isolate a TM / battery / RSI block, ground the loco, earth the OHE, renew a fuse, EEC, manual
+GR, VCD) — carrying the same gates and the same intents as the faults that point at them, at a
+lower precedence so a reported fault always outranks a how-to.
 
 ## Evaluation
 
-27 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
+30 scripted-pilot scenarios (`eval/scenarios/`) — pilot did it right, pilot missed a
 step, pilot's next move is unsafe, ambiguous intake, combination fault, config axis —
 scored against a **flat-retrieval baseline that has the same KB content** and only
 recites it. Live run (DeepSeek parse/decide, Claude phrase):
 
 | Metric | Agent | Flat baseline |
 |---|---|---|
-| Unsafe-instruction rate (target 0) | **0.00** | 0.48 |
+| Unsafe-instruction rate (target 0) | **0.00** | 0.50 |
 | Missed-gate rate (target 0) | **0.00** | 1.00 |
 | Specific-miss detection | 1.00 | 0.00 |
 | Correct-terminal rate | 1.00 | 0.00 |
-| Distinct tool paths (proof of agency) | 14 | 1 |
+| Distinct tool paths (proof of agency) | 15 | 1 |
 
 The baseline's unsafe rate is not a strawman: it prints the correct procedure, which says
 "reset QLM" / "climb on the roof" unconditionally and can never ask about the log book or
 the power block. Where the agent merely ties it (the baseline recites the right step
-somewhere, 19%), the report says so. Clean linear faults take a one-tool path; the agency
+somewhere, 17%), the report says so. Clean linear faults take a one-tool path; the agency
 is load-bearing in the branching cases, as the distinct-paths count shows.
 
 **Safety as a CI gate:** every push replays the suite offline (scripted parses, no
@@ -136,6 +143,9 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Auto regression with LSP · 1st-notch auto regression without LSP | §8.04 (+8.04.1) / §8.05 | meter-branch question (A3 / A4 / U2 / U5 → HMCS position); stated reasons (slipped pinion, locked axle) served first; §8.04.1 symptoms folded in |
 | Partial loss of tractive effort | §8.06 | HMCS positions → air leak → isolate TM-1 / TM-6 on U1 / U6 |
 | CCPT melting | §8.07 | one file keyed on the occasion (15 values, KB fact phrases); the Ch.7 Q118 / Q44 wedge gates reused |
+| Pneumatic failures: RS / MR / BP / FP pressure, sudden BP drop (intake + 4 causes), AFI overshoot, loco brakes (SA9 / A9 / not releasing), BP rising / not dropping | §9.01–9.10 | hub routing on the reported cause; **continuity-test gate** after a cattle run-over; stated-only after-attaching / dead-loco / light-engine / banker branches; "BP below 5" reroutes to §9.03 |
+| MCPA not working · panto not raising · all pilot lamps · LSDJ / LSCHBA / LSGR / LSRSI · UA meter · head light · flasher · horns · auto regression during RB · wheel skidding · loco not moving on 1st notch | §10.01–10.16 | **fuse-removal gate** on §10.08; the HBA-'0' test picks CHBA vs QV61; lamp routes into §10.04; low battery routes into §11.06; locked axle defers |
+| Reference procedures: isolation (RSI block, TM, MCP, battery charger, battery, RGCP, blower relays), wedging (EM contactors, relays), special instructions (EEC, manual GR, rear cab, without pilot lamps, grounding, OHE earthing, fire precautions, first aid, emergency telephone, power block, speedometer, fuse renewal, relay cleaning, SS2 dummying, BPEMS, VCD) | §11.01–11.08 / §12.01–12.03 / §13.01–13.16 | precedence −1 (a reported fault outranks a how-to); the same hazard gates and intents as the faults that cite them; §11.02's reverser-bit table on the lazily-asked RB axis |
 
 ## Layout
 
@@ -149,7 +159,7 @@ citations in CI. The PDF is DVC-tracked and kept out of git.
 | Streamlit chat client showing the engine trace | `client/` |
 | Scenario suite, harness, baseline, report | `eval/` |
 | Showcase walkthrough generator | `scripts/demo.py` |
-| Tests — 286 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 75 live parse cases | `tests/` |
+| Tests — 305 offline (reflex, loop guards, recurrence, graph traces, API, eval harness) + 89 live parse cases | `tests/` |
 
 Design spec: `BUILD_PLAN.md`. Decisions, provenance notes and open items: `HANDOFF.md`.
 

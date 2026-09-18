@@ -15,6 +15,7 @@ aliases:
   - "no sanding"
   - "sanders failed"
   - "sanding not working"
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
 config_dependency: none            # §10.12 does not branch on loco type
 type_dependency: none              # class axis (WAG-7 / WAG-5 / WAP-4): no branch in this section
 presenting_signs:                  # §10.12 causes

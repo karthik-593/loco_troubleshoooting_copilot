@@ -1,0 +1,83 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: LSGR does not glow when MP is placed on '0'
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.07, pp.169–170 (causes 1–2, a–e).
+# Mechanism: ladder a–e. (c) ELICITS `other_pilot_lamps_glowing` (LSP and LSRSI on BPT) and
+# its "trouble shoot for all pilot lamps not glowing" is a ROUTE RULE to §10.04.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: LSGR_not_glowing_on_zero
+aliases:
+  - "LSGR does not glow when MP is placed on 0"
+  - "LSGR not glowing when MP is on 0"
+  - "LSGR does not glow"
+  - "LSGR not glowing"
+  - "LSGR is not glowing"
+  - "LSGR not glowing on zero"
+  - "LSGR did not glow when I brought MP to 0"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "LSGR does not glow when MP is placed on '0' (GR stuck up on notches, or the LSGR lamp fused)"
+
+combination_rules: []
+route_rules:
+  - if_fact: other_pilot_lamps_glowing
+    equals: "no"
+    route_to: All_pilot_lamps_not_glowing
+    source: "§10.07(c), p170: 'If they are not glowing, trouble shoot for all pilot lamps not glowing'"
+    phrases: ["LSP and LSRSI are not glowing", "LSP and LSRSI not glowing",
+              "neither LSP nor LSRSI is glowing", "no pilot lamps on BPT"]
+
+steps:
+  # (a)
+  - id: wait_15_seconds_if_gr_regressing
+    text: >-
+      If GR is regressing, wait for 15 seconds and observe whether LSGR glows. If LSGR is not
+      glowing after the notch repeater and ammeter needles regress to '0', resume traction.
+    gate: null
+    source: "§10.07(a), p170"
+
+  # (b)
+  - id: open_dj_and_bring_gr_manually_to_zero
+    text: >-
+      If GR is not regressing and DJ has not tripped after 5.6 seconds through the Q-46
+      relay, open DJ immediately, apply the brake if necessary and find out the cause. If GR
+      has got stuck up, bring GR manually to '0' and check LSGR. If it glows, resume traction.
+    gate: null
+    source: "§10.07(b), p170"
+
+  # (c)
+  - id: press_bpt_and_check_lsp_and_lsrsi
+    text: >-
+      If GR, the ammeters and the notch repeater are on '0', press BPT and check whether the
+      LSP and LSRSI lamps are glowing. Report whether they are glowing.
+    gate: null
+    elicits: other_pilot_lamps_glowing
+    source: "§10.07(c), p170"
+
+  # (d)
+  - id: check_lsgr_in_rear_cab
+    text: >-
+      If they are glowing, check the LSGR lamp in the rear cab. If it is glowing, the leading
+      cab LSGR is defective.
+    gate: null
+    source: "§10.07(d), p170"
+
+  # (e)
+  - id: take_one_notch_and_observe_repeater_and_ammeters
+    text: >-
+      If LSGR is not glowing in the rear cab also, take one traction notch and observe the
+      notch repeater and the ammeters. If they are deviating, resume traction.
+    gate: null
+    completes: true
+    source: "§10.07(e), p170"
+
+terminal_actions:
+  resolved: "resume traction"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.07, pp.169–170"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

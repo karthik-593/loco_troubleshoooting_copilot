@@ -1,0 +1,96 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Dummying of safety valve SS2
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.14, pp.210–211 (items 1–10).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the ladder behind §9.02(f) ("tap / close COC /
+# dummy the concerned safety valve") and §9.01 item 3 (SS1). Item 10 is the deferral.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Dummying_safety_valve_SS2
+aliases:
+  - "dummying of safety valve"
+  - "dummy the safety valve"
+  - "dummying safety valve SS2"
+  - "how to dummy SS2"
+  - "SS2 stuck up"
+  - "SS2 blowing continuously"
+  - "safety valve blowing"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Safety valve SS2 is stuck up in the open position or leaking, and has to be tapped, closed or dummied"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: leakage_not_arrested
+    equals: "yes"
+    after_any: [block_the_pipe_line_with_a_wooden_plug]
+    text: >-
+      The leakage could not be arrested and the minimum working pressure cannot be
+      maintained: contact TLC.
+    source: "§13.14 item 10, p211"
+
+steps:
+  - id: stop_the_train_and_tap_the_safety_valve
+    text: >-
+      Stop the train at a convenient place. If the safety valve is stuck up in the open
+      position, gently tap the safety valve and try.
+    gate: null
+    source: "§13.14 items 1–2, p210"
+
+  - id: close_the_ss2_coc_if_provided
+    text: >-
+      In some locos a COC is provided for SS2: close the COC if SS2 is stuck up in the open
+      condition.
+    gate: null
+    source: "§13.14 item 3, p210"
+
+  - id: make_the_safety_valve_dummy
+    text: >-
+      If a COC is not provided and the leakage from SS2 is not stopped, make it dummy: remove
+      the top cap of SS2 with a suitable spanner, slacken the check nut, tighten the adjusting
+      screw, tighten the check nut again and replace the cap.
+    gate: null
+    source: "§13.14 item 4, p210"
+
+  - id: refix_the_safety_valve_if_worked_out
+    text: >-
+      If the leakage is not stopped or SS2 has worked out from the pipe, try to re-fix the
+      safety valve.
+    gate: null
+    source: "§13.14 item 5, p210"
+
+  - id: dummy_the_pipe_line_with_the_dummy_nut
+    text: >-
+      If SS2 cannot be fixed up, remove the dummy nut provided near SS2 and try to dummy the
+      pipe line.
+    gate: null
+    source: "§13.14 item 6, p210"
+
+  - id: block_the_pipe_line_with_a_wooden_plug
+    text: >-
+      If the dummy nut is also not suitable or not provided, try to block it with a wooden
+      plug. Report whether the leakage has been arrested.
+    gate: null
+    elicits: leakage_not_arrested
+    source: "§13.14 item 7, p211"
+
+  - id: energise_the_loco_and_resume_if_leakage_arrested
+    text: >-
+      If the leakage has been arrested, energise the loco and resume traction. Ensure RGCP is
+      in proper working order; if it is defective, work with BLCPD, duly opening it at 9.5
+      kg/cm2 and closing it at 8 kg/cm2.
+    gate: null
+    completes: true
+    source: "§13.14 items 8–9, p211"
+
+terminal_actions:
+  resolved: "resume traction with the safety valve dummied, working BLCPD manually if RGCP is defective"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.14, pp.210–211"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

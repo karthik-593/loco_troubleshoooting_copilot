@@ -748,6 +748,85 @@ pipe) ride as a conditional resolved line. (11) §9.06(h) doubled as a stated-on
 step and the resolved text. (12) Coverage list: the 15 files collapse to one
 "pneumatic failures" entry.
 
-Next: Ch.10 miscellaneous failures (§10.01 MCPA not working — the §9.01 step-1 / §7.01.2(a)
-cross-reference; §10.02 panto not rising — the §7.02(e) cross-reference; the rest of Ch.10
-beyond §10.03 / §10.12 already encoded).
+## Batch 5 — Ch.10 miscellaneous failures, encoded 2026-09-18
+
+Approved decisions (user, 2026-09-18, "all approved"): (1) §10.08's tell-tale fuse removal is a
+`hazard_exposure` gate on DJ open / panto lowered / HBA off with the IP(M) coc closed — §10.08
+states them as a BEFORE condition of the removal; (2) §10.02 is ONE file with the two fuse
+blocks as branches on `ccba_ccpt_fuse_melted`; (3) §10.06's HBA-'0' test is the discriminating
+question (`lschba_cause`, KB fact phrases), the modified-HCHBA table a stated-only aside;
+(4) §10.16(c) hand-brake wheel numbers stay as TSD text, not a `loco_type` branch; (5) §10.16(g)
+locked axle is a defer-to-TLC condition; (6) QEMS (§10.02) and QRS (§10.04(c)) wedges ordinary;
+(7) aliases keep §10.16 apart from §8.05 and the TE hub.
+
+14 files (§10.03 panto damaged and §10.12 sanders were already encoded): `mcpa_not_working`,
+`pantograph_not_raising`, `all_pilot_lamps_not_glowing`, `lsdj_not_glowing_when_bldj_opened`,
+`lschba_glows_on_run`, `lsgr_not_glowing_on_zero`, `lsrsi_glows_on_run`, `ua_meter_not_deviating`,
+`head_light_not_glowing`, `flasher_light_not_glowing`, `horns_not_sounding`,
+`auto_regression_with_lsb_during_rb`, `wheel_skidding`, `loco_not_moving_on_first_notch`.
+
+Cross-references closed: §10.05(b) and §10.07(c) route to §10.04 on `other_pilot_lamps_glowing`;
+§10.01(b) and §10.02(f) route to §11.06 on `battery_voltage_too_low`. §7.02(e) "panto not
+rising" is §10.02 (NOT Ch.9 — the batch-2 file's "(Chapter 9)" gloss was mine, corrected).
+
+Judgement calls: (a) §10.14 (auto regression during RB) carries NO reset_limit gate — §10.14(c)
+itself prescribes resetting the target a second time and dropping RB, unlike the Ch.6 relays;
+its (c) is placed BEFORE (b) so a stated recurrence is served first ((b) completes).
+(b) §10.04's MU / LSAF notes are stated-only asides.
+
+## Batch 6 — Ch.11 isolation, Ch.12 wedging, Ch.13 special instructions, encoded 2026-09-18
+
+27 REFERENCE PROCEDURE files (precedence −1, `listed_as: isolation, wedging and special
+instructions`): Ch.11 §11.01–11.08 except §11.04, which `pantograph_damaged` already carries;
+Ch.12 §12.01 (one file, relay chosen by `manual_relay`), §12.02, §12.03 (one file, relay chosen
+by `relay_to_wedge`, each relay keeping its own before-conditions); Ch.13 all sixteen sections.
+
+They carry the SAME gates and intents as the fault files that cite them — `enter_HT_compartment`
+on §13.05's repair step, `work_on_roof` on §13.06 / §13.10, `wedge_Q118` / `wedge_Q45` with the
+Ch.7 facts (`all_em_contactors_open`, `no_operation_a_ending_trouble`) in §12.03 — so asking for
+the how-to never routes around a refusal. §11.02's reverser-bit table is the one already written
+out in words in §6.03.3(j) / §6.03.4(i) (batch 1, user-confirmed) and corroborated by §8.04 B;
+the rb axis is asked lazily. §13.11's ready-reckoner speed table is NOT encoded (the
+"facts, not verbatim tables" rule) — the step names it and points at the TSD.
+
+Judgement calls to confirm: (1) §12.01's Q118 press gated on C-118 fully opened and the Q44
+press on Q118 energised (both stated BEFORE-checks); Q45's conditions left as ordinary steps.
+(2) §12.03's Q50 block states a BEFORE-check ("ensure LSC145 is extinguished before wedging
+Q50") that §8.01 does not — the reference file gates it, while §8.01's Q50 wedge stays an
+ordinary step per the confirmed batch-3 decision. Worth a ruling: should §8.01 gate it too?
+(3) §13.05 / §13.06 / §13.10 keep their hazard gates, so a pilot who opens with "going into the
+HT compartment" is cautioned on every turn until they state the loco is grounded, rather than
+being walked through steps 1–9 first — safe, but the caution repeats.
+(4) §13.08 (first aid) and §13.07 (fire precautions) are encoded as ordered procedures even
+though they are not fault ladders.
+
+New engine / LLM work in batches 5–6:
+- Three intents registered: `remove_fuse`, `work_on_relay`, `wedge_relay` (state, schema, prompt).
+- `llm/parse.py`: an intake hub no longer hijacks an ANSWER given inside another procedure —
+  if the current fault's own KB phrases match the message, the hub alias is dropped (§10.06's
+  "if DJ trips, CHBA is defective" was being taken over by the §5.01 hub alias "DJ trips").
+  The KB-phrase scan is now the shared helper `kb_phrase_facts`.
+- `llm/phrase.py`: NUMERIC-VALUE loss guard — a rendering that drops more than a quarter of a
+  step's standalone numbers falls back to verbatim (seen live: §11.02's reverser-bit numbers
+  rendered as "the bit positions ... as laid out").
+- `llm/schemas.py`: `ParseOutput` is `extra="allow"` + `fold_stray_facts()` — DeepSeek sometimes
+  emits an enumerated fact as a TOP-LEVEL key, and `extra="forbid"` turned a good parse into a
+  hard failure. Folded into `facts`, where KB-key validation still applies.
+- Fact hints sharpened for the negative wording ("DJ is still closed" → `dj_opened: no`, and the
+  same for panto / HBA / the de-energised facts) and for "all normal" → abnormality `no`.
+- Coverage list collapsed again (12 entries, 570 chars): the seven relay files became
+  "safety relay trips", the Ch.10 files "miscellaneous failures", Ch.11–13 one entry.
+- Tests: `tests/test_batch5_ch10.py` (8), `tests/test_batch6_ch11_13.py` (11, including
+  KB-wide integrity: every gate action is a registered intent, every route target resolves,
+  every alias resolves to its own fault). 305 offline. Held-out parse: 14 new cases (89), all
+  passing live; two stale cases fixed (a headlight message is no longer out of scope now that
+  §10.10 is encoded; "qop dropped" is ambiguous between QOP-1 and QOP-2, not out of scope).
+- Eval: 3 scenarios (§10.08 fuse removal on a live loco; §10.05 → §10.04 route with a specific
+  miss; §12.03 Q45 wedge refused on Operation 'A' ending trouble). 30/30 offline AND live,
+  unsafe 0, missed-gate 0, 16 paths offline / 15 live.
+
+Next: the TSD's remaining chapters are OUT of BUILD_PLAN §15 scope (Ch.14 SIV internal fault
+tree, Ch.15–16 microprocessor / 3-phase and MU locos, Ch.17–18 double-head and banker, Ch.20
+circuit diagrams). Ch.19 (troubles on air brake trains — BP / FP on the formation, brake
+binding, LHB bogie isolation, ACP, air spring) is conventional-loco adjacent and the one
+arguably-in-scope chapter left: a batch-7 candidate if the user wants it.

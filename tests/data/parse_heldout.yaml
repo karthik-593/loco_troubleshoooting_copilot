@@ -79,11 +79,14 @@
   allow_clarify_if_no_fault: true
 # --- §5.6 out-of-scope: a concrete problem that is not in the procedure set ---
 - text: "my headlight is not working. i am going at normal speed. is there any issue?"
-  out_of_scope: true
+  fault: Head_light_not_glowing     # was an out-of-scope case until batch 5 encoded §10.10
 - text: "no traction suddenly. no relays dropped, loco just stopped"
   fault: Total_loss_TE        # batch 3: the total-loss-of-TE intake hub (alias "no traction")
 - text: "qop dropped"
-  never_acts: true            # QOP alone is not encoded (only QLM with QOP/QRSI); the relay IS in the vocabulary
+  # batch 1 encoded QOP-1 and QOP-2 separately, so "qop" without a number is AMBIGUOUS: a
+  # clarify, or an UNCONFIRMED guess at one of them (§5.5 confirms before any guidance).
+  fault_any_of: [QOP1_dropped, QOP2_dropped]
+  allow_clarify_if_no_fault: true
 # --- one reset reported in the first message is the gated step, NOT a prior reset ---
 - text: "qlm dropped , i resetted, now working fine"
   fault: QLM_dropped
@@ -328,3 +331,51 @@
   fault: Loco_brake_not_applying_SA9
   claimed: [stop_immediately_with_a9_emergency_if_light_engine, ensure_sa9_inlet_outlet_cocs_open_working_cab_closed_non_working]
   facts: {light_engine: "yes"}
+# --- batch 5: Ch.10 miscellaneous failures ---
+- text: "LSRSI is glowing on run. noted the ammeter and UA readings, coasted with MP on 0 and checked both RSI blocks - one tell tale fuse melted in RSI-1"
+  fault: LSRSI_glows_on_run
+  claimed: [note_meter_readings_and_notches, coast_and_check_telltale_fuses_on_both_rsi_blocks]
+  facts: {telltale_fuses_melted: one_in_one_block}
+- text: "about to pull out the melted tell tale fuse, DJ is still closed"
+  state_fault: LSRSI_glows_on_run
+  fault: LSRSI_glows_on_run
+  intended_action: remove_fuse
+  facts: {dj_opened: "no"}
+- text: "none of the pilot lamps are glowing. HBA closed, battery 105 volts, locked and unlocked BL three times, ZLS is on"
+  fault: All_pilot_lamps_not_glowing
+  claimed: [ensure_hba_closed_voltage_above_90_and_cycle_bl, ensure_zls_on]
+- text: "LSCHBA is glowing on run but DJ has not tripped. kept HBA on 0 after closing the IP coc and the DJ did not trip"
+  fault: LSCHBA_glows_on_run
+  facts: {lschba_cause: qv61_defective}
+- text: "MCPA is not working. switched on HBA and ZCPA, the battery voltage is very low"
+  fault_any_of: [MCPA_not_working, Isolation_of_defective_battery]
+  facts: {battery_voltage_too_low: "yes"}
+- text: "head light does not glow. ZPR and BLPRF both closed, BLPRR was closed so I opened it and closed BLPRF, still nothing"
+  fault: Head_light_not_glowing
+  claimed: [check_zpr_zrt_and_blprf_positions, open_blprr_and_close_blprf]
+- text: "loco is not moving on the first notch though the ammeter deviates. BC gauge is zero, hand brake is released"
+  fault: Loco_not_moving_on_first_notch
+  claimed_min: 2              # the model may also claim the (c) release step; it is contradicted
+  facts: {hand_brake_applied: "no"}   # by hand_brake_applied=no, so the diff skips it either way
+- text: "panto is not raising. RS is 7 kg, tried the other panto, both PT cocs are open, operated HOM three times"
+  fault: Pantograph_not_raising
+  claimed: [check_rs_mr_pressure_and_raise_with_mcpa, try_with_other_pantograph, check_pt1_pt2_isolating_cocs, operate_hom_two_or_three_times]
+# --- batch 6: Ch.11-13 reference procedures ---
+- text: "how do I isolate traction motor 3?"
+  fault: Isolation_of_traction_motors
+- text: "need to ground the loco to get into the HT compartment, train is secured and protected, TLC informed"
+  fault: Grounding_the_loco
+  claimed_min: 2
+  intended_action: enter_HT_compartment
+- text: "how do I wedge a relay? it is Q45 I need to wedge"
+  fault: Wedging_of_relays
+  facts: {relay_to_wedge: q45}
+- text: "the CCLS fuse has melted a second time, put HOBA off and renewed it, it melted again"
+  # §13.12 item 9(c) and §10.04(c) both own a repeatedly-melting CCLS; either is right
+  fault_any_of: [Renewing_a_fuse, All_pilot_lamps_not_glowing]
+- text: "VCD acted, BP dropped and GR came to 0. how do I reset it?"
+  fault: VCD_operation_and_reset
+  facts: {vcd_situation: reset_required}
+- text: "MP has failed, want to work on EEC. placed MP on N and ZSMS on 0"
+  fault: EEC_operation
+  claimed: [place_mp_on_n_and_zsms_on_zero]

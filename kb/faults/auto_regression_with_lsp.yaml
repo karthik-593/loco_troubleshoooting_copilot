@@ -21,7 +21,7 @@ aliases:
   - "GR regressing with LSP"
 precedence: 1
 confirm_before_guidance: true
-listed_as: "Auto regression (with LSP / 1st notch without LSP)"
+listed_as: "auto regression (with LSP / 1st notch / during RB)"
 config_dependency: none
 type_dependency: none
 presenting_signs:

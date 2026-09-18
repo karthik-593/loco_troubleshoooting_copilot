@@ -1,0 +1,135 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: LSCHBA glows on run (without DJ tripping)
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.06, pp.168–169 (causes 1–2, the HBA-'0'
+#         test, "If CHBA defective" b–f, "If QV 61 defective" a–c, the modified-HCHBA
+#         position table and the Note).
+# Mechanism (approved batch 5 decision 3): the TSD's own discriminating test — keep HBA on
+# '0' after closing the IP coc; DJ trips = CHBA defective, DJ does not trip = QV61 defective —
+# is the first step, ELICITING `lschba_cause`; KB `fact_phrases` set it deterministically.
+# The two blocks are branches on that fact. The modified-HCHBA table's actionable clause
+# (position 3 for an open-circuited CHBA ammeter shunt) is a stated-only aside carrying the
+# Note that CCBA melting and an ammeter shunt cut look alike.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: LSCHBA_glows_on_run
+aliases:
+  - "LSCHBA glows on run"
+  - "LSCHBA glowing on run"
+  - "LSCHBA is glowing on run"
+  - "LSCHBA glows without DJ tripping"
+  - "LSCHBA glowing without DJ tripping"
+  - "LSCHBA glowing"
+  - "LSCHBA is glowing"
+  - "LSCHBA does not extinguish on run"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "LSCHBA glows on run without DJ tripping (CHBA failed, or QV61 de-energised)"
+
+combination_rules: []
+route_rules: []
+
+fact_phrases:
+  - fact: lschba_cause
+    equals: chba_defective
+    phrases: ["DJ trips", "DJ tripped", "DJ is tripping", "DJ trips with HBA off",
+              "CHBA is defective", "CHBA defective"]
+    source: "§10.06 trouble shooting, p168: 'Keep HBA 0 (after closing IP Coc), if DJ trips CHBA defective'"
+  - fact: lschba_cause
+    equals: qv61_defective
+    phrases: ["DJ does not trip", "DJ did not trip", "DJ is not tripping", "DJ not tripping",
+              "QV61 is defective", "QV61 defective", "QV 61 defective"]
+    source: "§10.06 trouble shooting, p168: 'if not QV61 defective'"
+
+steps:
+  - id: keep_hba_zero_and_observe_whether_dj_trips
+    text: >-
+      Keep HBA on '0', after closing the IP coc, and observe: if DJ trips, CHBA is defective;
+      if it does not trip, QV61 is defective. Report whether DJ trips.
+    gate: null
+    elicits: lschba_cause
+    source: "§10.06 trouble shooting, p168"
+
+  # If CHBA defective — (b)
+  - id: chba_ensure_hchba_on_1
+    text: "Ensure HCHBA is on the 1 position."
+    gate: null
+    applies_when: {lschba_cause: chba_defective}
+    source: "§10.06 'If CHBA defective' (b), p168"
+
+  # (c)
+  - id: chba_check_fuses_and_mcbs
+    text: >-
+      Ensure the fuses / MCBs on CHBA are not in fused / tripped condition; if any are,
+      replace or reset them.
+    gate: null
+    applies_when: {lschba_cause: chba_defective}
+    source: "§10.06 'If CHBA defective' (c), p168"
+
+  # (d)
+  - id: chba_keep_hchba_on_zero_and_inform_tlc
+    text: "Keep HCHBA on the '0' position. Inform SCOR / TLC."
+    gate: null
+    applies_when: {lschba_cause: chba_defective}
+    source: "§10.06 'If CHBA defective' (d), p168"
+
+  # (e)
+  - id: chba_work_further_watching_battery_voltage
+    text: >-
+      Work further — 6 hours in day time, 4 hours in night time — duly observing the battery
+      voltage; it should be above 90 V.
+    gate: null
+    applies_when: {lschba_cause: chba_defective}
+    source: "§10.06 'If CHBA defective' (e), p169"
+
+  # (f)
+  - id: chba_use_battery_sparingly
+    text: >-
+      Use the battery sparingly: avoid frequent operation of MP, MPS and sanders, and switch
+      off the corridor lights and cab lights if they are not required.
+    gate: null
+    applies_when: {lschba_cause: chba_defective}
+    completes: true
+    source: "§10.06 'If CHBA defective' (f), p169"
+
+  # If QV61 defective — (a)(b)(c)
+  - id: qv61_ignore_lschba
+    text: >-
+      Ignore LSCHBA, and while closing DJ release BLRDJ 4 seconds after the UA meter
+      deviates.
+    gate: null
+    applies_when: {lschba_cause: qv61_defective}
+    source: "§10.06 'If QV 61 defective' (a)(b), p169"
+
+  - id: qv61_ensure_chba_working_frequently
+    text: "Ensure CHBA is working frequently."
+    gate: null
+    applies_when: {lschba_cause: qv61_defective}
+    completes: true
+    source: "§10.06 'If QV 61 defective' (c), p169"
+
+  # Modified HCHBA table — stated-only aside
+  - id: hchba_on_3_if_ammeter_shunt_open_circuited
+    text: >-
+      In modified HCHBA locos: if, when DJ is opened, ICDJ comes along with the cab lights
+      not glowing and MCPA not working but the BA voltage shows normally, it indicates the
+      CHBA ammeter shunt is open circuited — then HCHBA is to be kept in the '3' position.
+      (CCBA melting and an ammeter shunt cut give the same indications; to know which is
+      defective, check the CCBA fuse condition in the ECC.)
+    gate: null
+    applies_when: {chba_ammeter_shunt_suspected: "yes"}
+    requires_stated: true
+    completes: true
+    source: "§10.06 modified HCHBA position table and Note, p169"
+
+terminal_actions:
+  resolved: >-
+    clear the block section duly observing the battery voltage, and identify the defective one
+    after clearing the section
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.06, pp.168–169"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

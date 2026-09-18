@@ -1,0 +1,39 @@
+scenario_id: lsdj_not_glowing_routes_to_pilot_lamps
+klass: specific_miss
+# Batch 5: §10.05(b) "if other pilot lamps are also not glowing, trouble shoot for all pilot
+# lamps not glowing" — a KB route rule, not a model decision. The pilot lands in §10.04 and
+# is asked the CCLS check they have not done.
+pilot_script:
+- LSDJ not glowing when BLDJ is opened
+- lowered the panto with ZPT on 0 and watched LSDJ, it did not re-glow. none of the other pilot lamps are glowing either
+- HBA is closed, battery is 104 volts, locked and unlocked BL twice, ZLS is on
+structured:
+- fault_guess: null
+  fault_confidence: 0.0
+  confirms_fault: 'yes'
+  fault_presenting: 'yes'
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - lower_panto_on_zpt_zero_and_observe_lsdj
+  facts: {other_pilot_lamps_glowing: 'no'}
+- fault_guess: null
+  fault_confidence: 0.0
+  claimed_steps:
+  - ensure_hba_closed_voltage_above_90_and_cycle_bl
+  - ensure_zls_on
+gold:
+  correct_terminal: ask_step:check_and_renew_ccls
+  must_fire_gates: []
+  must_not_do:
+  - instruct_reset
+  - confirm
+  max_turns: 3
+  expected_tool_path:
+  - diff_completed_steps
+  - (reroute→All_pilot_lamps_not_glowing)
+  - diff_completed_steps
+  expected_turn_terminals:
+  - ask_step
+  - ask_step
+  - ask_step

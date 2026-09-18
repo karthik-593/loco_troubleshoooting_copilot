@@ -1,0 +1,84 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Isolation of a traction motor
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 11, §11.02 "Isolation of traction motors", p.178 (the LOCO / TM /
+#         POSITIVE / NEGATIVE table), corroborated by §6.03.3(j) pp.92–93 and §6.03.4(i)
+#         pp.95–96 (the same bit → HMCS-position tables, written out in words) and by
+#         §8.04 B p.134 (A3 → HMCS-1 on 4, A4 → HMCS-2 on 2, U2 → HMCS-1 on 3, U5 →
+#         HMCS-2 on 3).
+# Mechanism: a REFERENCE PROCEDURE (batch 6). Positive side = the HMCS position for that TM;
+# negative side = the reverser bit on J1 (TMs 1–3) or J2 (TMs 4–6). The bit numbers differ
+# for WAP4 locos WITHOUT RB, so the file declares the rb axis — asked lazily, only when the
+# negative-side step is reached (the batch-1 pattern).
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Isolation_of_traction_motors
+aliases:
+  - "isolation of traction motors"
+  - "isolate a traction motor"
+  - "isolate the traction motor"
+  - "isolate traction motor"
+  - "how to isolate a traction motor"
+  - "traction motor isolation"
+  - "isolate TM"
+  - "TM isolation"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+rb_dependency: true
+presenting_signs:
+  - "A traction motor has to be isolated on the positive side (HMCS) and, when required, on the negative side (reverser bit)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: identify_the_traction_motor_to_isolate
+    text: >-
+      Identify which traction motor is to be isolated. Report the traction motor number
+      (TM-1 to TM-6).
+    gate: null
+    elicits: tm_to_isolate
+    source: "§11.02 table, p178"
+
+  - id: isolate_positive_side_by_hmcs_position
+    text: >-
+      Isolate the traction motor on the positive side with the concerned HMCS: TM-1 place
+      HMCS-1 in 2, TM-2 place HMCS-1 in 3, TM-3 place HMCS-1 in 4, TM-4 place HMCS-2 in 2,
+      TM-5 place HMCS-2 in 3, TM-6 place HMCS-2 in 4.
+    gate: null
+    source: "§11.02 table (POSITIVE column), p178; §8.04 B items 1–4, p134"
+
+  # NEGATIVE side — the bit table differs for WAP4 without RB (§6.03.3(j) / §6.03.4(i))
+  - id: isolate_negative_side_by_reverser_bit_rb_fitted
+    text: >-
+      When the negative side is also to be isolated, pack the concerned reverser bit: for
+      TM-1, TM-2 and TM-3 use reverser J1 — the 8th bit for HMCS-1 in 2, the 10th bit for
+      HMCS-1 in 3 and the 12th bit for HMCS-1 in 4; for TM-4, TM-5 and TM-6 use reverser J2
+      — the 8th bit for HMCS-2 in 2, the 10th bit for HMCS-2 in 3 and the 12th bit for
+      HMCS-2 in 4. Take precautions whenever operating the reverser or packing a bit.
+    gate: null
+    applies_when: {loco_rb: fitted}
+    completes: true
+    source: "§11.02 table (NEGATIVE column), p178; §6.03.3(j) pp92–93; §6.03.4(i) p95"
+
+  - id: isolate_negative_side_by_reverser_bit_no_rb
+    text: >-
+      When the negative side is also to be isolated on a WAP4 loco without RB, pack the
+      concerned reverser bit: for TM-1, TM-2 and TM-3 use reverser J1 — the 8th bit for
+      HMCS-1 in 2, the 10th bit for HMCS-1 in 3 and the 6th bit for HMCS-1 in 4; for TM-4,
+      TM-5 and TM-6 use reverser J2 — the 6th bit for HMCS-2 in 2, the 10th bit for HMCS-2
+      in 3 and the 8th bit for HMCS-2 in 4. Take precautions whenever operating the reverser
+      or packing a bit.
+    gate: null
+    applies_when: {loco_rb: not_fitted}
+    completes: true
+    source: "§11.02 table (NEGATIVE column), p178; §6.03.3(j) p93; §6.03.4(i) pp95–96"
+
+terminal_actions:
+  resolved: "work with 5/6th of the maximum permissible load with that traction motor isolated"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.11, §11.02, p.178; Ch.6 §6.03.3(j) pp.92–93, §6.03.4(i) pp.95–96"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -1,0 +1,223 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Manual operation of relays Q118, Q45 and Q44
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 12 "Wedging of Contactors and Relays", §12.01 A items 1–10 (Q118),
+#         B items 1–6 (Q45) and C items 1–10 (Q44), pp.183–184.
+# Mechanism: a REFERENCE PROCEDURE (batch 6), the standalone form of the manual energisations
+# that §7.01.3 / §7.01.4 / §7.01.5 carry inside the ICDJ branches. ONE file; the relay is a
+# fact (`manual_relay`) set by KB phrases or asked. Gates (batch 6 judgement call): pressing
+# Q118 is gated on C-118 being fully opened and pressing Q44 on Q118 being energised — both
+# are BEFORE-checks stated by §12.01 — with intent `work_on_relay`. Q45's conditions
+# are ordinary ordered steps (the §12.03 "not with Operation A ending trouble" rule belongs
+# to WEDGING Q45, which keeps its own gate in §7.06 / §7.04).
+# precedence -1: a reported symptom ("Q118 not energising") outranks this how-to.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Manual_operation_of_relays
+aliases:
+  - "manual operation of relays"
+  - "manual operation of Q118"
+  - "manual closing of Q118"
+  - "how to close Q118 manually"
+  - "manual energisation of Q45"
+  - "manual energisation of Q44"
+  - "how to energise Q45 manually"
+  - "how to energise Q44 manually"
+  - "manually operate the relay"
+  - "press the relay manually"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Relay Q118, Q45 or Q44 is to be operated manually (pressed by hand) to close DJ"
+
+combination_rules: []
+route_rules:
+  - if_fact: dj_closes_with_manual_relay
+    equals: "no"
+    route_to: DJ_tripped_on_line
+    source: "§12.01 A item 10 / B item 6 / C items 8–9, pp183–184: 'pick up the correct abnormal sign and trouble shoot accordingly'"
+
+fact_phrases:
+  - fact: manual_relay
+    equals: q118
+    phrases: ["Q118", "Q-118", "Q 118"]
+    source: "§12.01 A, p183"
+  - fact: manual_relay
+    equals: q45
+    phrases: ["Q45", "Q-45", "Q 45"]
+    source: "§12.01 B, p183"
+  - fact: manual_relay
+    equals: q44
+    phrases: ["Q44", "Q-44", "Q 44"]
+    source: "§12.01 C, p184"
+
+defer_conditions:
+  - fact: rgr_overheating
+    equals: "yes"
+    after_any: [q44_press_bp2dj_then_q44_rod]
+    text: "Overheating is noticed in RGR: open DJ immediately and contact TLC for advice."
+    source: "§12.01 C item 10, p184"
+
+steps:
+  - id: identify_which_relay_is_to_be_operated_manually
+    text: "Report which relay is to be operated manually — Q118, Q45 or Q44."
+    gate: null
+    elicits: manual_relay
+    source: "§12.01, p183"
+
+  - id: stop_the_train_break_the_seal_and_open_the_relay_cover
+    text: "Stop the train at a convenient place, break the seal and open the relay cover."
+    gate: null
+    source: "§12.01 A items 1–2, p183; B item 1, p183; C item 1, p184"
+
+  # A — Q118
+  - id: q118_ensure_bldj_and_blvmt_closed
+    text: "Ensure BLDJ and BLVMT are in closed condition."
+    gate: null
+    applies_when: {manual_relay: q118}
+    source: "§12.01 A item 3, p183"
+
+  - id: q118_ensure_c118_fully_opened
+    text: "Ensure contactor C-118 is fully opened. Report whether C-118 is fully opened."
+    gate: null
+    applies_when: {manual_relay: q118}
+    elicits: c118_fully_opened
+    source: "§12.01 A item 4, p183"
+
+  - id: q118_ensure_air_pressure_and_ba_voltage_normal
+    text: "Ensure the air pressure and the battery voltage are normal."
+    gate: null
+    applies_when: {manual_relay: q118}
+    source: "§12.01 A item 5, p183"
+
+  - id: q118_keep_zpt_on_1_with_rear_panto_raised
+    text: >-
+      Keep ZPT on position '1' and ensure the rear panto is raised and touching the contact
+      wire.
+    gate: null
+    applies_when: {manual_relay: q118}
+    source: "§12.01 A item 6, p183"
+
+  - id: q118_press_relay_then_bp2dj
+    text: "Press the Q-118 relay first and then press BP2DJ."
+    applies_when: {manual_relay: q118}
+    gate:
+      type: hazard_exposure
+      rule: "Do not press relay Q-118 by hand unless contactor C-118 is fully opened."
+      action: work_on_relay
+      preconditions:
+        - c118_fully_opened
+      on_precondition_unmet: >-
+        Do not press Q-118 yet: ensure contactor C-118 is fully opened first.
+      precondition_question: "Before pressing Q-118: is contactor C-118 fully opened?"
+      source: "§12.01 A items 4 and 7, p183"
+    source: "§12.01 A item 7, p183"
+
+  - id: q118_release_bp2dj_after_lschba_extinguishes
+    text: "Release BP2DJ after LSCHBA is extinguished."
+    gate: null
+    applies_when: {manual_relay: q118}
+    source: "§12.01 A item 8, p183"
+
+  - id: q118_release_relay_after_30_seconds
+    text: >-
+      Release Q-118 after 30 seconds of closing DJ. Report whether DJ closes and holds.
+    gate: null
+    applies_when: {manual_relay: q118}
+    elicits: dj_closes_with_manual_relay
+    completes: true
+    source: "§12.01 A items 9–10, p183"
+
+  # B — Q45
+  - id: q45_ensure_conditions_before_pressing
+    text: >-
+      Ensure BLDJ is closed, ZPT is on '1' or 2, LSGR is glowing, the SMGR drum is on '0' and
+      the air pressure is above 6.5 kg/cm2.
+    gate: null
+    applies_when: {manual_relay: q45}
+    source: "§12.01 B item 2, p183"
+
+  - id: q45_depute_alp_to_watch_pilot_lamps
+    text: "Depute the Assistant Loco Pilot to watch the pilot lamps."
+    gate: null
+    applies_when: {manual_relay: q45}
+    source: "§12.01 B item 3, p183"
+
+  - id: q45_press_the_relay_pallet
+    text: "Press the relay Q-45 pallet."
+    gate: null
+    applies_when: {manual_relay: q45}
+    source: "§12.01 B item 4, p183"
+
+  - id: q45_release_pallet_after_lschba_extinguishes
+    text: >-
+      If DJ closes, release the Q-45 pallet after LSCHBA extinguishes. Report whether DJ
+      closes and holds.
+    gate: null
+    applies_when: {manual_relay: q45}
+    elicits: dj_closes_with_manual_relay
+    completes: true
+    source: "§12.01 B items 5–6, p183"
+
+  # C — Q44
+  - id: q44_ensure_conditions_before_pressing
+    text: >-
+      Ensure contactor C118 is fully opened, BLDJ is closed, ZPT is on 1, LSGR is glowing,
+      the SMGR drum is on '0' and the air pressure is above 6.5 kg/cm2.
+    gate: null
+    applies_when: {manual_relay: q44}
+    source: "§12.01 C item 2, p184"
+
+  - id: q44_check_again_that_q118_is_energised
+    text: >-
+      Check once again and ensure that relay Q-118 is energised. Report whether Q-118 is
+      energised.
+    gate: null
+    applies_when: {manual_relay: q44}
+    elicits: q118_energised_for_manual_q44
+    source: "§12.01 C item 3, p184"
+
+  - id: q44_depute_alp_in_corridor_1_to_watch_rgr
+    text: "Depute the Assistant Loco Pilot in corridor No.1 to watch RGR while closing DJ."
+    gate: null
+    applies_when: {manual_relay: q44}
+    source: "§12.01 C item 4, p184"
+
+  - id: q44_press_bp2dj_then_q44_rod
+    text: >-
+      Press BP2DJ and then press the Q44 actuating rod gently. When LSDJ extinguishes and the
+      UA meter needle deviates, release Q44 immediately to avoid overheating of RGR — Q44
+      should not be pressed for more than 1 second.
+    applies_when: {manual_relay: q44}
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not press the Q44 actuating rod unless relay Q-118 is energised; Q44 must not be
+        held for more than 1 second, or RGR overheats.
+      action: work_on_relay
+      preconditions:
+        - q118_energised_for_manual_q44
+      on_precondition_unmet: >-
+        Do not press Q44 yet: check once again and ensure that relay Q-118 is energised.
+      precondition_question: "Before pressing Q44: is relay Q-118 energised?"
+      source: "§12.01 C items 3, 5 and 6, p184"
+    source: "§12.01 C items 5–6, p184"
+
+  - id: q44_release_bp2dj_after_lschba_extinguishes
+    text: >-
+      When LSCHBA is extinguished, release BP2DJ. If DJ does not close or the UA needle does
+      not deviate, release the Q44 pallet and BP2DJ. Report whether DJ closes and holds.
+    gate: null
+    applies_when: {manual_relay: q44}
+    elicits: dj_closes_with_manual_relay
+    completes: true
+    source: "§12.01 C items 7–9, p184"
+
+terminal_actions:
+  resolved: "work onwards with the relay operated manually as prescribed"
+  unresolved: "pick up the correct abnormal sign and trouble shoot accordingly"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.12, §12.01, pp.183–184"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

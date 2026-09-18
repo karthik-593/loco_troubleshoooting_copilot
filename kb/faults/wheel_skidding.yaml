@@ -1,0 +1,76 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Wheel skidding
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.15, p.175 (causes 1–3, a–f).
+# Mechanism: checklist a–f. (d) and (e) are brake-handling instructions rather than checks
+# and are carried in one step; (f) — reduce to 30 kmph to clear the section — completes and
+# is the resolved guidance.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Wheel_skidding
+aliases:
+  - "wheel skidding"
+  - "wheels skidding"
+  - "wheel skid"
+  - "loco wheel skidding"
+  - "skidding of wheels"
+  - "wheels are skidding"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "Wheel skidding on the locomotive (defective C3W distributor valve, poor train brake power, or poor engineman-ship)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: ensure_c3w_pg_selector_matches_the_train
+    text: >-
+      Ensure the C3W distributor valve P / G selector COC is on the goods side while working
+      with goods trains and on the passenger side while working with passenger / mail and
+      express trains.
+    gate: null
+    source: "§10.15(a), p175"
+
+  # (b)
+  - id: ensure_loco_brakes_release_and_isolate_defective_c3w
+    text: >-
+      Ensure the loco brakes are releasing in time and there is no brake binding on the loco.
+      If there is brake binding and the C3W distributor valve is defective, isolate the same.
+    gate: null
+    source: "§10.15(b), p175"
+
+  # (c)
+  - id: press_pvef_during_proportionate_brake_application
+    text: >-
+      The Loco Pilot may press PVEF to prevent application of the loco brakes during a
+      proportionate brake application through A9.
+    gate: null
+    source: "§10.15(c), p175"
+
+  # (d) (e)
+  - id: apply_brakes_judiciously_and_sa9_only_after_stopping
+    text: >-
+      Apply the brakes judiciously — if the brakes are not applied judiciously, wheel skidding
+      of the locomotive may take place. SA9 should be applied only after stopping the train.
+    gate: null
+    source: "§10.15(d)(e), p175"
+
+  # (f)
+  - id: reduce_speed_to_30_kmph_to_clear_section
+    text: >-
+      On detecting or getting information of wheel skidding, the Loco Pilot must reduce the
+      speed to 30 kmph to clear the section.
+    gate: null
+    completes: true
+    source: "§10.15(f), p175"
+
+terminal_actions:
+  resolved: "clear the section at a speed restricted to 30 kmph"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.15, p.175"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

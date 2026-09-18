@@ -19,7 +19,7 @@ aliases:
   - "QOP2 dropped"
   - "QOP 2 dropped"
   - "QOP-2 drops"
-listed_as: "QOP-2 dropped"
+listed_as: "safety relay trips (QLM / QOP-1 / QOP-2 / QOA / QLA / QRSI)"
 config_dependency: none            # §6.03.2: TFR terminal designations differ by class (a3/a4 on
                                    # WAG5A & WAM4; a5/a6 on WAG7 & WAP4) — both given in the text
 type_dependency: none

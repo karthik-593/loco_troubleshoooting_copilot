@@ -18,7 +18,7 @@ aliases:
   - "loco not taking load"
   - "loco not pulling"
 precedence: -2
-listed_as: "Total loss of tractive effort (LSB glowing / without LSB / with GR progression)"
+listed_as: "total loss of tractive effort"
 config_dependency: none
 type_dependency: none
 presenting_signs:

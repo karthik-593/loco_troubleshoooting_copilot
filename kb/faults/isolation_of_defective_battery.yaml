@@ -1,0 +1,133 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: Isolating a defective battery (UBA indicates '0')
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 11, §11.06, pp.180–182 (items 1–4, 3(a)(b)(c) I–II, the Note and
+#         "Procedure for isolating a defective battery" items 1–4).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) with a diagnostic head: the signal lamps decide
+# whether the trouble is with UBA / ZUBA or with HBA / Addl. CCBA / the battery. The route
+# target of §10.01(b) and §10.02(f) ("trouble shoots as per 11.6").
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Isolation_of_defective_battery
+aliases:
+  - "isolating a defective battery"
+  - "isolate the defective battery"
+  - "isolate a defective battery"
+  - "isolation of defective battery"
+  - "how to isolate a battery"
+  - "battery isolation"
+  - "UBA indicates 0"
+  - "UBA showing zero"
+  - "battery voltage is zero"
+  - "defective battery"
+  - "partial dead cell"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "UBA indicates '0' or very low battery voltage, and a defective battery is to be found and isolated"
+
+combination_rules: []
+route_rules: []
+
+defer_conditions:
+  - fact: battery_voltage_below_90_after_isolation
+    equals: "yes"
+    after_any: [check_battery_voltage_after_isolation]
+    text: "The battery voltage is less than 90 V after isolating the defective battery: contact TLC."
+    source: "§11.06 'Procedure for isolating a defective battery' item 4, p182"
+
+steps:
+  - id: ensure_signal_lamps_are_working
+    text: >-
+      Ensure the signal lamps are working. Report whether the signalling lamps are working.
+    gate: null
+    elicits: signalling_lamps_working
+    source: "§11.06 item 1, p180"
+
+  - id: ignore_uba_if_signalling_lamps_work_and_mcpa_builds_pressure
+    text: >-
+      If the signalling lamps are working, the trouble is with UBA or ZUBA: check the working
+      of MCPA. If MCPA works normally and is able to build up pressure in RS, ignore UBA and
+      resume traction.
+    gate: null
+    applies_when: {signalling_lamps_working: "yes"}
+    completes: true
+    source: "§11.06 item 2, p180"
+
+  - id: operate_hba_two_or_three_times
+    text: >-
+      If the signalling lamps are not working, the defect may be in HBA, Addl. CCBA or in the
+      battery: operate HBA 2 or 3 times and try. If UBA shows the battery voltage, resume
+      traction.
+    gate: null
+    applies_when: {signalling_lamps_working: "no"}
+    source: "§11.06 item 3(a), p180"
+
+  - id: change_or_reset_addl_ccba
+    text: "Change or reset the Addl. CCBA and try."
+    gate: null
+    applies_when: {signalling_lamps_working: "no"}
+    source: "§11.06 item 3(b), p180"
+
+  - id: open_battery_boxes_and_check_terminals
+    text: >-
+      If it is still unsuccessful, the defect is in the battery: open the covers of the
+      battery boxes and check the battery terminals and the condition of the batteries. If
+      any battery terminal is slack or any battery is defective, isolate the defective battery
+      as per the procedure and resume traction.
+    gate: null
+    applies_when: {signalling_lamps_working: "no"}
+    source: "§11.06 item 3(c) I, p180"
+
+  - id: bridge_each_battery_momentarily_to_find_the_defective_one
+    text: >-
+      If the battery terminals and batteries are found normal, keep HBA and ZCPA on position
+      '1', connect the 'positive' and 'negative' terminals of each battery momentarily with a
+      piece of insulated wire and check the battery voltage each time. If the battery voltage
+      reads normal when the terminals are touched and MCPA starts working, that particular
+      battery is the defective one — isolate it as per the procedure and build up pressure
+      with MCPA. (UBA indicating normal voltage with HBA on '1' but '0' or very little when
+      ZCPA is switched ON points the same way.)
+    gate: null
+    applies_when: {signalling_lamps_working: "no"}
+    source: "§11.06 item 3(c) II, p181; §11.06 Note, p181"
+
+  # Procedure for isolating a defective battery
+  - id: open_hba_and_disconnect_the_defective_battery_terminals
+    text: >-
+      After confirming that the particular battery is defective, open HBA and disconnect the
+      'positive' and 'negative' terminals of the defective battery.
+    gate: null
+    source: "§11.06 'Procedure for isolating a defective battery' item 1, p181"
+
+  - id: bolt_the_disconnected_terminals_together
+    text: >-
+      Connect the disconnected 'positive' and 'negative' terminals together tightly with a
+      bolt and nut.
+    gate: null
+    source: "§11.06 'Procedure for isolating a defective battery' item 2, p181"
+
+  - id: wrap_the_terminals_with_insulation_tape
+    text: >-
+      Wrap the terminals with insulation tape and ensure that they are not touching any part
+      of the loco body or the battery.
+    gate: null
+    source: "§11.06 'Procedure for isolating a defective battery' item 3, p181"
+
+  - id: check_battery_voltage_after_isolation
+    text: >-
+      Check the battery voltage. If it is normal or above 90 V, resume traction. Report the
+      battery voltage.
+    gate: null
+    elicits: battery_voltage_below_90_after_isolation
+    completes: true
+    source: "§11.06 'Procedure for isolating a defective battery' item 4, p182"
+
+terminal_actions:
+  resolved: "resume traction with the defective battery isolated"
+  unresolved: "contact TLC"                     # §11.06 item 4, p181
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.11, §11.06, pp.180–182"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

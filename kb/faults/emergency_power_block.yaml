@@ -1,0 +1,111 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Reference procedure: How to take an emergency power block
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 13, §13.10, pp.203–204 (items 1–10).
+# Mechanism: a REFERENCE PROCEDURE (batch 6) — the fuller form of the "Obtaining emergency
+# power block" block already encoded inside §10.03 (pantograph damaged). Roof work keeps the
+# same HAZARD-EXPOSURE gate, intent and facts as §10.03 / §11.04 / §13.06.
+# STATUS: encoded 2026-09-18 (batch 6) — pending human confirmation.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Emergency_power_block
+aliases:
+  - "how to take emergency power block"
+  - "emergency power block"
+  - "take a power block"
+  - "obtain an emergency power block"
+  - "ask for a power block"
+  - "power block procedure"
+precedence: -1
+listed_as: "isolation, wedging and special instructions"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "An emergency power block is to be taken after damage to the panto or the OHE, so that roof work can be done"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  - id: lower_the_panto_and_stop_near_a_telephone_tap
+    text: >-
+      In case of damage to the panto or the OHE, lower the panto immediately and stop the
+      train, if possible near an emergency telephone tap, and put on the flasher light.
+    gate: null
+    source: "§13.10 item 1, p203"
+
+  - id: protect_the_train_for_power_block
+    text: "Protect the train as per G&SR 6.03."
+    gate: null
+    source: "§13.10 item 2, p203"
+
+  - id: contact_tpc_and_give_the_particulars
+    text: >-
+      Contact TPC through the emergency telephone and inform TPC of the particulars of the
+      defect or damage — kilometre number, the stations between which the train is standing,
+      loco number, train number, up or down line and the time.
+    gate: null
+    source: "§13.10 items 3–4, pp203–204"
+
+  - id: ask_ohe_staff_to_take_the_power_block
+    text: >-
+      Ask for OHE staff to take the emergency power block. Report when the power block has
+      been taken and the OHE contact wire earthed on either side of the loco by the OHE staff.
+    gate: null
+    elicits: ohe_power_block_obtained_and_earthed
+    source: "§13.10 items 5–6, p204"
+
+  - id: ground_the_loco_for_the_power_block_roof_work
+    text: "Ground the loco. Report whether the loco is grounded."
+    gate: null
+    elicits: loco_grounded
+    source: "§13.10 item 6, p204"
+
+  - id: do_the_roof_work_with_the_ladder_fixed
+    text: "Do the roof work, duly fixing the ladder."
+    gate:
+      type: hazard_exposure
+      rule: >-
+        Do not do roof work until the emergency power block has been taken and the OHE contact
+        wire earthed on either side of the loco by the OHE staff, and the loco is grounded.
+      action: work_on_roof
+      preconditions:
+        - ohe_power_block_obtained_and_earthed
+        - loco_grounded
+      on_precondition_unmet: >-
+        Do not start the roof work yet: the emergency power block must be taken and the OHE
+        contact wire earthed on either side of the loco by the OHE staff, and the loco
+        grounded.
+      precondition_question: >-
+        Before the roof work: has the emergency power block been taken with the contact wire
+        earthed on either side by the OHE staff, and is the loco grounded?
+      source: "§13.10 item 6, p204"
+    source: "§13.10 item 6, p204"
+
+  - id: clear_the_roof_and_remove_the_ladder
+    text: >-
+      After completion of the roof work, keep the concerned HPT in the earthing heel, remove
+      all the materials from the roof and remove the ladder.
+    gate: null
+    source: "§13.10 item 7, p204"
+
+  - id: unground_after_the_block_is_cancelled
+    text: >-
+      After the earthing poles are removed from the contact wire and the power block is
+      cancelled by the OHE staff, un-ground the loco and close the PT COC of the defective
+      panto.
+    gate: null
+    source: "§13.10 items 8–9, p204"
+
+  - id: raise_the_good_panto_and_resume_after_power_is_restored
+    text: >-
+      After the power is restored, raise the good panto, close DJ and resume traction.
+    gate: null
+    completes: true
+    source: "§13.10 item 10, p204"
+
+terminal_actions:
+  resolved: "resume traction on the good pantograph after the power block is cancelled"
+  unresolved: "contact TLC"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.13, §13.10, pp.203–204"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"

@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Fault: Head light does not glow
+# SOURCE: SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019),
+#         Chapter 10 "Miscellaneous Failures", §10.10, pp.171–172 (causes 1–2, a–f).
+# Mechanism: plain ladder a–f; (f) — work on marker lights as per G&SR — completes.
+# STATUS: encoded 2026-09-18 (batch 5) — structure approved by the user 2026-09-18.
+# ─────────────────────────────────────────────────────────────────────────────
+fault_id: Head_light_not_glowing
+aliases:
+  - "head light does not glow"
+  - "head light not glowing"
+  - "headlight not glowing"
+  - "headlight does not glow"
+  - "head light is not glowing"
+  - "headlight not working"
+  - "head light not coming"
+  - "no head light"
+precedence: 1
+listed_as: "miscellaneous failures (indication lamps, lights, horns, MCPA, panto)"
+config_dependency: none
+type_dependency: none
+presenting_signs:
+  - "The head light does not glow (head light bulb fused, or the DC-DC converter not working)"
+
+combination_rules: []
+route_rules: []
+
+steps:
+  # (a)
+  - id: check_zpr_zrt_and_blprf_positions
+    text: >-
+      Check the position of ZPR / ZRT and BLPRF. If any one of them is not closed, close the
+      same and resume traction.
+    gate: null
+    source: "§10.10(a), p171"
+
+  # (b)
+  - id: open_blprr_and_close_blprf
+    text: >-
+      If both are closed, check the position of BLPRR. If it is closed, open the same and
+      close BLPRF; if successful, resume traction.
+    gate: null
+    source: "§10.10(b), p171"
+
+  # (c)
+  - id: check_rear_head_light_to_confirm_fused_bulb
+    text: >-
+      If BLPRR is open, open BLPRF, close BLPRR and check the rear head light. If it is
+      glowing, conclude that the front head light bulb is fused; replace the same and resume
+      traction.
+    gate: null
+    source: "§10.10(c), p171"
+
+  # (d)
+  - id: change_dc_dc_converter_selector_switch
+    text: >-
+      If the rear head light also does not glow, switch off ZPR / ZRT and change the DC-DC
+      converter selector switch provided on the DC-DC converter (the converter has two modes,
+      Converter-1 and Converter-2; the switch may be a toggle switch or a rotary switch).
+      Switch on ZPR / ZRT and BLPRF and try.
+    gate: null
+    source: "§10.10(d), pp171–172"
+
+  # (e)
+  - id: switch_off_bllf_if_dc_dc_fuse_melting
+    text: "If the fuse of the DC-DC converter is melting, switch off BLLF and try."
+    gate: null
+    source: "§10.10(e), p172"
+
+  # (f)
+  - id: work_on_marker_lights_as_per_gsr
+    text: >-
+      Keep the head light switches and ZPR / ZRT in the open position and ensure the marker
+      lights are glowing. Work onwards as per G&SR. After clearing the block section, inform
+      TLC.
+    gate: null
+    completes: true
+    source: "§10.10(f), p172"
+
+terminal_actions:
+  resolved: "resume traction"
+  unresolved: "inform TLC after clearing the block section"
+
+source: "SCR/ETTC Operating Manual & Trouble Shooting Directory (Rev-2, 2019), Ch.10, §10.10, pp.171–172"
+source_url: "https://scr.indianrailways.gov.in/cris//uploads/files/1566969531009-ETTC_TSD.pdf"
