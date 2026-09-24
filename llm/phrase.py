@@ -130,6 +130,10 @@ def render_verbatim(t: Terminal) -> str:
         return " ".join([t.message, *t.guidance]).strip()
     if t.kind == "ask_step":
         hold = f" Hold the {t.hold_action.replace('_', ' ')} until this is done." if t.hold_action else ""
+        if t.overview:
+            items = "\n".join(f"{i}. {x}" for i, x in enumerate(t.overview, 1))
+            return (f"Checks to do, in order:\n\n{items}\n\nWhat comes next depends on what these "
+                    f"checks find.{hold} Start with check 1 and tell me what you found.")
         if t.do_now:
             return f"Do this now: {t.message}{hold} Then tell me what you found."
         return f"Next check: {t.message}{hold} Done?"

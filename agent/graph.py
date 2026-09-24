@@ -26,6 +26,7 @@ from typing import Literal, Optional, TypedDict
 from langgraph.graph import END, START, StateGraph
 
 from engine import terminals as T
+from engine.diff import diff_steps
 from engine.gates import GateVerdict, evaluate_gates
 from engine.matcher import KnowledgeBase, default_kb
 from engine.reassess import MAX_ITER, max_iter_reached, no_progress, reassess
@@ -61,6 +62,7 @@ class GraphState(TypedDict, total=False):
     rerouted: bool                 # reassess changed matched_fault → must pass the reflex again
     news: bool                     # the parse brought something the engine acts on
     repeat: bool                   # same terminal as last turn, no news → phrased as "nothing further"
+    overview: bool                 # pilot asked for all the checks → next check rendered with the list
 
 
 @dataclass(frozen=True)
@@ -101,12 +103,14 @@ class Copilot:
             return {"update": None, "terminal": T.clarify(r.clarification or ""), "stop_reason": "clarify"}
         diag.clarify_asked = 0
         last = diag.last_terminal
-        if (r.update is not None and r.update.wants_detail and not r.update.brings_news(diag)
+        overview = r.update is not None and r.update.wants_overview
+        if (r.update is not None and r.update.wants_detail and not overview and not r.update.brings_news(diag)
                 and last is not None and last.kind == "ask_step"):
             # The spoken form offered the exact list and the pilot took it: same terminal, KB
             # text verbatim, no model and no engine pass (nothing about the loco changed).
             return {"update": None, "terminal": replace(last, verbatim=True), "stop_reason": "detail"}
-        return {"update": r.update, "news": r.update is not None and r.update.brings_news(diag)}
+        return {"update": r.update, "news": r.update is not None and r.update.brings_news(diag),
+                "overview": overview}
 
     def update_state_node(self, s: GraphState) -> GraphState:
         diag = s["diag"]
@@ -216,7 +220,9 @@ class Copilot:
         # Deterministic repeat detection: the pilot said nothing the engine acts on and the
         # engine landed on exactly what it told them last turn ("anything else?", "ok").
         sig = T.signature(t)
-        repeat = (not s.get("news", True)) and diag.last_terminal_sig == sig
+        # Asking for the whole checklist is not a pilot passing over the check asked last turn.
+        overview = bool(s.get("overview")) and t.kind == "ask_step"
+        repeat = (not s.get("news", True)) and diag.last_terminal_sig == sig and not overview
         if repeat and t.kind == "ask_step" and t.step_id and not t.do_now:
             # Backstop (parser-independent): the same check asked twice with nothing new in
             # between — a pilot who had done it would have said so. Put it as the next action.
@@ -224,6 +230,11 @@ class Copilot:
             t = replace(t, do_now=True)
         diag.last_terminal_sig = sig
         diag.last_terminal = t
+        fault = self._fault(diag)
+        if overview and fault is not None:
+            missing = diff_steps(diag, fault).missing
+            if missing and missing[0] == t.step_id:     # t is the diff's next check, not a gated step's ask
+                t = T.with_overview(t, fault, missing)
         r = phrase(t, self.providers.phrase, repeat=repeat)
         return {"reply": r.text, "phrase_fallback": r.used_fallback, "last_assistant": r.text, "repeat": repeat,
                 "terminal": t}

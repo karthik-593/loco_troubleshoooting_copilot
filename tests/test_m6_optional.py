@@ -189,6 +189,37 @@ def test_detail_request_re_renders_the_last_ask_verbatim_without_engine_or_model
     assert not t2.phrase_fallback and t2.tool_path == () and t2.reflex_runs == 0
 
 
+QLM = "QLM_dropped"
+QLM_CHECKS = ("check_ht2_compartment", "check_oil_levels", "check_arc_chutes_and_terminals")
+
+
+def test_list_all_checks_gives_the_remaining_checklist_not_the_same_step_again():
+    # seen live: "just list me all the checks" re-rendered only the HT-2 check, verbatim
+    d = DiagnosisState()
+    cp = _cp([ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes"),
+              ParseOutput(fault_guess=None, fault_confidence=0.0, asks_for_detail="yes")],
+             ["diff_completed_steps"] * 2)
+    t1 = cp.turn(d, "qlm dropped")
+    t2 = cp.turn(d, "just list me all the checks", last_assistant=t1.reply)
+    assert t2.terminal.kind == "ask_step" and t2.terminal.step_id == QLM_CHECKS[0]
+    assert len(t2.terminal.overview) == 3 and not t2.phrase_fallback
+    for i, word in enumerate(("HT-2 compartment", "TFP and GR oil level", "CGR-1/CGR-2/CGR-3"), 1):
+        assert f"{i}. " in t2.reply and word in t2.reply
+    assert "§6.1.1(c)" in t2.reply
+    assert "reset" not in t2.reply.lower()                  # the gated step is never pre-listed
+    assert not t2.terminal.do_now and QLM_CHECKS[0] not in d.steps_declined
+
+
+def test_overview_lists_only_what_is_left_and_the_first_turn_can_ask_for_it():
+    d = DiagnosisState()
+    cp = _cp([ParseOutput(fault_guess=QLM, fault_confidence=0.9, fault_presenting="yes",
+                          claimed_steps=[QLM_CHECKS[0]])],
+             ["diff_completed_steps"])
+    t = cp.turn(d, "qlm dropped, HT-2 checked, what equipments to check now?")
+    assert t.terminal.step_id == QLM_CHECKS[1] and len(t.terminal.overview) == 2
+    assert "HT-2 compartment" not in t.reply
+
+
 def test_branch_step_conditioned_this_turn_is_issued_as_do_now(kb):
     d = DiagnosisState()
     run_turn(d, StateUpdate(fault_id=Q2, claimed_steps=Q2_STEPS[:2], history={"traction2_abnormality_found": "no"}), kb)

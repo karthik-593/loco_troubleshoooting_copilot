@@ -167,6 +167,9 @@ class StateUpdate:
     # The pilot asks for the exact component list the short spoken form offered ("yes, the
     # list", "which components?"). Not a state change: the last ask is re-rendered verbatim.
     wants_detail: bool = False
+    # The pilot asks for the whole remaining checklist at once. Not a state change: the
+    # engine's next-check terminal is rendered with the remaining ordinary steps listed.
+    wants_overview: bool = False
 
     def brings_news(self, state: "DiagnosisState") -> bool:
         """Does this update change anything the engine acts on? False for "ok" / "anything

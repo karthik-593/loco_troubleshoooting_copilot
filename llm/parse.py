@@ -65,6 +65,13 @@ def out_of_scope_reason(kb: KnowledgeBase) -> str:
             + ", ".join(names) + ". Refer to the TSD for it.")
 
 
+# Deterministic backstop for asks_for_overview: seen live, the model read "just list me all
+# the checks" as asks_for_detail, which only re-renders the current check.
+_OVERVIEW = re.compile(
+    r"\b(all|every|full|whole|complete|entire)(\s+the)?\s+(checks?|steps?|procedure|checklist)\b"
+    r"|\bwhat\s+(all\s+)?(equipments?|checks?|things?)\s+(to|should|do|must|i)\b", re.I)
+
+
 def _unresolved(out: ParseOutput, state: DiagnosisState, kb: KnowledgeBase) -> ParseResult:
     """No fault resolved this turn. Out-of-scope (§5.6) if the pilot described a concrete
     problem clearly outside the list — or the model named one outside it — OR if
@@ -539,5 +546,6 @@ def parse_turn(text: str, state: DiagnosisState, kb: KnowledgeBase, provider: LL
         fault_presenting=presenting,
         denies_asked_step=(out.denies_asked_step == "yes"),
         wants_detail=(out.asks_for_detail == "yes"),
+        wants_overview=(out.asks_for_overview == "yes" or _OVERVIEW.search(text) is not None),
     )
     return ParseResult(update, confidence, False, None, out, rejected_steps=rejected + tuple(out.unmapped_claims))

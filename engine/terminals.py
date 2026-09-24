@@ -5,7 +5,7 @@ never from model knowledge. Each terminal carries its TSD citation.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Literal, Optional
 
 from kb.schema import Fault, Step
@@ -40,6 +40,8 @@ class Terminal:
                                               # already stated 'yes' (the gate let it through)
     verbatim: bool = False              # render the KB text itself, no phrasing (pilot asked
                                         # for the exact list after the short spoken form)
+    overview: tuple[str, ...] = ()      # ask_step: every remaining ordinary check, KB text + cite
+                                        # (pilot asked for all the checks at once)
 
     @property
     def instructs_reset(self) -> bool:
@@ -89,6 +91,14 @@ def ask_step(fault: Fault, step: Step, hold_action: Optional[str] = None,
         do_now=do_now,
         preconditions_met=tuple(step.gate.preconditions) if step.gate and step.gate.type == "hazard_exposure" else (),
     )
+
+
+def with_overview(t: Terminal, fault: Fault, step_ids: tuple[str, ...]) -> Terminal:
+    """The next check plus every remaining ordinary check, rendered as KB text. Only the
+    diff's ``missing`` list is passed in, which stops at the first pending gate — a gated
+    action (the reset) is never listed ahead of its verdict."""
+    items = tuple(f"{fault.step(s).text} ({fault.step(s).citation})" for s in step_ids)
+    return replace(t, overview=items, verbatim=True)
 
 
 def ask_history(fault: Fault, step: Step, question: str) -> Terminal:

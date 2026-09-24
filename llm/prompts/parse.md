@@ -59,6 +59,11 @@ Rules
 - asks_for_detail: "yes" when the assistant offered the exact component list and the pilot
   asks for it ("yes", "give me the list", "which ones?"). A bare "yes" after such an offer
   is asks_for_detail, not a claim. Nothing else changes.
+- asks_for_overview: "yes" when the pilot asks for ALL the checks / the whole procedure at
+  once ("list all the checks", "what all to check", "which equipment should I check",
+  "full procedure", "all steps"). This is about the whole checklist, not the one component
+  list of the current check — "list me all the checks" is asks_for_overview, not
+  asks_for_detail. Asking what to check is not a claim that anything was checked.
 - denies_asked_step: "yes" when the assistant's last message asked whether a check was done
   and the pilot answers no / not yet / didn't. A bare "no" after such a question is "yes"
   here. Never put a denied check in claimed_steps.

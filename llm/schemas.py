@@ -98,6 +98,11 @@ class ParseOutput(BaseModel):
         description="'yes' if the pilot asks for the exact component list / full detail the "
                     "assistant just offered ('yes', 'give me the list', 'which components?', "
                     "'full list'). 'unknown' otherwise.")
+    asks_for_overview: YesNoUnknown = Field(
+        default="unknown",
+        description="'yes' if the pilot asks for ALL the checks of the procedure at once, not "
+                    "just the current one ('list all the checks', 'what all should I check', "
+                    "'what equipment to check', 'full procedure', 'all steps'). 'unknown' otherwise.")
     denies_asked_step: YesNoUnknown = Field(
         default="unknown",
         description="'yes' if the assistant's last message asked whether a specific check was "
