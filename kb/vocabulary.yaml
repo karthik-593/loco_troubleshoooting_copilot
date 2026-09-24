@@ -1,0 +1,43 @@
+# Per-step equipment/precaution vocabulary guard (HANDOFF.md §6.7; PROJECT_JOURNEY_2 §6.7).
+# REJECT list, not a require list: does not force exact wording, only refuses a recorded
+# wrong substitution. Add one entry per future observed slip, same as every other guard rule.
+#
+# applies_when: term (case-insensitive, word-boundary) that must appear in the KB step's
+#   own text (message + guidance) for this entry to apply to that terminal.
+# forbidden: substitute phrases that must NOT appear in the rendered reply when it does.
+# source: where the slip was recorded.
+
+- applies_when: "breathers"
+  forbidden: ["breaker", "breakers", "circuit breaker", "circuit breakers"]
+  source: "HANDOFF.md — QLM (c): 'breakers' rendered for 'breathers'"
+
+- applies_when: "L4"
+  forbidden: ["l-series reactor", "l-series reactors", "reactor", "reactors"]
+  source: "HANDOFF.md batch 5-6 — 'L-series reactors' for L4/L5/L6 line contactors"
+- applies_when: "L5"
+  forbidden: ["l-series reactor", "l-series reactors", "reactor", "reactors"]
+  source: "HANDOFF.md batch 5-6 — 'L-series reactors' for L4/L5/L6 line contactors"
+- applies_when: "L6"
+  forbidden: ["l-series reactor", "l-series reactors", "reactor", "reactors"]
+  source: "HANDOFF.md batch 5-6 — 'L-series reactors' for L4/L5/L6 line contactors"
+# L1/L2/L3 (the QRSI-1/truck-1 mirror of L4/L5/L6) are the SAME physical component type and
+# therefore the same risk, though not separately observed live. Added by symmetry, flagged
+# as such rather than silently treated as an independent finding.
+- applies_when: "L1"
+  forbidden: ["l-series reactor", "l-series reactors", "reactor", "reactors"]
+  source: "by symmetry with L4/L5/L6 (HANDOFF.md batch 5-6) — not independently observed"
+- applies_when: "L2"
+  forbidden: ["l-series reactor", "l-series reactors", "reactor", "reactors"]
+  source: "by symmetry with L4/L5/L6 (HANDOFF.md batch 5-6) — not independently observed"
+- applies_when: "L3"
+  forbidden: ["l-series reactor", "l-series reactors", "reactor", "reactors"]
+  source: "by symmetry with L4/L5/L6 (HANDOFF.md batch 5-6) — not independently observed"
+
+- applies_when: "MVMT"
+  forbidden: ["motor contactor", "motor contactors"]
+  allow_suffix: true
+  source: "HANDOFF.md — 'motor contactors' rendered for the MVMT blowers"
+- applies_when: "MVSL"
+  forbidden: ["motor contactor", "motor contactors"]
+  allow_suffix: true
+  source: "HANDOFF.md — 'motor contactors' rendered for the MVSL blowers"

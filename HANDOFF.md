@@ -75,9 +75,9 @@ Milestone 1.
     `abnormality_key` + isolation block; ladder (b)|(c)→(d)|(e) as `applies_when` branches on
     facts `drops_after_long_interval` / `drops_frequently` / `drops_in_particular_hmcs1_position`
     / `drops_in_all_hmcs1_positions`; (d),(e) `completes: true`; defer `load_and_road_do_not_permit` (f).
-    **Interpretation flagged in the file:** post-isolation action on (a) is not stated by the TSD
-    ("try to isolate the same, otherwise contact TLC"); encoded as returning to (a)'s
-    no-abnormality path (reset, accelerate gradually), by analogy with §6.1.2(b). Confirm or trim.
+    qrsi1_drops_on_run.yaml — RESOLVED 2026-09-19: confirmed as kept inference. See
+    kb/faults/qrsi1_drops_on_run.yaml isolation.source note for basis (QRSI-2's identical
+    omission at §6.02.2(a) cross-checked as corroborating evidence).
     **Config axis — RECORDED, not built (user decision 2026-09-15):** `transformer_rating`
     (3900 | 5400 kVA) is a known future config axis, distinct from SIV/ARNO. TFR terminal
     designations depend on it: 3900 kVA → a5/a6 on QRSI-1, a3/a4 on QRSI-2; 5400 kVA → reversed
@@ -135,7 +135,7 @@ Milestone 1.
   reset_limit evaluator with per-step abnormality verdicts and rule 2b isolate-then-reset
   (isolated → CAUTION "5-isolated"; not isolated → REFUSE `abnormality_not_isolated`; unstated
   → ASK); `fault_resolved` → confirm with `terminal_actions.resolved`; **deviation from
-  BUILD_PLAN §7 (flagged, awaiting explicit OK):** combination rerouting is deterministic in
+  BUILD_PLAN §7 (flagged, ACCEPTED 2026-09-19 — see BUILD_PLAN.md §7.1 for rationale):** combination rerouting is deterministic in
   `engine.state.resolve_combination`, after every state update and before the reflex —
   otherwise the reflex can fire under the wrong procedure (seen live). `check_combination`
   remains a Class-A query tool. Parser: `facts{}` for KB-declared keys, per-step

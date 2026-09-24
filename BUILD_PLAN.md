@@ -269,6 +269,24 @@ These are standard production agent-loop safeguards; that you built them in is i
 
 Class A is where agency lives. Class B is never in Class A. Class C is engine-decided.
 
+### 7.1 Accepted deviation: combination reroute is deterministic, not agent-selected
+
+Combination-fault reroute (§7's original `check_combination`) is implemented as
+`engine.state.resolve_combination` — called deterministically after every state update
+and before the safety reflex, not as an agent-selected Class-A tool call. This was
+forced by a live defect (2026-09-15): the reflex evaluates gates against
+`state.matched_fault`, so if identity resolution waited on the agent choosing to call
+`check_combination`, the reflex could fire — and short-circuit the loop — against the
+WRONG procedure. Fault identity is a precondition of a correct safety verdict, so it
+belongs on the deterministic side of the agent/engine split, not the agent's.
+
+This narrows the agent's remit by one decision. It does not narrow its agency: the
+live eval shows 15 distinct tool paths across 30 scenarios, and `check_combination`
+remains a registered, agent-callable Class-A query tool — the agent still calls it,
+it is simply no longer the thing that decides whether a gate is allowed to fire.
+
+Accepted 2026-09-19. Superseded: the "awaiting explicit OK" note in HANDOFF.md.
+
 ---
 
 ## 8. LLM contract — the three jobs and their guardrails

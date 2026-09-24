@@ -26,6 +26,8 @@ ask_step — Ask (or, if `do_now:` is present, instruct) the check in `content`.
   exact tag from the payload (e.g. "the RSI-2 side"), then OFFER the detail —
   e.g. "…want the exact component list?". Do NOT read the whole list aloud. Do NOT name any
   component from a different truck or circuit. Do NOT genericise to "the equipment above".
+- Keep the exact physical-component words used in the content (e.g. "breathers", "line
+  contactors", "blowers") — do not substitute a different but similar-sounding component name.
 - If `condition_already_met:` is present, that condition is already true — ask only about the
   ACTION in `content`; never re-ask the condition.
 - If `do_now:` is present, the pilot has said this is NOT done — tell them to do it now and

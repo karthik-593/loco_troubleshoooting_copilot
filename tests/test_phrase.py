@@ -148,3 +148,129 @@ def test_repeat_rewrites_only_a_confirm(kb):
     assert for_repeat(c) is not c and for_repeat(c).message == REPEAT_MESSAGE     # helper is generic...
     r = phrase(c, FakeProvider(text_queue=["Reset once and monitor every 10 minutes."]), repeat=True)
     assert "Nothing further" not in r.text                                        # ...but phrase() applies it to confirm only
+
+
+# --- per-step equipment vocabulary (kb/vocabulary.yaml): the three recorded slips ---------
+
+def test_breathers_must_not_be_rendered_as_breakers(qlm):
+    """Recorded slip (HANDOFF): QLM (c)'s 'breathers' rendered as 'breakers'. The substance
+    guard passes it — every other word survives — so only the vocabulary reject catches it."""
+    t = T.ask_step(qlm, qlm.step(ORDINARY[2]))
+    tail = ("the CGR arc chutes, RGR and RPGR for red-hot condition, and the TFR terminals, "
+            "A33/A0/A34 bushings, HT cable, TFILM, TFSPM and oil leakage from")
+    bad = guard(t, f"Have you checked {tail} the breakers, drain plug and oil trap box?")
+    assert any(x.startswith("equipment_noun_substituted") for x in bad)
+    assert "breathers->breakers" in " ".join(bad)
+    good = guard(t, f"Have you checked {tail} the breathers, drain plug and oil trap box?")
+    assert not any(x.startswith("equipment_noun_substituted") for x in good)
+
+
+def test_line_contactors_must_not_be_rendered_as_reactors(kb):
+    """Recorded slip (HANDOFF): 'L-series reactors' for the L4/L5/L6 line contactors. This is
+    a SHORT-FORM rendering, which the substance guard sanctions — the noun reject is the only
+    check that fires."""
+    f = kb.get("QRSI2_drops_on_run")
+    t = T.ask_step(f, f.step("check_traction_circuit_2"))
+    bad = guard(t, "Any smoke or burning smell anywhere on the RSI-2 side, including the "
+                   "L-series reactors? Want the exact component list?")
+    assert "ask_step_lost_substance" not in bad              # the old guards let this through
+    assert any(x.startswith("equipment_noun_substituted") for x in bad)
+    good = guard(t, "Any smoke or burning smell anywhere on the RSI-2 side, including the "
+                    "L4, L5 and L6 line contactors? Want the exact component list?")
+    assert not any(x.startswith("equipment_noun_substituted") for x in good)
+
+
+def test_blowers_must_not_be_rendered_as_motor_contactors(kb):
+    """Recorded slip (HANDOFF): 'motor contactors' for the MVMT/MVSL blowers."""
+    f = kb.get("Op_B_part1")
+    t = T.ask_step(f, f.step("isolate_mvsl_not_working_and_work_50pc"))
+    bad = guard(t, "Since one of them is not working, isolate that MVSL and its motor "
+                   "contactors, then work onwards with 50% of the maximum permitted load. "
+                   "Tell me once it's done.")
+    assert any(x.startswith("equipment_noun_substituted") for x in bad)
+    good = guard(t, "Since one of them is not working, isolate that MVSL along with its MVMT "
+                    "and MVSI, then work onwards with 50% of the maximum permitted load. "
+                    "Tell me once it's done.")
+    assert not any(x.startswith("equipment_noun_substituted") for x in good)
+
+
+def test_vocabulary_reject_does_not_fire_on_unrelated_terminals(qlm):
+    """No false positive: a terminal whose KB text names none of the recorded terms is never
+    flagged, however it is worded — the entry is keyed on the KB text, not the reply."""
+    t = T.ask_step(qlm, qlm.step(ORDINARY[1]))               # "Check TFP and GR oil level..."
+    for rendering in ("Have you checked the TFP and GR oil levels for any abnormal increase?",
+                      "Have you checked the breakers and reactors?"):
+        assert not any(x.startswith("equipment_noun_substituted") for x in guard(t, rendering))
+
+
+# --- allow_suffix: the KB writes these identifiers with a unit number ---------------------
+
+def test_hyphenated_mvmt_still_matches_the_vocabulary_entry(kb):
+    """§7.07 item 1 writes 'MVMT-1, MVMT-2', never bare 'MVMT'. Before `allow_suffix` the
+    strict boundary missed every such step, so the recorded blower slip went uncaught."""
+    f = kb.get("Op_O")
+    t = T.ask_step(f, f.step("check_mvmt_mvrh_for_smell_smoke_fire"))
+    assert "MVMT-1" in t.message and "MVMT " not in t.message      # hyphenated, not bare
+    bad = guard(t, "Any smell, smoke or fire from the motor contactors or MVRH? If there is, "
+                   "use the fire extinguishers and work with precautions.")
+    assert any(x.startswith("equipment_noun_substituted") for x in bad)
+    assert "MVMT->motor contactors" in " ".join(bad)
+
+
+def test_unhyphenated_mvmt2_and_mvsl_match_the_vocabulary_entry(kb):
+    """§7.01.3 writes 'MVMT1, MVMT2, MVRH, MVSL1, MVSL2' — no hyphen, no space."""
+    f = kb.get("ICDJ_Q118_branch")
+    t = T.ask_step(f, f.step("wedge_q118"))
+    assert "MVMT2" in t.message and "MVSL2" in t.message
+    bad = guard(t, "Wedge Q118 energised and work with precautions: all EM contactors open "
+                   "before wedging, C118 fully open after closing DJ, check the motor "
+                   "contactors frequently, watch the TFR oil level, and avoid quick GR "
+                   "regression. Tell me when it's done.")
+    joined = " ".join(bad)
+    assert "MVMT->motor contactors" in joined and "MVSL->motor contactors" in joined
+
+
+def test_hyphenated_mvsl2_matches_the_vocabulary_entry(kb):
+    """§7.05 item 3 writes 'MVSL-1 and MVSL-2'."""
+    f = kb.get("Op_B_part1")
+    t = T.ask_step(f, f.step("check_mvsl1_mvsl2_working"))
+    assert "MVSL-2" in t.message
+    bad = guard(t, "Are the motor contactors working? Tell me whether both are working, one "
+                   "is not, or neither is.")
+    assert "MVSL->motor contactors" in " ".join(bad)
+
+
+def test_widened_boundary_does_not_false_positive_on_correct_blower_wording(kb):
+    """The widened match is KB-side only: a rendering that names the blowers correctly is
+    never flagged, in any of the three spellings the KB uses."""
+    cases = [("Op_O", "check_mvmt_mvrh_for_smell_smoke_fire",
+              "Any smell, smoke or fire from MVMT-1, MVMT-2 or MVRH? If there is, use the "
+              "fire extinguishers and work with precautions."),
+             ("ICDJ_Q118_branch", "wedge_q118",
+              "Wedge Q118 energised and work with precautions: all EM contactors open before "
+              "wedging, C118 fully open after closing DJ, check MVMT1, MVMT2, MVRH, MVSL1 "
+              "and MVSL2 frequently, watch the TFR oil level for colour change or abnormal "
+              "increase, and avoid quick GR regression. Tell me when it's done."),
+             ("Op_B_part1", "check_mvsl1_mvsl2_working",
+              "Are MVSL-1 and MVSL-2 both working? Tell me whether both are working, one is "
+              "not working, or both are not.")]
+    for fault_id, step_id, rendering in cases:
+        f = kb.get(fault_id)
+        t = T.ask_step(f, f.step(step_id))
+        v = guard(t, rendering)
+        assert not any(x.startswith("equipment_noun_substituted") for x in v), (fault_id, v)
+
+
+def test_allow_suffix_does_not_widen_the_other_entries(kb, qlm):
+    """breathers and L1-L6 carry no allow_suffix, so their KB-side match is unchanged: a
+    suffixed spelling must NOT satisfy them (proves the two boundaries stayed separate)."""
+    from llm.phrase import _wrong_equipment_noun
+    t = T.ask_step(qlm, qlm.step(ORDINARY[2]))                    # real step: bare "breathers"
+    assert _wrong_equipment_noun(t, "checked the breakers?") == ["breathers->breakers"]
+    f = kb.get("QRSI2_drops_on_run")
+    t2 = T.ask_step(f, f.step("check_traction_circuit_2"))        # real step: bare "L4, L5, L6"
+    assert any(h.startswith("L4->") for h in _wrong_equipment_noun(t2, "the l-series reactors?"))
+    # a synthetic terminal whose text has ONLY suffixed forms: strict entries must not match
+    synthetic = T.Terminal(kind="ask_step", fault_id=None, message="Check L4-1 and breathers-2.",
+                           source="test")
+    assert _wrong_equipment_noun(synthetic, "the reactors and the breakers?") == []

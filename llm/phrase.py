@@ -11,7 +11,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field, replace
+from functools import lru_cache
 from pathlib import Path
+
+import yaml
 
 from engine.terminals import REASON_NOT_ISOLATED, REASON_RECURRED, REASON_SECOND_RESET, RESET_DONE_NOTE, Terminal
 
@@ -81,6 +84,39 @@ def _foreign_identifiers(t: Terminal, low: str) -> list[str]:
             if other not in own and re.search(rf"(?<![\w-]){re.escape(other.lower())}(?![\w-])", low):
                 out.append(other)
     return sorted(set(out))
+
+
+_VOCAB_PATH = Path(__file__).resolve().parents[1] / "kb" / "vocabulary.yaml"
+
+
+@lru_cache(maxsize=1)
+def _load_vocabulary() -> tuple[dict, ...]:
+    if not _VOCAB_PATH.exists():
+        return ()
+    return tuple(yaml.safe_load(_VOCAB_PATH.read_text(encoding="utf-8")) or ())
+
+
+def _wrong_equipment_noun(t: Terminal, low: str) -> list[str]:
+    """A term named in this terminal's own KB text must never be rendered with a
+    recorded wrong substitute (kb/vocabulary.yaml) — e.g. 'breakers' for 'breathers'.
+    Reject list: does not require exact wording, only refuses a known confusion."""
+    kb_low = " ".join([t.message, *t.guidance]).lower()
+    hits = []
+    for entry in _load_vocabulary():
+        term = entry["applies_when"].lower()
+        # allow_suffix: the KB writes this identifier with a unit number (MVMT-1, MVMT1,
+        # MVMT2) as well as bare, and all forms mean the same component. Only the KB-side
+        # match widens; the forbidden-phrase match keeps the strict boundary.
+        if entry.get("allow_suffix"):
+            pat = rf"(?<![\w-]){re.escape(term)}-?\d*(?![\w-])"
+        else:
+            pat = rf"(?<![\w-]){re.escape(term)}(?![\w-])"
+        if not re.search(pat, kb_low):
+            continue
+        for bad in entry["forbidden"]:
+            if re.search(rf"(?<![\w-]){re.escape(bad.lower())}(?![\w-])", low):
+                hits.append(f"{entry['applies_when']}->{bad}")
+    return hits
 
 
 def _key_words_present(clause: str, low: str) -> bool:
@@ -235,6 +271,11 @@ def guard(t: Terminal, text: str) -> tuple[str, ...]:
         v.append("too_long")                       # the payload's own length bounds a long step
     if re.search(r"^\s*([-*#]|\d+\.)\s", s, re.M):
         v.append("markdown_structure")
+    # Recorded wrong-noun substitutions (kb/vocabulary.yaml) — checked for EVERY terminal
+    # kind: a caution's or confirm's guidance carries the same equipment text as a step.
+    wrong_nouns = _wrong_equipment_noun(t, low)
+    if wrong_nouns:
+        v.append("equipment_noun_substituted:" + ",".join(wrong_nouns))
 
     if t.kind == "refuse":
         # An isolation-failed refusal's KB text is "contact TLC" (§6.1.2(b)) with no literal
